@@ -33,6 +33,7 @@ export default function CheckoutPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "Online">("Online");
 
   // Delivery charge: free above ₹999, else ₹49
   const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
@@ -53,25 +54,72 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  async function reverseGeocode(lat: number, lng: number) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { "User-Agent": "MIAKSAAA/1.0" } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const addr = data.address || {};
+      setAddress((prev) => ({
+        ...prev,
+        city: addr.city || addr.town || addr.village || addr.county || prev.city,
+        state: addr.state || prev.state,
+        postalCode: addr.postcode || prev.postalCode,
+        country: addr.country || prev.country,
+        addressLine1: addr.road
+          ? `${addr.house_number ? addr.house_number + ", " : ""}${addr.road}`
+          : prev.addressLine1,
+      }));
+      toast.success("Address fields auto-filled from location!");
+    } catch {
+      // reverse geocode failed silently — user can fill manually
+    }
+  }
+
+  function captureLocation(highAccuracy: boolean) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCoords({ lat: latitude, lng: longitude });
+        toast.success("Delivery coordinates captured! 📍");
+        reverseGeocode(latitude, longitude);
+        setFetchingLocation(false);
+      },
+      (err) => {
+        console.error("Geolocation error:", err.code, err.message);
+        if (err.code === 1) {
+          toast.error("Location permission denied. Please allow location access in your browser settings.");
+          setFetchingLocation(false);
+        } else if (err.code === 2 && highAccuracy) {
+          captureLocation(false);
+        } else if (err.code === 3 && highAccuracy) {
+          captureLocation(false);
+        } else {
+          toast.error(err.code === 2
+            ? "Location unavailable. Try entering manually."
+            : "Location request timed out. Try again or enter manually."
+          );
+          setFetchingLocation(false);
+        }
+      },
+      {
+        enableHighAccuracy: highAccuracy,
+        timeout: highAccuracy ? 10000 : 8000,
+        maximumAge: highAccuracy ? 0 : 120000,
+      }
+    );
+  }
+
   async function getGeolocation() {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser.");
       return;
     }
     setFetchingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        toast.success("Delivery coordinates captured! 📍");
-        setFetchingLocation(false);
-      },
-      (err) => {
-        console.error(err);
-        toast.error("Could not capture location. Please enter manually.");
-        setFetchingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 5000 }
-    );
+    captureLocation(true);
   }
 
   async function handleCheckout(e: React.FormEvent) {
@@ -83,6 +131,23 @@ export default function CheckoutPage() {
     }
     if (items.length === 0) {
       toast.error("Your cart is empty.");
+      return;
+    }
+
+    if (paymentMethod === "Online") {
+      sessionStorage.setItem("online-payment-data", JSON.stringify({
+        userId: user.uid,
+        userEmail: user.email || "",
+        items,
+        subtotal: getSubtotal(),
+        discount: getDiscount(),
+        couponCode: couponCode || "",
+        total: orderTotal,
+        deliveryAddress: address,
+        coords,
+        notes,
+      }));
+      router.push("/online-payment");
       return;
     }
 
@@ -170,7 +235,7 @@ export default function CheckoutPage() {
                     required
                     value={address.fullName}
                     onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
-                    className="input pl-9 text-sm"
+                    className="input pl-10 text-sm"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -187,7 +252,7 @@ export default function CheckoutPage() {
                     required
                     value={address.phone}
                     onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    className="input pl-9 text-sm"
+                    className="input pl-10 text-sm"
                     placeholder="Enter 10-digit number"
                   />
                 </div>
@@ -302,29 +367,44 @@ export default function CheckoutPage() {
               <CreditCard size={18} style={{ color: "var(--gold-400)" }} /> Payment Method
             </h2>
 
-            {/* COD — active */}
-            <div className="p-4 rounded-xl flex items-center justify-between" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid var(--border-gold)" }}>
-              <div>
-                <h4 className="text-sm font-bold flex items-center gap-1.5 text-white">
-                  Cash on Delivery (COD) <span className="badge badge-gold text-[9px] py-0.5 px-2">Available</span>
-                </h4>
-                <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Pay with cash upon safe delivery of your order</p>
-              </div>
-              <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: "var(--gold-400)" }}>
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--gold-400)" }} />
-              </div>
-            </div>
-
-            {/* Online Payment — Coming Soon */}
-            <div className="p-4 rounded-xl flex items-center justify-between opacity-50 cursor-not-allowed" style={{ background: "rgba(147,51,234,0.03)", border: "1px solid var(--border)" }}>
+            {/* COD — Coming Soon */}
+            <div className="p-4 rounded-xl flex items-center justify-between opacity-50 cursor-not-allowed"
+              style={{ background: "rgba(251,191,36,0.03)", border: "1px solid var(--border)" }}>
               <div>
                 <h4 className="text-sm font-bold flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
-                  Online Payment (UPI / Card)
-                  <span className="badge badge-purple text-[9px] py-0.5 px-2">Coming Soon</span>
+                  Cash on Delivery (COD)
+                  <span className="badge badge-gold text-[9px] py-0.5 px-2">Coming Soon</span>
                 </h4>
-                <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Online payments will be available shortly</p>
+                <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Pay with cash upon safe delivery of your order</p>
               </div>
-              <div className="w-5 h-5 rounded-full border-2" style={{ borderColor: "rgba(147,51,234,0.3)" }} />
+              <div className="w-5 h-5 rounded-full border-2" style={{ borderColor: "rgba(251,191,36,0.3)" }} />
+            </div>
+
+            {/* Online Payment — QR */}
+            <div
+              onClick={() => setPaymentMethod("Online")}
+              className="p-4 rounded-xl flex items-center justify-between transition-all cursor-pointer"
+              style={{
+                background: paymentMethod === "Online" ? "rgba(147,51,234,0.08)" : "rgba(147,51,234,0.03)",
+                border: paymentMethod === "Online" ? "1px solid rgba(147,51,234,0.5)" : "1px solid var(--border)",
+              }}
+            >
+              <div>
+                <h4 className="text-sm font-bold flex items-center gap-1.5">
+                  QR Online Payment
+                  <span className="badge badge-purple text-[9px] py-0.5 px-2">Active</span>
+                </h4>
+                <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+                  Scan the QR code using any UPI app to complete payment
+                </p>
+              </div>
+              <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{
+                borderColor: paymentMethod === "Online" ? "rgb(147,51,234)" : "rgba(147,51,234,0.3)",
+              }}>
+                {paymentMethod === "Online" && (
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgb(147,51,234)" }} />
+                )}
+              </div>
             </div>
 
             <div className="pt-3">

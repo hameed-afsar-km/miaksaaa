@@ -110,7 +110,7 @@ export interface Order {
   discount: number;
   couponCode?: string;
   total: number;
-  paymentMethod: "COD";
+  paymentMethod: "COD" | "Online";
   status: OrderStatus;
   deliveryAddress: DeliveryAddress;
   location?: { lat: number; lng: number } | null;

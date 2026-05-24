@@ -251,7 +251,8 @@ export async function placeOrder(
   total: number,
   deliveryAddress: DeliveryAddress,
   location: { lat: number; lng: number } | null,
-  notes: string
+  notes: string,
+  paymentMethod: "COD" | "Online" = "COD"
 ): Promise<string> {
   // 1. Create order document with 'waiting' status
   const ref = await addDoc(collection(db, "orders"), {
@@ -262,7 +263,7 @@ export async function placeOrder(
     discount,
     couponCode,
     total,
-    paymentMethod: "COD",
+    paymentMethod,
     status: "waiting",
     deliveryAddress,
     location,
