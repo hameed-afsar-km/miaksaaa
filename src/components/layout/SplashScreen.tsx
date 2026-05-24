@@ -55,7 +55,7 @@ export function SplashScreen() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-0 leading-none -mt-3"
+                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-0 leading-none -mt-12"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA

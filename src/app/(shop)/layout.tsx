@@ -13,7 +13,9 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <Navbar logoUrl={settings?.logoUrl} />
       <CartDrawer />
       <main className="min-h-screen pt-[88px] lg:pt-[80px] pb-20 md:pb-0">
-        {children}
+        <div className="pt-4 md:pt-6">
+          {children}
+        </div>
       </main>
       <Footer logoUrl={settings?.logoUrl} />
       <BottomNav />

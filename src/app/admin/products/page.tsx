@@ -188,7 +188,7 @@ export default function AdminProductsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter catalog by name or category..."
-          className="input pl-10 text-sm"
+          className="input pl-11 text-sm"
         />
       </div>
 

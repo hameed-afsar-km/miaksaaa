@@ -235,7 +235,7 @@ export default function CheckoutPage() {
                     required
                     value={address.fullName}
                     onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
-                    className="input pl-10 text-sm"
+                    className="input pl-11 text-sm"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                     required
                     value={address.phone}
                     onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    className="input pl-10 text-sm"
+                    className="input pl-11 text-sm"
                     placeholder="Enter 10-digit number"
                   />
                 </div>

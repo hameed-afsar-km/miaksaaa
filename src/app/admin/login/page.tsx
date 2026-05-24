@@ -107,7 +107,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input pl-10 text-sm focus:border-amber-400 focus:ring-amber-500/20"
+                className="input pl-11 text-sm focus:border-amber-400 focus:ring-amber-500/20"
                 placeholder="admin@miaksaaa.com"
                 style={{ borderColor: "rgba(251,191,36,0.15)", background: "rgba(251,191,36,0.02)" }}
               />
@@ -125,7 +125,7 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input pl-10 text-sm focus:border-amber-400 focus:ring-amber-500/20"
+                className="input pl-11 text-sm focus:border-amber-400 focus:ring-amber-500/20"
                 placeholder="••••••••"
                 style={{ borderColor: "rgba(251,191,36,0.15)", background: "rgba(251,191,36,0.02)" }}
               />

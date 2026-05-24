@@ -121,7 +121,7 @@ function LoginContent() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-10 text-sm"
+                  className="input pl-11 text-sm"
                   placeholder="name@example.com"
                 />
               </div>
@@ -143,7 +143,7 @@ function LoginContent() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-10 text-sm"
+                  className="input pl-11 text-sm"
                   placeholder="••••••••"
                 />
               </div>

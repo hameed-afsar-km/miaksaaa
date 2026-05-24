@@ -37,7 +37,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
     >
       {/* Main section: fills viewport height on desktop */}
       <div
-        className="container-lg flex flex-col md:flex-row md:items-end md:justify-between gap-10 py-16 md:min-h-[26vh]"
+        className="container-lg flex flex-col md:flex-row md:items-end md:justify-between gap-10 py-16 md:min-h-[29vh]"
       >
         {/* Left — LARGE brand name scaled to fill available height */}
         <Link href="/" className="group shrink-0 self-start md:self-end">
@@ -51,7 +51,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
             MIAKSAAA
           </span>
           <span
-            className="text-xs tracking-[0.22em] uppercase mt-2 block"
+            className="text-xs tracking-[0.22em] uppercase mt-1 block mr-6"
             style={{ color: "var(--text-muted)" }}
           >
             Fashion and Fun World
