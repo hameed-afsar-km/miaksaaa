@@ -8,9 +8,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { validateCoupon } from "@/lib/firebase/firestore";
+import { useAuthStore } from "@/lib/store/authStore";
 import toast from "react-hot-toast";
 
 export function CartDrawer() {
+  const { user } = useAuthStore();
   const { cartOpen, setCartOpen } = useUIStore();
   const {
     items, removeItem, updateQuantity,
@@ -24,7 +26,7 @@ export function CartDrawer() {
     if (!couponInput.trim()) return;
     setCouponLoading(true);
     try {
-      const { valid, coupon, message } = await validateCoupon(couponInput, getSubtotal());
+      const { valid, coupon, message } = await validateCoupon(couponInput, getSubtotal(), user?.uid);
       if (valid && coupon) {
         applyCoupon(coupon.code, coupon.discount, coupon.type);
         toast.success(`Coupon applied! ${coupon.type === "percent" ? `${coupon.discount}% off` : formatPrice(coupon.discount) + " off"}`);

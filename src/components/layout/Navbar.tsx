@@ -89,13 +89,13 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
           <div className="flex flex-col items-center justify-center text-center">
             <Link href="/" className="flex flex-col items-center group">
               <span
-                className="text-xl lg:text-2xl font-black tracking-wider gradient-text leading-tight"
+                className="text-2xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA
               </span>
               <span
-                className="text-[8px] lg:text-[10px] tracking-[0.15em] uppercase leading-none mt-0.5"
+                className="text-[10px] lg:text-xs tracking-[0.15em] uppercase leading-none mt-0.5"
                 style={{ color: "var(--text-muted)" }}
               >
                 Fashion and Fun World

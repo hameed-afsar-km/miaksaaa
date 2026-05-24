@@ -14,8 +14,11 @@ import {
   ChevronDown,
   Info,
   Package,
+  Trash2,
+  Download,
+  AlertTriangle,
 } from "lucide-react";
-import { getAllOrders, updateOrderStatus } from "@/lib/firebase/firestore";
+import { getAllOrders, updateOrderStatus, deleteOrder, deleteAllOrders } from "@/lib/firebase/firestore";
 import { Order, OrderStatus } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -87,6 +90,58 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDelete = async (orderId: string) => {
+    if (!confirm("Delete this order permanently?")) return;
+    try {
+      await deleteOrder(orderId);
+      toast.success("Order deleted");
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete order");
+    }
+  };
+
+  const handleClearLog = async () => {
+    if (!confirm("Delete ALL orders permanently? This cannot be undone.")) return;
+    try {
+      await deleteAllOrders();
+      toast.success("All orders cleared");
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to clear orders");
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    const rows = [["Order #", "Customer", "Phone", "Place", "Items", "Qty", "Total", "Status", "Date"]];
+    for (const o of orders) {
+      const itemStr = o.items.map((i) => i.title).join("; ");
+      const qtyStr = o.items.map((i) => i.quantity).join("; ");
+      rows.push([
+        `#${o.id.slice(-8).toUpperCase()}`,
+        o.deliveryAddress.fullName,
+        o.deliveryAddress.phone,
+        `${o.deliveryAddress.city}, ${o.deliveryAddress.state}`,
+        itemStr,
+        qtyStr,
+        formatPrice(o.total),
+        o.status,
+        o.createdAt?.toDate().toLocaleDateString() ?? "",
+      ]);
+    }
+    const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV downloaded");
+  };
+
   const filtered =
     activeFilter === "all" ? orders : orders.filter((o) => o.status === activeFilter);
 
@@ -107,11 +162,28 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-8">
       {/* Title */}
-      <div>
-        <h1 className="text-3xl font-black gradient-text">Fulfillment Registry</h1>
-        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-          Manage, approve, and track all customer orders
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-black gradient-text">Fulfillment Registry</h1>
+          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+            Manage, approve, and track all customer orders
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadCSV}
+            className="btn-outline text-xs px-4 py-2 gap-1.5 cursor-pointer"
+          >
+            <Download size={14} /> CSV
+          </button>
+          <button
+            onClick={handleClearLog}
+            className="btn-outline text-xs px-4 py-2 gap-1.5 cursor-pointer"
+            style={{ borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}
+          >
+            <Trash2 size={14} /> Clear Log
+          </button>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -240,6 +312,14 @@ export default function AdminOrdersPage() {
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-purple-300"
                       />
                     </div>
+                    <button
+                      onClick={() => handleDelete(order.id)}
+                      className="p-2 rounded-lg transition-colors cursor-pointer"
+                      style={{ color: "rgba(239,68,68,0.6)" }}
+                      title="Delete order"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
 

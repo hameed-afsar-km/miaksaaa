@@ -7,9 +7,11 @@ import { useCartStore } from "@/lib/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import { useState } from "react";
 import { validateCoupon } from "@/lib/firebase/firestore";
+import { useAuthStore } from "@/lib/store/authStore";
 import toast from "react-hot-toast";
 
 export default function CartPage() {
+  const { user } = useAuthStore();
   const {
     items, removeItem, updateQuantity, clearCart,
     getSubtotal, getDiscount, getTotal,
@@ -22,7 +24,7 @@ export default function CartPage() {
     if (!couponInput.trim()) return;
     setCouponLoading(true);
     try {
-      const { valid, coupon, message } = await validateCoupon(couponInput, getSubtotal());
+      const { valid, coupon, message } = await validateCoupon(couponInput, getSubtotal(), user?.uid);
       if (valid && coupon) {
         applyCoupon(coupon.code, coupon.discount, coupon.type);
         toast.success(`Coupon applied!`);

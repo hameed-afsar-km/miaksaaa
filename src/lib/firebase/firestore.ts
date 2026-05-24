@@ -15,6 +15,7 @@ import {
   Timestamp,
   setDoc,
   increment,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "./config";
 import {
@@ -182,7 +183,8 @@ export async function deleteCategory(id: string): Promise<void> {
 
 export async function validateCoupon(
   code: string,
-  orderTotal: number
+  orderTotal: number,
+  userId?: string
 ): Promise<{ valid: boolean; coupon?: Coupon; message?: string }> {
   const q = query(
     collection(db, "coupons"),
@@ -208,6 +210,10 @@ export async function validateCoupon(
       valid: false,
       message: `Minimum order of ₹${coupon.minOrder} required`,
     };
+  }
+
+  if (coupon.oneTimeUse && userId && coupon.usedBy?.includes(userId)) {
+    return { valid: false, message: "You have already used this coupon" };
   }
 
   return { valid: true, coupon };
@@ -277,6 +283,27 @@ export async function placeOrder(
     }
   }
 
+  // 3. Track coupon usage if a coupon was used
+  if (couponCode) {
+    try {
+      const couponQuery = query(
+        collection(db, "coupons"),
+        where("code", "==", couponCode.toUpperCase())
+      );
+      const couponSnap = await getDocs(couponQuery);
+      if (!couponSnap.empty) {
+        const couponDoc = couponSnap.docs[0];
+        const couponRef = doc(db, "coupons", couponDoc.id);
+        await updateDoc(couponRef, {
+          usedCount: increment(1),
+          usedBy: arrayUnion(userId),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to update coupon usage:", err);
+    }
+  }
+
   return ref.id;
 }
 
@@ -334,6 +361,16 @@ export async function updateOrderStatus(
     status,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteOrder(id: string): Promise<void> {
+  await deleteDoc(doc(db, "orders", id));
+}
+
+export async function deleteAllOrders(): Promise<void> {
+  const snap = await getDocs(collection(db, "orders"));
+  const batch = snap.docs.map((d) => deleteDoc(doc(db, "orders", d.id)));
+  await Promise.all(batch);
 }
 
 // ─── STORE SETTINGS ──────────────────────────────────────────────────────────

@@ -48,6 +48,8 @@ export default function AdminCouponsPage() {
       usedCount: 0,
       isActive: true,
       expiresAt: null,
+      oneTimeUse: false,
+      usedBy: [],
     });
     setFormOpen(true);
   };
@@ -87,6 +89,8 @@ export default function AdminCouponsPage() {
         maxUses: Number(editingCoupon.maxUses ?? 100),
         usedCount: Number(editingCoupon.usedCount ?? 0),
         isActive: !!editingCoupon.isActive,
+        oneTimeUse: !!editingCoupon.oneTimeUse,
+        usedBy: editingCoupon.usedBy ?? [],
         expiresAt: editingCoupon.expiresAt ?? null,
       };
 
@@ -333,6 +337,20 @@ export default function AdminCouponsPage() {
                       type="checkbox"
                       checked={editingCoupon.isActive ?? true}
                       onChange={(e) => setEditingCoupon({ ...editingCoupon, isActive: e.target.checked })}
+                      className="w-4 h-4 cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  {/* One-Time Use Toggle */}
+                  <div className="p-4 rounded-2xl flex items-center justify-between border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">One-Time Use</h5>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>each user can only use this coupon once</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editingCoupon.oneTimeUse ?? false}
+                      onChange={(e) => setEditingCoupon({ ...editingCoupon, oneTimeUse: e.target.checked })}
                       className="w-4 h-4 cursor-pointer accent-purple-500"
                     />
                   </div>

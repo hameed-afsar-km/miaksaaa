@@ -130,6 +130,8 @@ export interface Coupon {
   usedCount: number;
   isActive: boolean;
   expiresAt: Timestamp | null;
+  oneTimeUse: boolean;
+  usedBy: string[];
 }
 
 // ─── BANNER ───────────────────────────────────────────────────────────────────
