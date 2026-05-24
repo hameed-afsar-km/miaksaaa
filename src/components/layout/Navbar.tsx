@@ -11,7 +11,7 @@ import { useCartStore } from "@/lib/store/cartStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { logOut, signInWithGoogle } from "@/lib/firebase/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -29,6 +29,9 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const wishCount = useWishlistStore((s) => s.items.length);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   async function handleLogin() {
     try {
@@ -116,7 +119,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             {/* Cart */}
             <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "8px" }}>
               <ShoppingBag size={20} />
-              {totalItems > 0 && (
+              {mounted && totalItems > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
                   style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
                   {totalItems}
@@ -186,8 +189,22 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </AnimatePresence>
               </div>
             ) : (
-              <button onClick={handleLogin} className="btn-primary" style={{ padding: "6px 12px", fontSize: "0.75rem", minHeight: "auto", height: "auto" }}>
-                Sign In
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-1.5 font-bold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, #9333ea, #7e22ce)",
+                  color: "#fff",
+                  fontSize: "0.7rem",
+                  padding: "7px 13px",
+                  borderRadius: "999px",
+                  boxShadow: "0 0 16px rgba(147,51,234,0.4)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <User size={13} />
+                <span className="hidden xs:inline">Sign In</span>
+                <span className="xs:hidden">In</span>
               </button>
             )}
           </div>

@@ -152,136 +152,171 @@ export function HeroSection({ banners }: HeroSectionProps) {
       />
 
       {/* ─────────────────────────────────────────────────────────
-          MOBILE layout (< lg)
-          • Covers size of width (width = height = 100vw, ratio 1:1)
-          • Centered image inside radial glow
-          • Frosted-glass panel at the absolute bottom
-          • Guarantees texts NEVER go below the fold
+          MOBILE layout (< lg) — Full-bleed cinematic hero
+          • Banner image fills the entire hero as background
+          • Gradient overlays ensure text readability
+          • PromoTag badge floats top-left
+          • All content (title, subtitle, CTAs, dots) pinned bottom
+          • All fields driven by admin-modifiable banner data
           ───────────────────────────────────────────────────────── */}
-      <div className="hero-mobile lg:hidden relative w-full pt-4 z-10 flex flex-col justify-between overflow-hidden">
-        {/* Background Radial Glow */}
-        <div 
-          className="absolute w-[80%] h-[80%] top-[10%] left-[10%] rounded-full opacity-20 filter blur-[50px] pointer-events-none"
+      <div className="hero-mobile lg:hidden relative w-full z-10 overflow-hidden">
+
+        {/* ── Full-bleed background image with fade transition ── */}
+        <AnimatePresence mode="wait">
+          {banner.imageUrl ? (
+            <motion.div
+              key={`mob-bg-${current}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.9, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={banner.imageUrl}
+                alt={banner.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="100vw"
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mob-bg-empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+              style={{ background: banner.bgColor || "#1a0a3d" }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* ── Color tint overlay (admin bgColor) ── */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`mob-tint-${current}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.0 }}
+            className="absolute inset-0 pointer-events-none z-[1]"
+            style={{
+              background: `radial-gradient(ellipse at 50% 20%, ${banner.bgColor || '#120a24'}70 0%, transparent 65%)`,
+            }}
+          />
+        </AnimatePresence>
+
+        {/* ── Top gradient scrim (navbar area readability) ── */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-transparent pointer-events-none z-[2]" />
+
+        {/* ── Bottom gradient scrim (text readability) ── */}
+        <div
+          className="absolute inset-0 pointer-events-none z-[2]"
           style={{
-            background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')}40 0%, ${(banner.bgColor || '#9333ea')}25 70%)`
+            background: "linear-gradient(to top, rgba(6,4,13,0.97) 0%, rgba(6,4,13,0.75) 35%, transparent 65%)",
           }}
         />
 
-        {/* Centered Image Card */}
-        <div className="flex-1 w-full flex items-center justify-center p-2 max-h-[42vh]">
-          {/* Static mobile card frame container */}
-          <div
-            className="relative w-[55%] max-w-[220px] aspect-square flex items-center justify-center rounded-3xl overflow-hidden border border-white/10"
-            style={{
-              background: "rgba(255, 255, 255, 0.02)",
-            }}
-          >
-            <AnimatePresence mode="wait">
-              {banner.imageUrl ? (
-                <motion.div
-                  key={`mob-img-${current}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, ease: "easeInOut" }}
-                  className="absolute inset-0 w-full h-full"
+        {/* ── Floating PromoTag badge — top left ── */}
+        <AnimatePresence mode="wait">
+          {banner.promoTag && (
+            <motion.div
+              key={`mob-badge-${current}`}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="absolute top-4 left-4 z-10 flex items-center gap-1.5"
+            >
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black tracking-widest uppercase"
+                style={{
+                  background: "rgba(251,191,36,0.15)",
+                  border: "1px solid rgba(251,191,36,0.45)",
+                  color: "#fbbf24",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <Zap size={8} className="fill-amber-400 text-amber-400" />
+                {banner.promoTag}
+              </span>
+              {banner.highlightLabel && (
+                <span
+                  className="text-[8px] font-semibold tracking-wider"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
                 >
-                  <Image
-                    src={banner.imageUrl}
-                    alt={banner.title}
-                    fill
-                    className="object-cover transition-transform duration-700"
-                    priority
-                    sizes="65vw"
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="mob-placeholder"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <span className="text-[9px] tracking-widest font-black uppercase text-amber-400/40">
-                    MIAKSAAA
-                  </span>
-                </motion.div>
+                  ✦ {banner.highlightLabel}
+                </span>
               )}
-            </AnimatePresence>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Frosted Glass Bottom Card Overlay */}
-        <div className="w-full bg-[#0d071a]/85 backdrop-blur-lg border-t border-white/10 p-3.5 flex flex-col gap-1.5 relative z-20">
+        {/* ── Bottom content: title, subtitle, CTAs, dots ── */}
+        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4">
           <AnimatePresence mode="wait">
             <motion.div
-              key={`mob-text-${current}`}
-              initial={{ opacity: 0, y: 12 }}
+              key={`mob-content-${current}`}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.35 }}
-              className="space-y-1.5"
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-2.5"
             >
-              {/* Badges row */}
-              <div className="flex items-center gap-2">
-                {banner.promoTag && (
-                  <span
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest uppercase bg-amber-400/10 border border-amber-400/35 text-amber-400"
-                  >
-                    {banner.promoTag}
-                  </span>
-                )}
-                {banner.highlightLabel && (
-                  <span
-                    className="text-[8px] font-semibold text-white/50 tracking-wider"
-                  >
-                    ✦ {banner.highlightLabel}
-                  </span>
-                )}
-              </div>
-
-              {/* Title & Subtitle */}
-              <h2 className="text-sm font-black text-white uppercase tracking-tight line-clamp-1">
+              {/* Title */}
+              <h1
+                className="text-2xl font-black text-white uppercase leading-tight tracking-tight"
+                style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}
+              >
                 {banner.title}
-              </h2>
-              <p className="text-[9px] text-white/60 line-clamp-1 leading-normal font-light">
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-[11px] text-white/65 leading-relaxed font-light line-clamp-2">
                 {banner.subtitle}
               </p>
 
-              {/* Action Buttons & Indicator Row */}
-              <div className="flex items-center gap-3 pt-0.5">
+              {/* CTA Buttons */}
+              <div className="flex gap-3 pt-0.5">
                 <Link
                   href={banner.ctaLink}
-                  className="flex-1 py-2 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider text-black transition-transform active:scale-95"
+                  className="flex-1 py-2.5 rounded-xl text-center text-[11px] font-black uppercase tracking-wider transition-transform active:scale-95"
                   style={{
                     background: banner.ctaColor || "#fbbf24",
+                    color: "#0a0614",
+                    boxShadow: `0 4px 20px ${banner.ctaColor || "#fbbf24"}50`,
                   }}
                 >
                   {banner.ctaText}
                 </Link>
                 <Link
                   href="/products"
-                  className="flex-1 py-2 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider text-white border border-white/15 backdrop-blur-sm active:scale-95"
+                  className="flex-1 py-2.5 rounded-xl text-center text-[11px] font-black uppercase tracking-wider text-white active:scale-95"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    backdropFilter: "blur(8px)",
+                    background: "rgba(255,255,255,0.06)",
+                  }}
                 >
                   Explore
                 </Link>
               </div>
 
-              {/* Mobile Slide indicators */}
-              <div className="flex gap-1.5 justify-center pt-1.5">
+              {/* Slide indicators */}
+              <div className="flex gap-2 justify-center pt-1">
                 {displayBanners.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => {
-                      setCurrent(i);
-                      setProgress(0);
-                    }}
+                    onClick={() => { setCurrent(i); setProgress(0); }}
                     aria-label={`Slide ${i + 1}`}
-                    className="h-1 rounded-full transition-all duration-300"
+                    className="h-[3px] rounded-full transition-all duration-300"
                     style={{
-                      width: i === current ? 14 : 5,
-                      background: i === current ? (banner.ctaColor || "#fbbf24") : "rgba(255,255,255,0.2)",
+                      width: i === current ? 24 : 6,
+                      background: i === current
+                        ? (banner.ctaColor || "#fbbf24")
+                        : "rgba(255,255,255,0.25)",
                     }}
                   />
                 ))}

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, User } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 const TABS = [
   { href: "/",          icon: Home,        label: "Home" },
@@ -15,6 +16,8 @@ const TABS = [
 export function BottomNav() {
   const pathname = usePathname();
   const totalItems = useCartStore((s) => s.getTotalItems());
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Hide on admin pages
   if (pathname.startsWith("/admin")) return null;
@@ -49,7 +52,7 @@ export function BottomNav() {
                     transform: active ? "scale(1.1)" : "scale(1)",
                   }}
                 />
-                {isCart && totalItems > 0 && (
+                {isCart && mounted && totalItems > 0 && (
                   <span
                     className="absolute -top-2 -right-2 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
                     style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}
