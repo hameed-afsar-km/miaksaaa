@@ -58,7 +58,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
           {/* LEFT: Desktop nav links */}
           <div className="flex items-center gap-1 min-w-0">
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1">
               {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
@@ -77,8 +77,8 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </Link>
               ))}
             </nav>
-            {/* Mobile hamburger (left side) */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl md:hidden">
+            {/* Mobile hamburger (left side) — hidden on desktop */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl lg:hidden">
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -102,9 +102,9 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
           </div>
 
           {/* RIGHT: Cart, Wishlist, Profile */}
-          <div className="flex items-center justify-end gap-1">
-            {/* Wishlist */}
-            <Link href="/wishlist" className="relative btn-ghost p-2 rounded-xl hidden sm:flex">
+          <div className="flex items-center justify-end gap-0.5">
+            {/* Wishlist — desktop only; on mobile it lives in the burger menu */}
+            <Link href="/wishlist" className="relative btn-ghost p-2 rounded-xl hidden lg:flex">
               <Heart size={20} />
               {wishCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
@@ -115,7 +115,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             </Link>
 
             {/* Cart */}
-            <button onClick={() => setCartOpen(true)} className="relative btn-ghost p-2 rounded-xl">
+            <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "8px" }}>
               <ShoppingBag size={20} />
               {totalItems > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
@@ -130,7 +130,8 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-1.5 btn-ghost px-2 py-1.5 rounded-xl"
+                  className="flex items-center gap-1 btn-ghost rounded-xl"
+                  style={{ padding: "6px 8px" }}
                 >
                   <div className="w-8 h-8 rounded-full overflow-hidden border-2 shrink-0" style={{ borderColor: "var(--purple-500)" }}>
                     {user.photoURL ? (
@@ -186,7 +187,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </AnimatePresence>
               </div>
             ) : (
-              <button onClick={handleLogin} className="btn-primary py-2 px-3 text-sm hidden sm:flex">
+              <button onClick={handleLogin} className="btn-primary" style={{ padding: "6px 12px", fontSize: "0.75rem", minHeight: "auto", height: "auto" }}>
                 Sign In
               </button>
             )}
@@ -215,6 +216,18 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                     {label}
                   </Link>
                 ))}
+                {/* Wishlist link — only in mobile burger */}
+                <Link href="/wishlist" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                  style={{ color: "var(--text-secondary)" }}>
+                  <Heart size={15} /> Wishlist
+                  {wishCount > 0 && (
+                    <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                      {wishCount}
+                    </span>
+                  )}
+                </Link>
                 {!user && (
                   <button onClick={() => { handleLogin(); setMobileOpen(false); }}
                     className="btn-primary mt-2">Sign In with Google</button>

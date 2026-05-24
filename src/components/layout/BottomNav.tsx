@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingBag, Heart, Package, User } from "lucide-react";
+import { Home, ShoppingBag, User } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
 import { motion } from "framer-motion";
 
@@ -9,7 +9,6 @@ const TABS = [
   { href: "/",          icon: Home,        label: "Home" },
   { href: "/products",  icon: ShoppingBag, label: "Shop" },
   { href: "/cart",      icon: ShoppingBag, label: "Cart", isCart: true },
-  { href: "/wishlist",  icon: Heart,       label: "Wishlist" },
   { href: "/profile",   icon: User,        label: "Profile" },
 ];
 

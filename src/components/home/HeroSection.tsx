@@ -5,11 +5,10 @@ import { ChevronLeft, ChevronRight, ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Banner } from "@/lib/types";
-import { BeamsBackground } from "@/components/ui/beams-background";
 
 const STATIC_BANNERS: Omit<Banner, "id">[] = [
   {
-    imageUrl: "",
+    imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop",
     title: "Premium Luxury",
     subtitle: "Exclusive collections curated for the discerning taste",
     ctaText: "Shop Now",
@@ -22,7 +21,7 @@ const STATIC_BANNERS: Omit<Banner, "id">[] = [
     order: 0,
   },
   {
-    imageUrl: "",
+    imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
     title: "Flash Sale Live",
     subtitle: "Up to 70% off on selected premium items — today only",
     ctaText: "Grab Deals",
@@ -35,7 +34,7 @@ const STATIC_BANNERS: Omit<Banner, "id">[] = [
     order: 1,
   },
   {
-    imageUrl: "",
+    imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop",
     title: "Free Delivery",
     subtitle: "On all orders above ₹999 — Cash On Delivery available",
     ctaText: "Start Shopping",
@@ -77,24 +76,12 @@ export function HeroSection({ banners }: HeroSectionProps) {
   const banner = displayBanners[current];
 
   return (
-    <BeamsBackground
+    <div
       className="relative w-full overflow-hidden"
-      // Desktop: exactly 100vh height
-      // Mobile (Android): covers the width, making the ratio 1:1 (height is 100vw)
-      style={{
-        height: "var(--hero-height)",
-      }}
+      style={{ background: "#06040d" }}
     >
-      {/* Dynamic CSS variable for responsive heights and premium rotating geometric animations */}
-      <style jsx global>{`
-        :root {
-          --hero-height: 100vw;
-        }
-        @media (min-width: 1024px) {
-          :root {
-            --hero-height: 100vh;
-          }
-        }
+      {/* Keyframes for rotating geometric animations */}
+      <style>{`
         @keyframes spin-slow {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -108,6 +95,18 @@ export function HeroSection({ banners }: HeroSectionProps) {
         }
         .animate-spin-reverse-slow {
           animation: spin-reverse-slow 45s linear infinite;
+        }
+        /* Mobile: start below top navbar and fit remaining height perfectly */
+        .hero-mobile {
+          height: calc(100svh - 4rem);
+          margin-top: 4rem;
+        }
+        /* Fallback for browsers without svh support */
+        @supports not (height: 100svh) {
+          .hero-mobile {
+            height: calc(100vh - 4rem);
+            margin-top: 4rem;
+          }
         }
       `}</style>
 
@@ -159,7 +158,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
           • Frosted-glass panel at the absolute bottom
           • Guarantees texts NEVER go below the fold
           ───────────────────────────────────────────────────────── */}
-      <div className="lg:hidden relative w-full h-full pt-16 z-10 flex flex-col justify-between overflow-hidden">
+      <div className="hero-mobile lg:hidden relative w-full pt-4 z-10 flex flex-col justify-between overflow-hidden">
         {/* Background Radial Glow */}
         <div 
           className="absolute w-[80%] h-[80%] top-[10%] left-[10%] rounded-full opacity-20 filter blur-[50px] pointer-events-none"
@@ -169,49 +168,52 @@ export function HeroSection({ banners }: HeroSectionProps) {
         />
 
         {/* Centered Image Card */}
-        <div className="flex-1 w-full flex items-center justify-center p-5">
-          <AnimatePresence mode="wait">
-            {banner.imageUrl ? (
-              <motion.div
-                key={`mob-img-${current}`}
-                initial={{ opacity: 0, scale: 0.88, y: 5 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.88, y: -5 }}
-                transition={{ duration: 0.45 }}
-                className="relative w-[70%] aspect-square flex items-center justify-center"
-              >
-                {/* Mobile Rotating ambient guide ring */}
-                <div 
-                  className="absolute inset-0 rounded-full border border-dashed opacity-10 animate-spin-slow pointer-events-none"
-                  style={{ borderColor: banner.ctaColor || "#fbbf24" }}
-                />
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.title}
-                  fill
-                  className="object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)]"
-                  priority
-                  sizes="65vw"
-                />
-              </motion.div>
-            ) : (
-              <div
-                className="w-32 h-32 rounded-full flex items-center justify-center"
-                style={{
-                  background: "rgba(255, 255, 255, 0.02)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                }}
-              >
-                <span className="text-[9px] tracking-widest font-black uppercase text-amber-400/40">
-                  MIAKSAAA
-                </span>
-              </div>
-            )}
-          </AnimatePresence>
+        <div className="flex-1 w-full flex items-center justify-center p-2 max-h-[42vh]">
+          {/* Static mobile card frame container */}
+          <div
+            className="relative w-[55%] max-w-[220px] aspect-square flex items-center justify-center rounded-3xl overflow-hidden border border-white/10"
+            style={{
+              background: "rgba(255, 255, 255, 0.02)",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {banner.imageUrl ? (
+                <motion.div
+                  key={`mob-img-${current}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    className="object-cover transition-transform duration-700"
+                    priority
+                    sizes="65vw"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="mob-placeholder"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <span className="text-[9px] tracking-widest font-black uppercase text-amber-400/40">
+                    MIAKSAAA
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Frosted Glass Bottom Card Overlay */}
-        <div className="w-full bg-[#0d071a]/75 backdrop-blur-lg border-t border-white/10 p-4 flex flex-col gap-2 relative z-20">
+        <div className="w-full bg-[#0d071a]/85 backdrop-blur-lg border-t border-white/10 p-3.5 flex flex-col gap-1.5 relative z-20">
           <AnimatePresence mode="wait">
             <motion.div
               key={`mob-text-${current}`}
@@ -219,7 +221,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.35 }}
-              className="space-y-2"
+              className="space-y-1.5"
             >
               {/* Badges row */}
               <div className="flex items-center gap-2">
@@ -240,15 +242,15 @@ export function HeroSection({ banners }: HeroSectionProps) {
               </div>
 
               {/* Title & Subtitle */}
-              <h2 className="text-base font-black text-white uppercase tracking-tight line-clamp-1">
+              <h2 className="text-sm font-black text-white uppercase tracking-tight line-clamp-1">
                 {banner.title}
               </h2>
-              <p className="text-[10px] text-white/60 line-clamp-1 leading-normal font-light">
+              <p className="text-[9px] text-white/60 line-clamp-1 leading-normal font-light">
                 {banner.subtitle}
               </p>
 
               {/* Action Buttons & Indicator Row */}
-              <div className="flex items-center gap-3 pt-1">
+              <div className="flex items-center gap-3 pt-0.5">
                 <Link
                   href={banner.ctaLink}
                   className="flex-1 py-2 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider text-black transition-transform active:scale-95"
@@ -267,7 +269,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
               </div>
 
               {/* Mobile Slide indicators */}
-              <div className="flex gap-1.5 justify-center pt-2">
+              <div className="flex gap-1.5 justify-center pt-1.5">
                 {displayBanners.map((_, i) => (
                   <button
                     key={i}
@@ -297,10 +299,13 @@ export function HeroSection({ banners }: HeroSectionProps) {
           • Premium side index list with countdown progress bars
           • Guarantees texts NEVER go below the fold
           ───────────────────────────────────────────────────────── */}
-      <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-full pt-16 max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10">
-        
+      <div 
+        className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-screen pt-16 max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10"
+        style={{ transform: "translateY(-40px)" }}
+      >
+
         {/* Left Column — Brand & Text Details */}
-        <div className="flex flex-col justify-center pr-12 h-full py-10 relative z-10">
+        <div className="flex flex-col justify-center pr-12 h-full py-4 pb-16 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={`desk-text-${current}`}
@@ -414,7 +419,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
         <div className="w-[1px] h-48 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-6" />
 
         {/* Right Column — Product museum card showcase */}
-        <div className="flex items-center justify-center pl-12 h-full py-10 relative">
+        <div className="flex items-center justify-center pl-12 h-full py-4 pb-16 relative z-10">
           
           {/* Backlight orb glow matching banner color values */}
           <div 
@@ -424,72 +429,69 @@ export function HeroSection({ banners }: HeroSectionProps) {
             }}
           />
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`desk-img-${current}`}
-              initial={{ opacity: 0, scale: 0.9, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -15 }}
-              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className="relative z-10 flex items-center justify-center"
-            >
-              {/* Spinning geometric halo wires */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div 
-                  className="w-[106%] h-[106%] rounded-full border border-dashed opacity-25 animate-spin-slow"
-                  style={{ borderColor: banner.ctaColor || "#fbbf24" }}
-                />
-                <div 
-                  className="w-[116%] h-[116%] rounded-full border border-dotted opacity-15 animate-spin-reverse-slow"
-                  style={{ borderColor: banner.bgColor || "#9333ea" }}
-                />
-              </div>
+          {/* Spinning geometric halo wires (static) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div 
+              className="w-[106%] h-[106%] rounded-full border border-dashed opacity-25 animate-spin-slow"
+              style={{ borderColor: banner.ctaColor || "#fbbf24" }}
+            />
+            <div 
+              className="w-[116%] h-[116%] rounded-full border border-dotted opacity-15 animate-spin-reverse-slow"
+              style={{ borderColor: banner.bgColor || "#9333ea" }}
+            />
+          </div>
 
+          {/* Static premium glass museum card frame */}
+          <div
+            className="relative group transition-all duration-500 hover:-translate-y-2.5 overflow-hidden"
+            style={{
+              width: "min(430px, 54vh)",
+              aspectRatio: "1/1",
+              borderRadius: 36,
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              background: "rgba(255, 255, 255, 0.03)",
+              backdropFilter: "blur(16px)",
+              boxShadow: "0 30px 70px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.1)",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10" />
+
+            <AnimatePresence mode="wait">
               {banner.imageUrl ? (
-                <div
-                  className="relative group transition-all duration-500 hover:-translate-y-2.5"
-                  style={{
-                    width: "min(430px, 54vh)",
-                    aspectRatio: "1/1",
-                    borderRadius: 36,
-                    overflow: "hidden",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    backdropFilter: "blur(16px)",
-                    boxShadow: "0 30px 70px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.1)",
-                  }}
+                <motion.div
+                  key={`desk-img-${current}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-
                   <Image
                     src={banner.imageUrl}
                     alt={banner.title}
                     fill
-                    className="object-contain p-8 transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                     priority
                     sizes="min(430px, 54vh)"
                   />
-                  <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-                </div>
+                </motion.div>
               ) : (
-                <div
-                  className="flex items-center justify-center"
-                  style={{
-                    width: "min(430px, 54vh)",
-                    aspectRatio: "1/1",
-                    borderRadius: 36,
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    backdropFilter: "blur(16px)",
-                  }}
+                <motion.div
+                  key="desk-placeholder"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center"
                 >
                   <span className="text-xs tracking-widest font-black uppercase text-amber-400/40">
                     MIAKSAAA EXCLUSIVE
                   </span>
-                </div>
+                </motion.div>
               )}
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+
+            <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none z-10" />
+          </div>
         </div>
       </div>
 
@@ -546,6 +548,6 @@ export function HeroSection({ banners }: HeroSectionProps) {
       >
         <ChevronRight size={20} className="text-white/60 hover:text-white" />
       </button>
-    </BeamsBackground>
+    </div>
   );
 }

@@ -18,6 +18,7 @@ import { getAllBanners, saveBanner, deleteBanner, getAllProducts } from "@/lib/f
 import { Banner, Product } from "@/lib/types";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { ImageUploadZone } from "@/components/admin/ImageUploadZone";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -321,16 +322,19 @@ export default function AdminBannersPage() {
                     />
                   </div>
 
-                  {/* Image URL */}
+                  {/* Slide Image Upload & URL */}
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Slide Image URL</label>
-                    <input
-                      type="text"
-                      required
-                      value={editingBanner.imageUrl || ""}
-                      onChange={(e) => setEditingBanner({ ...editingBanner, imageUrl: e.target.value })}
-                      className="input text-xs py-2"
-                      placeholder="https://images.unsplash.com/photo-..."
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-2">
+                      Slide Image
+                    </label>
+                    <ImageUploadZone
+                      images={editingBanner.imageUrl ? [editingBanner.imageUrl] : []}
+                      onChange={(urls) =>
+                        setEditingBanner({
+                          ...editingBanner,
+                          imageUrl: urls[urls.length - 1] || "",
+                        })
+                      }
                     />
                   </div>
 
