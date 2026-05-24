@@ -16,16 +16,11 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="w-9 h-9 object-contain" />
-              ) : (
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", boxShadow: "0 0 16px rgba(147,51,234,0.4)" }}
-                >
-                  <span className="text-white font-black text-sm" style={{ fontFamily: "Playfair Display,serif" }}>M</span>
-                </div>
-              )}
+              <img
+                src={logoUrl || "/logo2.png"}
+                alt="MIAKSAAA Logo"
+                className="h-10 w-auto object-contain"
+              />
               <span className="text-xl font-black gradient-text" style={{ fontFamily: "Playfair Display,serif" }}>MIAKSAAA</span>
             </div>
             <p className="text-sm leading-relaxed mb-5" style={{ color: "var(--text-muted)" }}>

@@ -37,13 +37,14 @@ export default function AdminDashboardPage() {
   }, []);
 
   const totalSales = orders
-    .filter((o) => o.status !== "cancelled")
+    .filter((o) => o.status !== "cancelled by user" && o.status !== "cancelled by admin")
     .reduce((sum, o) => sum + o.total, 0);
 
   const completedOrders = orders.filter((o) => o.status === "delivered").length;
-  const pendingOrders = orders.filter((o) => o.status === "pending").length;
+  const pendingOrders = orders.filter((o) => o.status === "waiting").length;
   const stockShortage = products.filter((p) => p.stock <= 5).length;
-  const averageOrderValue = orders.length > 0 ? totalSales / orders.filter((o) => o.status !== "cancelled").length : 0;
+  const activeOrders = orders.filter((o) => o.status !== "cancelled by user" && o.status !== "cancelled by admin");
+  const averageOrderValue = activeOrders.length > 0 ? totalSales / activeOrders.length : 0;
 
   if (loading) {
     return (
@@ -200,10 +201,29 @@ export default function AdminDashboardPage() {
                       {formatPrice(order.total)}
                     </td>
                     <td className="py-3 text-right">
-                      <span className={`badge text-[9px] py-0.5 px-2 ${
-                        order.status === "cancelled" ? "badge-red" :
-                        order.status === "delivered" ? "badge-green" : "badge-purple"
-                      }`}>
+                      <span
+                        className="badge text-[9px] py-0.5 px-2"
+                        style={{
+                          background:
+                            order.status === "cancelled by user" || order.status === "cancelled by admin"
+                              ? "rgba(239,68,68,0.15)"
+                              : order.status === "delivered" || order.status === "completed"
+                              ? "rgba(34,197,94,0.15)"
+                              : order.status === "waiting"
+                              ? "rgba(234,179,8,0.15)"
+                              : "rgba(168,85,247,0.15)",
+                          color:
+                            order.status === "cancelled by user" || order.status === "cancelled by admin"
+                              ? "#f87171"
+                              : order.status === "delivered" || order.status === "completed"
+                              ? "#4ade80"
+                              : order.status === "waiting"
+                              ? "#eab308"
+                              : "#c084fc",
+                          borderRadius: 999,
+                          border: "none",
+                        }}
+                      >
                         {order.status}
                       </span>
                     </td>

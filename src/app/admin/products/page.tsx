@@ -25,6 +25,7 @@ import { Product, Category } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { ImageUploadZone } from "@/components/admin/ImageUploadZone";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -438,52 +439,17 @@ export default function AdminProductsPage() {
                     />
                   </div>
 
-                  {/* Product Images URL list */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 flex justify-between items-center">
-                      <span>Image URLs</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            images: [...(editingProduct.images ?? []), ""],
-                          })
-                        }
-                        className="text-amber-400 font-bold hover:text-amber-300 text-[10px]"
-                      >
-                        + Add URL
-                      </button>
+                  {/* Product Images Drag & Drop / Upload */}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-2">
+                      Product Images
                     </label>
-
-                    {(editingProduct.images ?? []).map((imgUrl, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <input
-                          type="text"
-                          required={idx === 0}
-                          value={imgUrl}
-                          onChange={(e) => {
-                            const newImages = [...(editingProduct.images ?? [])];
-                            newImages[idx] = e.target.value;
-                            setEditingProduct({ ...editingProduct, images: newImages });
-                          }}
-                          className="input text-xs py-2 flex-1"
-                          placeholder="https://images.unsplash.com/photo-..."
-                        />
-                        {idx > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newImages = (editingProduct.images ?? []).filter((_, i) => i !== idx);
-                              setEditingProduct({ ...editingProduct, images: newImages });
-                            }}
-                            className="p-2 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-300 rounded-xl"
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    <ImageUploadZone
+                      images={editingProduct.images ?? []}
+                      onChange={(newImages) =>
+                        setEditingProduct({ ...editingProduct, images: newImages })
+                      }
+                    />
                   </div>
 
                   {/* Flag Toggles */}

@@ -51,36 +51,19 @@ export function SplashScreen() {
             }}
           />
 
-          {/* Logo mark */}
+          {/* Logo */}
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="relative mb-6"
           >
-            <div
-              className="w-24 h-24 rounded-2xl flex items-center justify-center relative"
-              style={{
-                background: "linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)",
-                boxShadow: "0 0 60px rgba(147,51,234,0.7)",
-              }}
-            >
-              <span
-                className="text-white font-black text-3xl tracking-tighter"
-                style={{ fontFamily: "Playfair Display, serif" }}
-              >
-                M
-              </span>
-              {/* Gold accent corner */}
-              <div
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #fbbf24 0%, #d97706 100%)",
-                  boxShadow: "0 0 10px rgba(251,191,36,0.7)",
-                }}
-              />
-            </div>
+            <img
+              src="/logo2.png"
+              alt="MIAKSAAA Logo"
+              className="w-28 h-28 object-contain"
+              style={{ filter: "drop-shadow(0 0 32px rgba(147,51,234,0.7))" }}
+            />
           </motion.div>
 
           {/* Brand name */}

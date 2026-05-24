@@ -55,19 +55,11 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
         <div className="container-lg flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
-            ) : (
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
-                style={{
-                  background: "linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)",
-                  boxShadow: "0 0 20px rgba(147,51,234,0.4)",
-                }}
-              >
-                <span className="text-white font-black text-sm" style={{ fontFamily: "Playfair Display, serif" }}>M</span>
-              </div>
-            )}
+            <img
+              src={logoUrl || "/logo2.png"}
+              alt="MIAKSAAA Logo"
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+            />
             <span
               className="text-xl font-black tracking-wider gradient-text hidden sm:block"
               style={{ fontFamily: "Playfair Display, serif" }}
