@@ -96,16 +96,16 @@ export function HeroSection({ banners }: HeroSectionProps) {
         .animate-spin-reverse-slow {
           animation: spin-reverse-slow 45s linear infinite;
         }
-        /* Mobile: start below top navbar and fit remaining height perfectly */
+        /* Mobile: start below top navbar and fit remaining height perfectly between top and bottom navbars */
         .hero-mobile {
-          height: calc(100svh - 4rem);
-          margin-top: 4rem;
+          height: calc(100svh - 8rem);
+          margin-top: 0rem;
         }
         /* Fallback for browsers without svh support */
         @supports not (height: 100svh) {
           .hero-mobile {
-            height: calc(100vh - 4rem);
-            margin-top: 4rem;
+            height: calc(100vh - 8rem);
+            margin-top: 0rem;
           }
         }
       `}</style>
@@ -176,7 +176,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
                 src={banner.imageUrl}
                 alt={banner.title}
                 fill
-                className="object-cover"
+                className="object-cover object-[center_35%]"
                 priority
                 sizes="100vw"
               />
@@ -228,7 +228,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="absolute top-4 left-4 z-10 flex items-center gap-1.5"
+              className="absolute top-[40px] left-4 z-30 flex items-center gap-1.5"
             >
               <span
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black tracking-widest uppercase"
@@ -255,7 +255,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
         </AnimatePresence>
 
         {/* ── Bottom content: title, subtitle, CTAs, dots ── */}
-        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4">
+        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`mob-content-${current}`}
@@ -334,8 +334,8 @@ export function HeroSection({ banners }: HeroSectionProps) {
           • Premium side index list with countdown progress bars
           • Guarantees texts NEVER go below the fold
           ───────────────────────────────────────────────────────── */}
-      <div 
-        className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-screen pt-16 max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10"
+      <div
+        className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-screen pt-[88px] max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10"
         style={{ transform: "translateY(-40px)" }}
       >
 
@@ -386,7 +386,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
 
               {/* Title Header */}
               <h1 className="text-4xl xl:text-6xl font-black leading-[1.1] tracking-tight">
-                <span 
+                <span
                   className="bg-gradient-to-r from-white via-purple-100 to-amber-200 bg-clip-text text-transparent filter drop-shadow-md uppercase block"
                   style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}
                 >
@@ -415,8 +415,8 @@ export function HeroSection({ banners }: HeroSectionProps) {
                 >
                   {banner.ctaText} <ArrowRight size={14} />
                 </Link>
-                <Link 
-                  href="/products" 
+                <Link
+                  href="/products"
                   className="btn-outline text-xs px-6 py-4 font-black tracking-widest uppercase rounded-xl hover:bg-white/5 border-white/20 transition-all duration-300"
                 >
                   Explore All
@@ -434,7 +434,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
                   { label: "SUPPORT", value: "24/7 VIP" },
                 ].map(({ label, value }, idx) => (
                   <div key={label} className="flex flex-col">
-                    <span 
+                    <span
                       className="text-[10px] font-black tracking-widest"
                       style={{ color: banner.ctaColor || "#fbbf24" }}
                     >
@@ -455,9 +455,9 @@ export function HeroSection({ banners }: HeroSectionProps) {
 
         {/* Right Column — Product museum card showcase */}
         <div className="flex items-center justify-center pl-12 h-full py-4 pb-16 relative z-10">
-          
+
           {/* Backlight orb glow matching banner color values */}
-          <div 
+          <div
             className="absolute w-[85%] h-[85%] rounded-full opacity-35 filter blur-[90px] transition-all duration-1000"
             style={{
               background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')} 0%, ${(banner.bgColor || '#9333ea')} 70%)`
@@ -466,11 +466,11 @@ export function HeroSection({ banners }: HeroSectionProps) {
 
           {/* Spinning geometric halo wires (static) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div 
+            <div
               className="w-[106%] h-[106%] rounded-full border border-dashed opacity-25 animate-spin-slow"
               style={{ borderColor: banner.ctaColor || "#fbbf24" }}
             />
-            <div 
+            <div
               className="w-[116%] h-[116%] rounded-full border border-dotted opacity-15 animate-spin-reverse-slow"
               style={{ borderColor: banner.bgColor || "#9333ea" }}
             />
@@ -542,7 +542,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
             className="group flex items-center gap-4 text-left transition-all"
             aria-label={`Go to slide ${i + 1}`}
           >
-            <span 
+            <span
               className={`text-xs font-black transition-colors ${i === current ? 'text-white' : 'text-white/25 group-hover:text-white/50'}`}
             >
               0{i + 1}
@@ -550,7 +550,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
 
             {/* countdown slider bar */}
             <div className="relative w-14 h-[2px] bg-white/10 overflow-hidden rounded-full">
-              <div 
+              <div
                 className="absolute top-0 left-0 h-full transition-all duration-100 ease-linear"
                 style={{
                   width: i === current ? `${progress}%` : "0%",

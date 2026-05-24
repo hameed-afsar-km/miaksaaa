@@ -55,7 +55,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
         style={{ borderBottom: "1px solid var(--glass-border)" }}
       >
         {/* 3-column grid: left=nav, center=brand, right=actions */}
-        <div className="container-lg grid grid-cols-3 items-center h-16">
+        <div className="container-lg grid grid-cols-3 items-center h-[88px] lg:h-[80px]">
 
           {/* LEFT: Desktop nav links */}
           <div className="flex items-center gap-1 min-w-0">
@@ -79,9 +79,9 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </Link>
               ))}
             </nav>
-            {/* Mobile hamburger (left side) — hidden on desktop */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl lg:hidden" aria-label="Open menu">
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {/* Hamburger menu button — always visible on both desktop & mobile */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2.5 rounded-xl" aria-label="Open menu">
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
 
@@ -89,13 +89,13 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
           <div className="flex flex-col items-center justify-center text-center">
             <Link href="/" className="flex flex-col items-center group">
               <span
-                className="text-lg sm:text-xl md:text-2xl font-black tracking-wider gradient-text leading-tight"
+                className="text-xl lg:text-2xl font-black tracking-wider gradient-text leading-tight"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA
               </span>
               <span
-                className="text-[7px] sm:text-[9px] md:text-[10px] tracking-[0.15em] uppercase leading-none mt-0.5"
+                className="text-[8px] lg:text-[10px] tracking-[0.15em] uppercase leading-none mt-0.5"
                 style={{ color: "var(--text-muted)" }}
               >
                 Fashion and Fun World
@@ -105,22 +105,13 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
 
           {/* RIGHT: Cart, Wishlist, Profile */}
           <div className="flex items-center justify-end gap-0.5">
-            {/* Wishlist — desktop only; on mobile it lives in the burger menu */}
-            <Link href="/wishlist" className="relative btn-ghost p-2 rounded-xl hidden lg:flex">
-              <Heart size={20} />
-              {wishCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                  {wishCount}
-                </span>
-              )}
-            </Link>
+
 
             {/* Cart */}
-            <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "8px" }}>
-              <ShoppingBag size={20} />
+            <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "10px" }}>
+              <ShoppingBag size={22} className="lg:scale-[0.9]" />
               {mounted && totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
                   style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
                   {totalItems}
                 </span>
@@ -154,7 +145,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-12 w-52 glass rounded-xl overflow-hidden z-50"
+                      className="absolute right-0 top-16 lg:top-12 w-52 glass rounded-xl overflow-hidden z-50"
                       style={{ border: "1px solid var(--glass-border)" }}
                     >
                       <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
@@ -163,7 +154,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                       </div>
                       <div className="p-1.5 flex flex-col gap-0.5">
                         <Link href="/profile" onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
+                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
                           <User size={15} style={{ color: "var(--purple-400)" }} /> Profile
                         </Link>
                         <Link href="/orders" onClick={() => setProfileOpen(false)}
@@ -195,14 +186,14 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 style={{
                   background: "linear-gradient(135deg, #9333ea, #7e22ce)",
                   color: "#fff",
-                  fontSize: "0.7rem",
-                  padding: "7px 13px",
+                  fontSize: "0.75rem",
+                  padding: "8px 14px",
                   borderRadius: "999px",
                   boxShadow: "0 0 16px rgba(147,51,234,0.4)",
                   letterSpacing: "0.05em",
                 }}
               >
-                <User size={13} />
+                <User size={14} />
                 <span className="hidden xs:inline">Sign In</span>
                 <span className="xs:hidden">In</span>
               </button>
@@ -232,6 +223,27 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                     {label}
                   </Link>
                 ))}
+
+                <Link
+                  href="/wishlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-between"
+                  style={{
+                    color: pathname === "/wishlist" ? "var(--purple-300)" : "var(--text-secondary)",
+                    background: pathname === "/wishlist" ? "rgba(147,51,234,0.1)" : "transparent",
+                  }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Heart size={16} className={wishCount > 0 ? "fill-amber-400 text-amber-400" : ""} />
+                    <span>Wishlist</span>
+                  </div>
+                  {wishCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                      {wishCount}
+                    </span>
+                  )}
+                </Link>
 
                 {!user && (
                   <button onClick={() => { handleLogin(); setMobileOpen(false); }}
