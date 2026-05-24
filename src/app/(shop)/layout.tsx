@@ -4,16 +4,18 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { SplashScreen } from "@/components/layout/SplashScreen";
 
-export default function ShopLayout({ children }: { children: React.ReactNode }) {
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
+  const settings = await import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null);
+
   return (
     <>
       <SplashScreen />
-      <Navbar />
+      <Navbar logoUrl={settings?.logoUrl} />
       <CartDrawer />
       <main className="min-h-screen pt-16 pb-20 md:pb-0">
         {children}
       </main>
-      <Footer />
+      <Footer logoUrl={settings?.logoUrl} />
       <BottomNav />
     </>
   );

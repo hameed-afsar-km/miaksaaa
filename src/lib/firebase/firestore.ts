@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   Timestamp,
   setDoc,
+  increment,
 } from "firebase/firestore";
 import { db } from "./config";
 import {
@@ -29,48 +30,45 @@ import {
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
 
+async function getVisibleProductsRaw(): Promise<Product[]> {
+  try {
+    const snap = await getDocs(query(collection(db, "products"), where("isVisible", "==", true)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  } catch (err) {
+    console.error("Failed to fetch products:", err);
+    return [];
+  }
+}
+
 export async function getAllProducts(): Promise<Product[]> {
-  const q = query(
-    collection(db, "products"),
-    where("isVisible", "==", true),
-    orderBy("createdAt", "desc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  const products = await getVisibleProductsRaw();
+  return products.sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
+    const bTime = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds || 0;
+    return bTime - aTime;
+  });
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const q = query(
-    collection(db, "products"),
-    where("isFeatured", "==", true),
-    where("isVisible", "==", true),
-    limit(8)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  const products = await getVisibleProductsRaw();
+  return products.filter((p) => p.isFeatured).slice(0, 8);
 }
 
 export async function getNewArrivals(): Promise<Product[]> {
-  const q = query(
-    collection(db, "products"),
-    where("isNew", "==", true),
-    where("isVisible", "==", true),
-    orderBy("createdAt", "desc"),
-    limit(8)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  const products = await getVisibleProductsRaw();
+  return products
+    .filter((p) => p.isNew)
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
+      const bTime = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds || 0;
+      return bTime - aTime;
+    })
+    .slice(0, 8);
 }
 
 export async function getHotProducts(): Promise<Product[]> {
-  const q = query(
-    collection(db, "products"),
-    where("isHot", "==", true),
-    where("isVisible", "==", true),
-    limit(8)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  const products = await getVisibleProductsRaw();
+  return products.filter((p) => p.isHot).slice(0, 8);
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
@@ -117,13 +115,16 @@ export async function deleteProduct(id: string): Promise<void> {
 // ─── BANNERS ─────────────────────────────────────────────────────────────────
 
 export async function getActiveBanners(): Promise<Banner[]> {
-  const q = query(
-    collection(db, "banners"),
-    where("isActive", "==", true),
-    orderBy("order", "asc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Banner));
+  try {
+    const snap = await getDocs(collection(db, "banners"));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...d.data() } as Banner))
+      .filter((b) => b.isActive)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (err) {
+    console.error("Failed to fetch active banners:", err);
+    return [];
+  }
 }
 
 export async function getAllBanners(): Promise<Banner[]> {
@@ -155,6 +156,26 @@ export async function getCategories(): Promise<Category[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
+}
+
+export async function getAllCategoriesAdmin(): Promise<Category[]> {
+  const snap = await getDocs(collection(db, "categories"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
+}
+
+export async function saveCategory(
+  id: string | null,
+  data: Omit<Category, "id">
+): Promise<void> {
+  if (id) {
+    await updateDoc(doc(db, "categories", id), data);
+  } else {
+    await addDoc(collection(db, "categories"), data);
+  }
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await deleteDoc(doc(db, "categories", id));
 }
 
 // ─── COUPONS ─────────────────────────────────────────────────────────────────
@@ -226,6 +247,7 @@ export async function placeOrder(
   location: { lat: number; lng: number } | null,
   notes: string
 ): Promise<string> {
+  // 1. Create order document with 'waiting' status
   const ref = await addDoc(collection(db, "orders"), {
     userId,
     userEmail,
@@ -235,13 +257,26 @@ export async function placeOrder(
     couponCode,
     total,
     paymentMethod: "COD",
-    status: "pending",
+    status: "waiting",
     deliveryAddress,
     location,
     notes,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  // 2. Reduce stock for each product ordered
+  for (const item of items) {
+    try {
+      const productRef = doc(db, "products", item.productId);
+      await updateDoc(productRef, {
+        stock: increment(-item.quantity),
+      });
+    } catch (err) {
+      console.error(`Failed to reduce stock for product ${item.productId}:`, err);
+    }
+  }
+
   return ref.id;
 }
 
@@ -265,7 +300,37 @@ export async function updateOrderStatus(
   id: string,
   status: Order["status"]
 ): Promise<void> {
-  await updateDoc(doc(db, "orders", id), {
+  const orderRef = doc(db, "orders", id);
+  
+  try {
+    const snap = await getDoc(orderRef);
+    if (snap.exists()) {
+      const orderData = snap.data();
+      const oldStatus = orderData.status;
+
+      // Check if changing to a cancelled status from a non-cancelled status
+      const isNowCancelled = status === "cancelled by user" || status === "cancelled by admin";
+      const wasAlreadyCancelled = oldStatus === "cancelled by user" || oldStatus === "cancelled by admin";
+
+      if (isNowCancelled && !wasAlreadyCancelled) {
+        const items = orderData.items || [];
+        for (const item of items) {
+          try {
+            const productRef = doc(db, "products", item.productId);
+            await updateDoc(productRef, {
+              stock: increment(item.quantity),
+            });
+          } catch (err) {
+            console.error(`Failed to restore stock for product ${item.productId}:`, err);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error reading order for stock check:", err);
+  }
+
+  await updateDoc(orderRef, {
     status,
     updatedAt: serverTimestamp(),
   });

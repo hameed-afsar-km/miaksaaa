@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
     setAuthLoading(true);
     try {
       const loggedUser = await signInWithEmail(email, password);
-      const adminStatus = await checkIsAdmin(loggedUser.uid);
+      const adminStatus = await checkIsAdmin(loggedUser.uid, loggedUser.email);
 
       if (adminStatus) {
         toast.success("Welcome, sovereign admin!");

@@ -34,6 +34,11 @@ export default function CheckoutPage() {
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Delivery charge: free above ₹999, else ₹49
+  const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
+  const deliveryCharge = subtotalAfterDiscount >= 999 ? 0 : 49;
+  const orderTotal = subtotalAfterDiscount + deliveryCharge;
+
   // Redirect if cart is empty
   useEffect(() => {
     if (!authLoading && items.length === 0) {
@@ -90,7 +95,7 @@ export default function CheckoutPage() {
         getSubtotal(),
         getDiscount(),
         couponCode || "",
-        getTotal(),
+        orderTotal,
         address,
         coords,
         notes
@@ -297,16 +302,29 @@ export default function CheckoutPage() {
               <CreditCard size={18} style={{ color: "var(--gold-400)" }} /> Payment Method
             </h2>
 
+            {/* COD — active */}
             <div className="p-4 rounded-xl flex items-center justify-between" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid var(--border-gold)" }}>
               <div>
                 <h4 className="text-sm font-bold flex items-center gap-1.5 text-white">
-                  Cash on Delivery (COD) <span className="badge badge-gold text-[9px] py-0.5 px-2">Premium Handling</span>
+                  Cash on Delivery (COD) <span className="badge badge-gold text-[9px] py-0.5 px-2">Available</span>
                 </h4>
-                <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Pay with cash or digital UPI upon safe delivery of items</p>
+                <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>Pay with cash upon safe delivery of your order</p>
               </div>
               <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: "var(--gold-400)" }}>
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--gold-400)" }} />
               </div>
+            </div>
+
+            {/* Online Payment — Coming Soon */}
+            <div className="p-4 rounded-xl flex items-center justify-between opacity-50 cursor-not-allowed" style={{ background: "rgba(147,51,234,0.03)", border: "1px solid var(--border)" }}>
+              <div>
+                <h4 className="text-sm font-bold flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
+                  Online Payment (UPI / Card)
+                  <span className="badge badge-purple text-[9px] py-0.5 px-2">Coming Soon</span>
+                </h4>
+                <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Online payments will be available shortly</p>
+              </div>
+              <div className="w-5 h-5 rounded-full border-2" style={{ borderColor: "rgba(147,51,234,0.3)" }} />
             </div>
 
             <div className="pt-3">
@@ -358,10 +376,17 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="flex justify-between" style={{ color: "var(--text-secondary)" }}>
-                <span>Delivery Charge</span><span style={{ color: "#86efac" }}>Complimentary</span>
+                <span>Delivery Charge</span>
+                {deliveryCharge === 0
+                  ? <span style={{ color: "#86efac" }}>FREE 🎉</span>
+                  : <span>{formatPrice(deliveryCharge)}</span>
+                }
               </div>
+              {deliveryCharge > 0 && (
+                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Add ₹{999 - subtotalAfterDiscount} more for free delivery</p>
+              )}
               <div className="flex justify-between font-black text-base border-t pt-3" style={{ borderColor: "var(--border)" }}>
-                <span>Total Amount</span><span className="gradient-text text-lg">{formatPrice(getTotal())}</span>
+                <span>Total Amount</span><span className="gradient-text text-lg">{formatPrice(orderTotal)}</span>
               </div>
             </div>
 

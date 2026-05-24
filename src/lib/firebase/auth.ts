@@ -95,8 +95,13 @@ export function onAuthChange(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback);
 }
 
-/** Check if user has admin role in Firestore */
-export async function checkIsAdmin(uid: string): Promise<boolean> {
+/** Check if user has admin role in Firestore OR matches the super admin email from env */
+export async function checkIsAdmin(uid: string, email?: string | null): Promise<boolean> {
+  // Super-admin shortcut: env-pinned email always grants access
+  const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL;
+  if (superAdminEmail && email && email.toLowerCase() === superAdminEmail.toLowerCase()) {
+    return true;
+  }
   try {
     const adminRef = doc(db, "admins", uid);
     const snap = await getDoc(adminRef);

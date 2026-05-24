@@ -19,24 +19,33 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  getAllCategoriesAdmin,
 } from "@/lib/firebase/firestore";
-import { Product } from "@/lib/types";
+import { Product, Category } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Image from "next/image";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [customCategoryActive, setCustomCategoryActive] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const loadProducts = () => {
     setLoading(true);
-    getAllProducts()
-      .then(setProducts)
+    Promise.all([
+      getAllProducts().catch(() => []),
+      getAllCategoriesAdmin().catch(() => []),
+    ])
+      .then(([productsData, categoriesData]) => {
+        setProducts(productsData);
+        setCategoriesList(categoriesData);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   };
@@ -52,7 +61,7 @@ export default function AdminProductsPage() {
       price: 0,
       discountedPrice: undefined,
       images: [""],
-      category: "",
+      category: categoriesList[0]?.name || "",
       tags: [],
       stock: 10,
       isFeatured: false,
@@ -63,11 +72,14 @@ export default function AdminProductsPage() {
       rating: 5,
       reviewCount: 1,
     });
+    setCustomCategoryActive(categoriesList.length === 0);
     setFormOpen(true);
   };
 
   const openEditForm = (p: Product) => {
     setEditingProduct(p);
+    const isCustom = p.category && !categoriesList.some(c => c.name.toLowerCase() === p.category.toLowerCase());
+    setCustomCategoryActive(isCustom || categoriesList.length === 0);
     setFormOpen(true);
   };
 
@@ -303,14 +315,54 @@ export default function AdminProductsPage() {
 
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Category</label>
-                      <input
-                        type="text"
-                        required
-                        value={editingProduct.category || ""}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                        className="input text-xs py-2"
-                        placeholder="bags, shoes, accessories..."
-                      />
+                      {!customCategoryActive ? (
+                        <select
+                          value={editingProduct.category || ""}
+                          onChange={(e) => {
+                            if (e.target.value === "__custom__") {
+                              setCustomCategoryActive(true);
+                              setEditingProduct({ ...editingProduct, category: "" });
+                            } else {
+                              setEditingProduct({ ...editingProduct, category: e.target.value });
+                            }
+                          }}
+                          className="input text-xs py-2 appearance-none cursor-pointer pr-8"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" disabled style={{ backgroundColor: "#120a24" }}>Select Category...</option>
+                          {categoriesList.map((cat) => (
+                            <option key={cat.id} value={cat.name} style={{ backgroundColor: "#120a24" }}>
+                              {cat.name}
+                            </option>
+                          ))}
+                          <option value="__custom__" style={{ backgroundColor: "#120a24", color: "var(--gold-400)", fontWeight: "bold" }}>
+                            + Add custom category...
+                          </option>
+                        </select>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            required
+                            value={editingProduct.category || ""}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                            className="input text-xs py-2 flex-1"
+                            placeholder="Type custom category..."
+                          />
+                          {categoriesList.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCustomCategoryActive(false);
+                                setEditingProduct({ ...editingProduct, category: categoriesList[0]?.name || "" });
+                              }}
+                              className="px-3 border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 text-[10px] font-bold rounded-xl"
+                            >
+                              List
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div>

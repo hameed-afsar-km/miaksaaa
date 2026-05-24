@@ -12,16 +12,30 @@ export const metadata: Metadata = {
   description: "Discover premium products at MIAKSAAA — your luxury shopping destination.",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+
+function serializeProduct(product: any) {
+  if (!product) return null;
+  return {
+    ...product,
+    createdAt: product.createdAt ? (typeof product.createdAt.toMillis === "function" ? product.createdAt.toMillis() : product.createdAt) : null,
+    updatedAt: product.updatedAt ? (typeof product.updatedAt.toMillis === "function" ? product.updatedAt.toMillis() : product.updatedAt) : null,
+  };
+}
 
 export default async function HomePage() {
-  const [banners, featured, newArrivals, hot, categories] = await Promise.all([
+  const [banners, featuredRaw, newArrivalsRaw, hotRaw, categories, settings] = await Promise.all([
     getActiveBanners().catch(() => []),
     getFeaturedProducts().catch(() => []),
     getNewArrivals().catch(() => []),
     getHotProducts().catch(() => []),
     getCategories().catch(() => []),
+    import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null),
   ]);
+
+  const featured = (featuredRaw || []).map(serializeProduct).filter(Boolean) as any[];
+  const newArrivals = (newArrivalsRaw || []).map(serializeProduct).filter(Boolean) as any[];
+  const hot = (hotRaw || []).map(serializeProduct).filter(Boolean) as any[];
 
   return (
     <>
@@ -29,7 +43,12 @@ export default async function HomePage() {
       <QuickSliderSection products={featured} />
       <CategoriesSection categories={categories} />
       <FeaturedSection title="Featured Products" products={featured} />
-      <FlashSaleSection products={hot} />
+      {settings?.flashSaleActive && (
+        <FlashSaleSection 
+          products={hot} 
+          targetDate={settings?.flashSaleEndsAt ? new Date(settings.flashSaleEndsAt.toMillis()) : undefined} 
+        />
+      )}
       <FeaturedSection title="New Arrivals" products={newArrivals} badge="New" />
       <TrustSection />
     </>

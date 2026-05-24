@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   images: {
@@ -8,8 +9,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  experimental: {
-    optimizeCss: true,
+  // Turbopack root fix: prevents confusion from parent-directory lockfile
+  turbopack: {
+    root: path.resolve(__dirname),
   },
 };
 

@@ -23,6 +23,7 @@ const SIDEBAR_ITEMS = [
   { label: "Products",   path: "/admin/products",  icon: ShoppingBag },
   { label: "Orders",     path: "/admin/orders",    icon: Receipt },
   { label: "Banners",    path: "/admin/banners",   icon: ImageIcon },
+  { label: "Categories", path: "/admin/categories",icon: Tag },
   { label: "Coupons",    path: "/admin/coupons",   icon: Tag },
   { label: "Settings",   path: "/admin/settings",  icon: Settings },
 ];

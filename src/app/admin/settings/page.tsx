@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
     setSaving(true);
     try {
       await updateStoreSettings(settings);
-      toast.success("Sanctum settings calibrated successfully! ⚙️");
+      toast.success("Web settings calibrated successfully! ⚙️");
     } catch (err) {
       console.error(err);
       toast.error("Failed to update store settings");
@@ -57,7 +57,7 @@ export default function AdminSettingsPage() {
       {/* Title */}
       <div>
         <h1 className="text-3xl font-black gradient-text" style={{ fontFamily: "Playfair Display, serif" }}>
-          Sanctum Calibrations
+          Web Calibrations
         </h1>
         <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
           Calibrate store statuses, flash reductions, and base configurations
@@ -149,6 +149,17 @@ export default function AdminSettingsPage() {
                 <span className="font-mono text-xs text-white">{settings.accentColor}</span>
               </div>
             </div>
+
+            <div className="col-span-2">
+              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Store Logo URL</label>
+              <input
+                type="text"
+                value={settings.logoUrl || ""}
+                onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
+                className="input text-xs py-2"
+                placeholder="https://... (Leave blank to use default M logo)"
+              />
+            </div>
           </div>
         </div>
 
@@ -183,8 +194,8 @@ export default function AdminSettingsPage() {
                   value={
                     settings.flashSaleEndsAt
                       ? new Date(settings.flashSaleEndsAt.toDate().getTime() - new Date().getTimezoneOffset() * 60000)
-                          .toISOString()
-                          .slice(0, 16)
+                        .toISOString()
+                        .slice(0, 16)
                       : ""
                   }
                   onChange={(e) => {

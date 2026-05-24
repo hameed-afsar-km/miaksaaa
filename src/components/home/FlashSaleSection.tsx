@@ -41,8 +41,8 @@ function TimeBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function FlashSaleSection({ products }: { products: Product[] }) {
-  const { h, m, s } = useCountdown();
+export function FlashSaleSection({ products, targetDate }: { products: Product[], targetDate?: Date }) {
+  const { h, m, s } = useCountdown(targetDate);
   if (products.length === 0) return null;
 
   return (

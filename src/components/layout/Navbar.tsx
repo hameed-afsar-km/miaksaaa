@@ -22,7 +22,7 @@ const NAV_LINKS = [
   { href: "/orders", label: "Orders" },
 ];
 
-export function Navbar() {
+export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const pathname = usePathname();
   const { user, isAdmin } = useAuthStore();
   const { setCartOpen } = useUIStore();
@@ -55,15 +55,19 @@ export function Navbar() {
         <div className="container-lg flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
-              style={{
-                background: "linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)",
-                boxShadow: "0 0 20px rgba(147,51,234,0.4)",
-              }}
-            >
-              <span className="text-white font-black text-sm" style={{ fontFamily: "Playfair Display, serif" }}>M</span>
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
+            ) : (
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)",
+                  boxShadow: "0 0 20px rgba(147,51,234,0.4)",
+                }}
+              >
+                <span className="text-white font-black text-sm" style={{ fontFamily: "Playfair Display, serif" }}>M</span>
+              </div>
+            )}
             <span
               className="text-xl font-black tracking-wider gradient-text hidden sm:block"
               style={{ fontFamily: "Playfair Display, serif" }}

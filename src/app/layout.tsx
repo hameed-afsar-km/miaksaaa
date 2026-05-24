@@ -29,10 +29,24 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const settings = await import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null);
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        {settings?.accentColor && (
+          <style>{`
+            :root {
+              --purple-300: ${settings.accentColor}cc;
+              --purple-400: ${settings.accentColor}dd;
+              --purple-500: ${settings.accentColor};
+              --purple-600: ${settings.accentColor}ee;
+              --gradient-purple: linear-gradient(135deg, ${settings.accentColor} 0%, #7e22ce 100%);
+            }
+          `}</style>
+        )}
+      </head>
       <body>
         <AuthProvider>
           {children}

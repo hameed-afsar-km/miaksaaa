@@ -11,7 +11,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthChange(async (user) => {
       setUser(user);
       if (user) {
-        const admin = await checkIsAdmin(user.uid);
+        const admin = await checkIsAdmin(user.uid, user.email);
         setIsAdmin(admin);
       } else {
         setIsAdmin(false);

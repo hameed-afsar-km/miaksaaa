@@ -83,11 +83,12 @@ export interface WishlistState {
 
 // ─── ORDER ────────────────────────────────────────────────────────────────────
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
+  | "waiting"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "completed"
+  | "cancelled by user"
+  | "cancelled by admin";
 
 export interface DeliveryAddress {
   fullName: string;

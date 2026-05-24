@@ -14,31 +14,35 @@ import {
   MoveUp,
   MoveDown,
 } from "lucide-react";
-import { getAllBanners, saveBanner, deleteBanner } from "@/lib/firebase/firestore";
-import { Banner } from "@/lib/types";
+import { getAllBanners, saveBanner, deleteBanner, getAllProducts } from "@/lib/firebase/firestore";
+import { Banner, Product } from "@/lib/types";
 import toast from "react-hot-toast";
 import Image from "next/image";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [productsList, setProductsList] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingBanner, setEditingBanner] = useState<Partial<Banner> | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const loadBanners = () => {
+  const loadData = () => {
     setLoading(true);
-    getAllBanners()
-      .then((data) => {
-        // Order by the order property
-        setBanners(data.sort((a, b) => a.order - b.order));
+    Promise.all([
+      getAllBanners().catch(() => []),
+      getAllProducts().catch(() => []),
+    ])
+      .then(([bannersData, productsData]) => {
+        setBanners(bannersData.sort((a, b) => a.order - b.order));
+        setProductsList(productsData);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    loadBanners();
+    loadData();
   }, []);
 
   const openCreateForm = () => {
@@ -68,7 +72,7 @@ export default function AdminBannersPage() {
     try {
       await deleteBanner(id);
       toast.success("Banner slide vaporized successfully");
-      loadBanners();
+      loadData();
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete banner");
@@ -103,7 +107,7 @@ export default function AdminBannersPage() {
       toast.success("Hero slide saved successfully!");
       setFormOpen(false);
       setEditingBanner(null);
-      loadBanners();
+      loadData();
     } catch (err) {
       console.error(err);
       toast.error("Failed to save banner slide");
@@ -218,6 +222,44 @@ export default function AdminBannersPage() {
                 </div>
 
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
+                  {/* Assign Product Link */}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 text-amber-400">
+                      Assign Product (Optional)
+                    </label>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const prodId = e.target.value;
+                        if (!prodId) return;
+                        const prod = productsList.find((p) => p.id === prodId);
+                        if (prod) {
+                          setEditingBanner({
+                            ...editingBanner,
+                            title: prod.title,
+                            subtitle: prod.description,
+                            imageUrl: prod.images[0] || "",
+                            ctaLink: `/products/${prod.id}`,
+                            promoTag: prod.category.toUpperCase(),
+                            ctaText: "Buy Now",
+                          });
+                          toast.success("Slide calibrated with product details! ✨");
+                        }
+                      }}
+                      className="input text-xs py-2 appearance-none cursor-pointer pr-8 border border-amber-500/30"
+                      style={{ backgroundColor: "rgba(251,191,36,0.03)" }}
+                    >
+                      <option value="" style={{ backgroundColor: "#120a24" }}>Select a product to link...</option>
+                      {productsList.map((prod) => (
+                        <option key={prod.id} value={prod.id} style={{ backgroundColor: "#120a24" }}>
+                          {prod.title} (₹{prod.discountedPrice ?? prod.price})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[9px] text-purple-300/40 mt-1">
+                      Selecting a product will automatically fill the slide image, headlines, and links.
+                    </p>
+                  </div>
                   {/* Title & Subtitle */}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Headline title</label>
