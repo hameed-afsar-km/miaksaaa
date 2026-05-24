@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,9 +16,14 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const addToCart = useCartStore((s) => s.addItem);
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
-  const inWishlist = isInWishlist(product.id);
+  const inWishlist = mounted && isInWishlist(product.id);
   const discountPct = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
   const outOfStock = product.stock === 0;

@@ -57,14 +57,22 @@ export function HeroSection({ banners }: HeroSectionProps) {
   const displayBanners =
     banners && banners.length > 0 ? banners : STATIC_BANNERS;
   const [current, setCurrent] = useState(0);
+  const [progress, setProgress] = useState(0);
 
+  // High-fidelity ticking timer for numerical progress line indicators
   useEffect(() => {
-    const t = setInterval(
-      () => setCurrent((c) => (c + 1) % displayBanners.length),
-      5000
-    );
-    return () => clearInterval(t);
-  }, [displayBanners.length]);
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          setCurrent((c) => (c + 1) % displayBanners.length);
+          return 0;
+        }
+        return prev + 2; // 2% every 100ms = 100% in 5000ms
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [current, displayBanners.length]);
 
   const banner = displayBanners[current];
 
@@ -72,12 +80,12 @@ export function HeroSection({ banners }: HeroSectionProps) {
     <BeamsBackground
       className="relative w-full overflow-hidden"
       // Desktop: exactly 100vh height
-      // Mobile (Android): covers the width, making the ratio 1:1 (so height is 100vw)
+      // Mobile (Android): covers the width, making the ratio 1:1 (height is 100vw)
       style={{
         height: "var(--hero-height)",
       }}
     >
-      {/* Dynamic CSS variable for responsive heights */}
+      {/* Dynamic CSS variable for responsive heights and premium rotating geometric animations */}
       <style jsx global>{`
         :root {
           --hero-height: 100vw;
@@ -87,168 +95,191 @@ export function HeroSection({ banners }: HeroSectionProps) {
             --hero-height: 100vh;
           }
         }
+        @keyframes spin-slow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse-slow {
+          0% { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 35s linear infinite;
+        }
+        .animate-spin-reverse-slow {
+          animation: spin-reverse-slow 45s linear infinite;
+        }
       `}</style>
 
-      {/* Animated colour tint per slide */}
+      {/* Animated colour tint overlay per slide */}
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0 pointer-events-none"
+          transition={{ duration: 1.0 }}
+          className="absolute inset-0 pointer-events-none z-[1]"
           style={{
-            background: `radial-gradient(ellipse at 65% 40%, ${banner.bgColor}cc 0%, #0a0614 65%)`,
+            background: `radial-gradient(ellipse at 70% 35%, ${(banner.bgColor || '#120a24')}bd 0%, #06040d 75%)`,
           }}
         />
       </AnimatePresence>
 
-      {/* Floating orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Floating high-end ambient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
         <div
-          className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full opacity-10 animate-pulse"
+          className="absolute top-1/4 right-[15%] w-96 h-96 rounded-full opacity-20 animate-pulse blur-[100px]"
           style={{
-            background:
-              "radial-gradient(circle, rgba(147,51,234,0.8) 0%, transparent 70%)",
+            background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')}80 0%, transparent 70%)`,
           }}
         />
         <div
-          className="absolute bottom-1/3 left-[10%] w-48 h-48 rounded-full opacity-10"
+          className="absolute bottom-1/4 left-[15%] w-72 h-72 rounded-full opacity-15 blur-[80px]"
           style={{
-            background:
-              "radial-gradient(circle, rgba(251,191,36,0.7) 0%, transparent 70%)",
+            background: `radial-gradient(circle, ${(banner.bgColor || '#9333ea')}60 0%, transparent 70%)`,
           }}
         />
       </div>
 
-      {/* Grid overlay */}
+      {/* Luxury thin grid overlay */}
       <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        className="absolute inset-0 opacity-[0.03] pointer-events-none z-[1]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(147,51,234,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,0.3) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+            "linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
         }}
       />
 
       {/* ─────────────────────────────────────────────────────────
           MOBILE layout (< lg)
           • Covers size of width (width = height = 100vw, ratio 1:1)
-          • Text overlaid over the 1:1 square image
+          • Centered image inside radial glow
+          • Frosted-glass panel at the absolute bottom
           • Guarantees texts NEVER go below the fold
           ───────────────────────────────────────────────────────── */}
-      <div className="lg:hidden relative w-full h-full pt-16">
-        {/* Background Image Container (1:1 aspect ratio) */}
-        <div className="absolute inset-0 w-full h-full">
+      <div className="lg:hidden relative w-full h-full pt-16 z-10 flex flex-col justify-between overflow-hidden">
+        {/* Background Radial Glow */}
+        <div 
+          className="absolute w-[80%] h-[80%] top-[10%] left-[10%] rounded-full opacity-20 filter blur-[50px] pointer-events-none"
+          style={{
+            background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')}40 0%, ${(banner.bgColor || '#9333ea')}25 70%)`
+          }}
+        />
+
+        {/* Centered Image Card */}
+        <div className="flex-1 w-full flex items-center justify-center p-5">
           <AnimatePresence mode="wait">
             {banner.imageUrl ? (
               <motion.div
                 key={`mob-img-${current}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="absolute inset-0 w-full h-full"
+                initial={{ opacity: 0, scale: 0.88, y: 5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.88, y: -5 }}
+                transition={{ duration: 0.45 }}
+                className="relative w-[70%] aspect-square flex items-center justify-center"
               >
+                {/* Mobile Rotating ambient guide ring */}
+                <div 
+                  className="absolute inset-0 rounded-full border border-dashed opacity-10 animate-spin-slow pointer-events-none"
+                  style={{ borderColor: banner.ctaColor || "#fbbf24" }}
+                />
                 <Image
                   src={banner.imageUrl}
                   alt={banner.title}
                   fill
-                  className="object-cover"
+                  className="object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)]"
                   priority
-                  sizes="100vw"
+                  sizes="65vw"
                 />
               </motion.div>
             ) : (
               <div
-                className="absolute inset-0 flex items-center justify-center w-full h-full"
+                className="w-32 h-32 rounded-full flex items-center justify-center"
                 style={{
-                  background: "rgba(147,51,234,0.06)",
-                  border: "1px solid rgba(147,51,234,0.15)",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
                 }}
               >
-                <span className="text-[10px] tracking-widest font-black uppercase text-amber-400/50">
-                  MIAKSAAA EXCLUSIVE
+                <span className="text-[9px] tracking-widest font-black uppercase text-amber-400/40">
+                  MIAKSAAA
                 </span>
               </div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Gradient backdrop to ensure rich readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0614] via-[#0a0614]/75 to-transparent pointer-events-none" />
-
-        {/* Content Container (flex to position texts, actions & dots) */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-end px-6 pb-6 pt-4">
+        {/* Frosted Glass Bottom Card Overlay */}
+        <div className="w-full bg-[#0d071a]/75 backdrop-blur-lg border-t border-white/10 p-4 flex flex-col gap-2 relative z-20">
           <AnimatePresence mode="wait">
             <motion.div
               key={`mob-text-${current}`}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.45 }}
-              className="space-y-3 text-center"
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="space-y-2"
             >
-              {banner.promoTag && (
-                <div
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold"
-                  style={{
-                    background: "rgba(251,191,36,0.15)",
-                    border: "1px solid rgba(251,191,36,0.35)",
-                    color: "var(--gold-400)",
-                  }}
-                >
-                  <Zap size={10} />
-                  {banner.promoTag}
-                </div>
-              )}
+              {/* Badges row */}
+              <div className="flex items-center gap-2">
+                {banner.promoTag && (
+                  <span
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest uppercase bg-amber-400/10 border border-amber-400/35 text-amber-400"
+                  >
+                    {banner.promoTag}
+                  </span>
+                )}
+                {banner.highlightLabel && (
+                  <span
+                    className="text-[8px] font-semibold text-white/50 tracking-wider"
+                  >
+                    ✦ {banner.highlightLabel}
+                  </span>
+                )}
+              </div>
 
-              <h1 className="text-xl sm:text-2xl font-black leading-tight text-white drop-shadow-md">
+              {/* Title & Subtitle */}
+              <h2 className="text-base font-black text-white uppercase tracking-tight line-clamp-1">
                 {banner.title}
-              </h1>
-
-              <p
-                className="text-xs leading-snug max-w-xs mx-auto drop-shadow"
-                style={{ color: "rgba(255, 255, 255, 0.75)" }}
-              >
+              </h2>
+              <p className="text-[10px] text-white/60 line-clamp-1 leading-normal font-light">
                 {banner.subtitle}
               </p>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 justify-center pt-1">
+              {/* Action Buttons & Indicator Row */}
+              <div className="flex items-center gap-3 pt-1">
                 <Link
                   href={banner.ctaLink}
-                  className="btn-primary text-[10px] px-4 py-2 gap-1"
+                  className="flex-1 py-2 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider text-black transition-transform active:scale-95"
                   style={{
-                    background: `linear-gradient(135deg, ${banner.ctaColor}, ${banner.ctaColor}cc)`,
+                    background: banner.ctaColor || "#fbbf24",
                   }}
                 >
-                  {banner.ctaText} <ArrowRight size={12} />
+                  {banner.ctaText}
                 </Link>
                 <Link
                   href="/products"
-                  className="btn-outline text-[10px] px-4 py-2 text-white border-white/20 hover:bg-white/10"
+                  className="flex-1 py-2 rounded-lg text-center text-[10px] font-bold uppercase tracking-wider text-white border border-white/15 backdrop-blur-sm active:scale-95"
                 >
-                  Explore All
+                  Explore
                 </Link>
               </div>
 
-              {/* Mobile Slide dots */}
+              {/* Mobile Slide indicators */}
               <div className="flex gap-1.5 justify-center pt-2">
                 {displayBanners.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setCurrent(i)}
+                    onClick={() => {
+                      setCurrent(i);
+                      setProgress(0);
+                    }}
                     aria-label={`Slide ${i + 1}`}
-                    className="transition-all duration-300 rounded-full"
+                    className="h-1 rounded-full transition-all duration-300"
                     style={{
-                      width: i === current ? 18 : 6,
-                      height: 5,
-                      background:
-                        i === current
-                          ? "linear-gradient(90deg,#9333ea,#fbbf24)"
-                          : "rgba(255,255,255,0.3)",
+                      width: i === current ? 14 : 5,
+                      background: i === current ? (banner.ctaColor || "#fbbf24") : "rgba(255,255,255,0.2)",
                     }}
                   />
                 ))}
@@ -261,93 +292,117 @@ export function HeroSection({ banners }: HeroSectionProps) {
       {/* ─────────────────────────────────────────────────────────
           DESKTOP layout (≥ lg)
           • Covers height of web size (100vh)
-          • Grid split is 1:1 (equal columns lg:grid-cols-2)
-          • Product image aspect ratio is 1:1 (square)
+          • Grid split ratio 1:1, divider line in the middle
+          • Floating museum product image card inside glowing halo
+          • Premium side index list with countdown progress bars
           • Guarantees texts NEVER go below the fold
           ───────────────────────────────────────────────────────── */}
-      <div className="hidden lg:grid lg:grid-cols-2 h-full pt-16 max-w-screen-xl mx-auto px-8 xl:px-12 items-center">
-        {/* Left Column — Text (50% width) */}
-        <div className="flex flex-col justify-center pr-8 h-full py-6">
+      <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-full pt-16 max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10">
+        
+        {/* Left Column — Brand & Text Details */}
+        <div className="flex flex-col justify-center pr-12 h-full py-10 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={`desk-text-${current}`}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-4"
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 40 }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-6"
             >
-              {banner.promoTag && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold"
-                  style={{
-                    background: "rgba(251,191,36,0.15)",
-                    border: "1px solid rgba(251,191,36,0.35)",
-                    color: "var(--gold-400)",
-                  }}
-                >
-                  <Zap size={12} />
-                  {banner.promoTag}
-                </motion.div>
-              )}
+              {/* Badges layout */}
+              <div className="flex flex-wrap items-center gap-3">
+                {banner.promoTag && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+                    style={{
+                      background: "rgba(251,191,36,0.12)",
+                      border: "1px solid rgba(251,191,36,0.35)",
+                      color: "var(--gold-400)",
+                    }}
+                  >
+                    <Zap size={11} className="fill-amber-400 text-amber-400" />
+                    {banner.promoTag}
+                  </motion.span>
+                )}
+                {banner.highlightLabel && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.05 }}
+                    className="inline-flex items-center px-3.5 py-1 rounded-full text-[10px] font-bold tracking-wider"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.85)",
+                    }}
+                  >
+                    ✦ {banner.highlightLabel}
+                  </motion.span>
+                )}
+              </div>
 
-              <h1 className="text-4xl xl:text-5xl font-black leading-tight">
-                <span className="gradient-text">{banner.title}</span>
+              {/* Title Header */}
+              <h1 className="text-4xl xl:text-6xl font-black leading-[1.1] tracking-tight">
+                <span 
+                  className="bg-gradient-to-r from-white via-purple-100 to-amber-200 bg-clip-text text-transparent filter drop-shadow-md uppercase block"
+                  style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}
+                >
+                  {banner.title}
+                </span>
               </h1>
 
-              {banner.highlightLabel && (
-                <div
-                  className="inline-block px-4 py-1.5 rounded-lg text-xs font-bold"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(147,51,234,0.25), rgba(251,191,36,0.15))",
-                    border: "1px solid rgba(147,51,234,0.3)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  ✦ {banner.highlightLabel}
-                </div>
-              )}
-
+              {/* Description Subtitle */}
               <p
-                className="text-sm xl:text-base leading-relaxed max-w-md"
-                style={{ color: "var(--text-secondary)" }}
+                className="text-sm xl:text-base leading-relaxed max-w-md font-light"
+                style={{ color: "rgba(255, 255, 255, 0.65)" }}
               >
                 {banner.subtitle}
               </p>
 
-              <div className="flex gap-3 pt-1">
+              {/* CTAs */}
+              <div className="flex gap-4 pt-2">
                 <Link
                   href={banner.ctaLink}
-                  className="btn-primary text-xs px-5 py-3 gap-2"
+                  className="btn-primary text-xs px-6 py-4 gap-2 font-black tracking-widest uppercase rounded-xl transition-all duration-300 hover:scale-105"
                   style={{
-                    background: `linear-gradient(135deg, ${banner.ctaColor}, ${banner.ctaColor}cc)`,
+                    background: `linear-gradient(135deg, ${(banner.ctaColor || '#fbbf24')}, ${(banner.ctaColor || '#fbbf24')}dd)`,
+                    boxShadow: `0 8px 30px ${(banner.ctaColor || '#fbbf24')}25`,
+                    color: "#0a0614",
                   }}
                 >
-                  {banner.ctaText} <ArrowRight size={15} />
+                  {banner.ctaText} <ArrowRight size={14} />
                 </Link>
-                <Link href="/products" className="btn-outline text-xs px-5 py-3">
+                <Link 
+                  href="/products" 
+                  className="btn-outline text-xs px-6 py-4 font-black tracking-widest uppercase rounded-xl hover:bg-white/5 border-white/20 transition-all duration-300"
+                >
                   Explore All
                 </Link>
               </div>
 
+              {/* Luxury features section */}
               <div
-                className="flex gap-6 pt-3 border-t max-w-sm"
-                style={{ borderColor: "rgba(147,51,234,0.2)" }}
+                className="flex gap-10 pt-6 border-t max-w-md"
+                style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
               >
                 {[
-                  { label: "Products", value: "500+" },
-                  { label: "Customers", value: "10K+" },
-                  { label: "Brands", value: "50+" },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-base font-black gradient-text">{value}</p>
-                    <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                  { label: "SHIPPING", value: "PRIORITY" },
+                  { label: "AUTHENTIC", value: "GUARANTEED" },
+                  { label: "SUPPORT", value: "24/7 VIP" },
+                ].map(({ label, value }, idx) => (
+                  <div key={label} className="flex flex-col">
+                    <span 
+                      className="text-[10px] font-black tracking-widest"
+                      style={{ color: banner.ctaColor || "#fbbf24" }}
+                    >
+                      {value}
+                    </span>
+                    <span className="text-[9px] font-bold tracking-widest mt-1 text-white/30 uppercase">
                       {label}
-                    </p>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -355,94 +410,141 @@ export function HeroSection({ banners }: HeroSectionProps) {
           </AnimatePresence>
         </div>
 
-        {/* Right Column — Image (50% width) */}
-        <div className="flex items-center justify-center pl-8 h-full py-6">
+        {/* Vertical thin glass divider line in the middle */}
+        <div className="w-[1px] h-48 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-6" />
+
+        {/* Right Column — Product museum card showcase */}
+        <div className="flex items-center justify-center pl-12 h-full py-10 relative">
+          
+          {/* Backlight orb glow matching banner color values */}
+          <div 
+            className="absolute w-[85%] h-[85%] rounded-full opacity-35 filter blur-[90px] transition-all duration-1000"
+            style={{
+              background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')} 0%, ${(banner.bgColor || '#9333ea')} 70%)`
+            }}
+          />
+
           <AnimatePresence mode="wait">
-            {banner.imageUrl ? (
-              <motion.div
-                key={`desk-img-${current}`}
-                initial={{ opacity: 0, scale: 0.94 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.94 }}
-                transition={{ duration: 0.55, ease: "easeOut" }}
-                // Responsive square sizing constraint so it never overflows 100vh height
-                className="relative"
-                style={{
-                  width: "min(460px, 58vh)",
-                  aspectRatio: "1/1",
-                  borderRadius: 28,
-                  overflow: "hidden",
-                  border: "1px solid rgba(251,191,36,0.25)",
-                  boxShadow:
-                    "0 32px 64px rgba(0,0,0,0.55), 0 0 60px rgba(147,51,234,0.2)",
-                }}
-              >
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.title}
-                  fill
-                  className="object-cover transition-transform duration-700 hover:scale-105"
-                  priority
-                  sizes="min(460px, 58vh)"
+            <motion.div
+              key={`desk-img-${current}`}
+              initial={{ opacity: 0, scale: 0.9, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -15 }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 flex items-center justify-center"
+            >
+              {/* Spinning geometric halo wires */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div 
+                  className="w-[106%] h-[106%] rounded-full border border-dashed opacity-25 animate-spin-slow"
+                  style={{ borderColor: banner.ctaColor || "#fbbf24" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0614]/60 via-transparent to-transparent pointer-events-none" />
-              </motion.div>
-            ) : (
-              <div
-                className="flex items-center justify-center"
-                style={{
-                  width: "min(460px, 58vh)",
-                  aspectRatio: "1/1",
-                  borderRadius: 28,
-                  background: "rgba(147,51,234,0.05)",
-                  border: "1px solid rgba(147,51,234,0.15)",
-                }}
-              >
-                <span className="text-xs tracking-widest font-black uppercase text-amber-400/60">
-                  MIAKSAAA EXCLUSIVE
-                </span>
+                <div 
+                  className="w-[116%] h-[116%] rounded-full border border-dotted opacity-15 animate-spin-reverse-slow"
+                  style={{ borderColor: banner.bgColor || "#9333ea" }}
+                />
               </div>
-            )}
+
+              {banner.imageUrl ? (
+                <div
+                  className="relative group transition-all duration-500 hover:-translate-y-2.5"
+                  style={{
+                    width: "min(430px, 54vh)",
+                    aspectRatio: "1/1",
+                    borderRadius: 36,
+                    overflow: "hidden",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    background: "rgba(255, 255, 255, 0.03)",
+                    backdropFilter: "blur(16px)",
+                    boxShadow: "0 30px 70px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    className="object-contain p-8 transition-transform duration-700 group-hover:scale-105"
+                    priority
+                    sizes="min(430px, 54vh)"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: "min(430px, 54vh)",
+                    aspectRatio: "1/1",
+                    borderRadius: 36,
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    backdropFilter: "blur(16px)",
+                  }}
+                >
+                  <span className="text-xs tracking-widest font-black uppercase text-amber-400/40">
+                    MIAKSAAA EXCLUSIVE
+                  </span>
+                </div>
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Desktop slide dots */}
-      <div className="hidden lg:flex absolute bottom-6 left-1/2 -translate-x-1/2 gap-2 z-10">
+      {/* Premium Side Index Navigation strip */}
+      <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col gap-7 z-20">
         {displayBanners.map((_, i) => (
           <button
             key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Slide ${i + 1}`}
-            className="transition-all duration-300 rounded-full"
-            style={{
-              width: i === current ? 28 : 8,
-              height: 8,
-              background:
-                i === current
-                  ? "linear-gradient(90deg,#9333ea,#fbbf24)"
-                  : "rgba(147,51,234,0.3)",
+            onClick={() => {
+              setCurrent(i);
+              setProgress(0);
             }}
-          />
+            className="group flex items-center gap-4 text-left transition-all"
+            aria-label={`Go to slide ${i + 1}`}
+          >
+            <span 
+              className={`text-xs font-black transition-colors ${i === current ? 'text-white' : 'text-white/25 group-hover:text-white/50'}`}
+            >
+              0{i + 1}
+            </span>
+
+            {/* countdown slider bar */}
+            <div className="relative w-14 h-[2px] bg-white/10 overflow-hidden rounded-full">
+              <div 
+                className="absolute top-0 left-0 h-full transition-all duration-100 ease-linear"
+                style={{
+                  width: i === current ? `${progress}%` : "0%",
+                  background: banner.ctaColor || "linear-gradient(90deg, #9333ea, #fbbf24)",
+                }}
+              />
+            </div>
+          </button>
         ))}
       </div>
 
-      {/* Desktop arrow buttons */}
+      {/* Slide Arrow Navigation */}
       <button
-        onClick={() =>
-          setCurrent((c) => (c - 1 + displayBanners.length) % displayBanners.length)
-        }
+        onClick={() => {
+          setCurrent((c) => (c - 1 + displayBanners.length) % displayBanners.length);
+          setProgress(0);
+        }}
         aria-label="Previous slide"
-        className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full items-center justify-center glass transition-all hover:scale-110"
+        className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-white/5 backdrop-blur-md transition-all hover:scale-110 hover:bg-white/10"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="text-white/60 hover:text-white" />
       </button>
       <button
-        onClick={() => setCurrent((c) => (c + 1) % displayBanners.length)}
+        onClick={() => {
+          setCurrent((c) => (c + 1) % displayBanners.length);
+          setProgress(0);
+        }}
         aria-label="Next slide"
-        className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full items-center justify-center glass transition-all hover:scale-110"
+        className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-white/5 backdrop-blur-md transition-all hover:scale-110 hover:bg-white/10"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} className="text-white/60 hover:text-white" />
       </button>
     </BeamsBackground>
   );

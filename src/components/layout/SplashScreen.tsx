@@ -61,7 +61,7 @@ export function SplashScreen() {
             <img
               src="/logo2.png"
               alt="MIAKSAAA Logo"
-              className="w-28 h-28 object-contain"
+              className="w-44 h-44 object-contain"
               style={{ filter: "drop-shadow(0 0 32px rgba(147,51,234,0.7))" }}
             />
           </motion.div>

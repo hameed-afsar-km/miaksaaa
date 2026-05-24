@@ -19,7 +19,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
               <img
                 src={logoUrl || "/logo2.png"}
                 alt="MIAKSAAA Logo"
-                className="h-10 w-auto object-contain"
+                className="h-12 w-auto object-contain"
               />
               <span className="text-xl font-black gradient-text" style={{ fontFamily: "Playfair Display,serif" }}>MIAKSAAA</span>
             </div>

@@ -154,11 +154,16 @@ export default function AdminBannersPage() {
           >
             <div className="space-y-4">
               {/* Image Preview */}
-              <div className="aspect-[21/9] rounded-2xl overflow-hidden bg-purple-950/20 relative border border-purple-500/10">
+              <div 
+                className="aspect-[21/9] rounded-2xl overflow-hidden relative border border-purple-500/10"
+                style={{ 
+                  background: banner.bgColor ? `radial-gradient(circle at 75% 30%, ${banner.bgColor}dd 0%, #0a0614 90%)` : "rgba(147,51,234,0.06)" 
+                }}
+              >
                 {banner.imageUrl && (
-                  <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover" />
+                  <Image src={banner.imageUrl} alt={banner.title} fill className="object-contain" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-4">
                   {banner.promoTag && <span className="badge badge-gold self-start text-[8px] py-0.5 px-1.5 font-bold mb-1">{banner.promoTag}</span>}
                   <h4 className="text-sm font-bold text-white leading-tight truncate">{banner.title}</h4>
                   <p className="text-[10px] text-purple-200 truncate">{banner.subtitle}</p>
@@ -170,6 +175,27 @@ export default function AdminBannersPage() {
                 <span className={`badge text-[9px] py-0.5 px-2 ${banner.isActive ? "badge-green" : "badge-red"}`}>
                   {banner.isActive ? "Live" : "Inactive"}
                 </span>
+              </div>
+
+              {/* Slider customization config badges */}
+              <div className="flex flex-wrap gap-2 text-[9px] text-purple-300/50 pt-2 border-t border-purple-500/5">
+                {banner.highlightLabel && (
+                  <span className="px-1.5 py-0.5 rounded bg-purple-950/40 border border-purple-500/20 text-amber-300/80">
+                    Label: {banner.highlightLabel}
+                  </span>
+                )}
+                {banner.bgColor && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full border border-white/20 animate-pulse" style={{ backgroundColor: banner.bgColor }} />
+                    BG: {banner.bgColor}
+                  </span>
+                )}
+                {banner.ctaColor && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full border border-white/20 animate-pulse" style={{ backgroundColor: banner.ctaColor }} />
+                    CTA: {banner.ctaColor}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -284,6 +310,17 @@ export default function AdminBannersPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Highlight Label (e.g. ✦ 2026 Collection)</label>
+                    <input
+                      type="text"
+                      value={editingBanner.highlightLabel || ""}
+                      onChange={(e) => setEditingBanner({ ...editingBanner, highlightLabel: e.target.value })}
+                      className="input text-xs py-2"
+                      placeholder="✦ 2026 Collection"
+                    />
+                  </div>
+
                   {/* Image URL */}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Slide Image URL</label>
@@ -317,6 +354,47 @@ export default function AdminBannersPage() {
                         onChange={(e) => setEditingBanner({ ...editingBanner, ctaLink: e.target.value })}
                         className="input text-xs py-2"
                       />
+                    </div>
+                  </div>
+
+                  {/* BG & CTA Custom Colors */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Bg Glow Color</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={editingBanner.bgColor || "#120a24"}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, bgColor: e.target.value })}
+                          className="w-8 h-8 rounded border border-purple-500/30 cursor-pointer bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={editingBanner.bgColor || "#120a24"}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, bgColor: e.target.value })}
+                          className="input text-xs py-1.5 flex-1"
+                          placeholder="#120a24"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">CTA Button Color</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={editingBanner.ctaColor || "#fbbf24"}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, ctaColor: e.target.value })}
+                          className="w-8 h-8 rounded border border-purple-500/30 cursor-pointer bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={editingBanner.ctaColor || "#fbbf24"}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, ctaColor: e.target.value })}
+                          className="input text-xs py-1.5 flex-1"
+                          placeholder="#fbbf24"
+                        />
+                      </div>
                     </div>
                   </div>
 

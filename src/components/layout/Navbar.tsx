@@ -58,7 +58,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             <img
               src={logoUrl || "/logo2.png"}
               alt="MIAKSAAA Logo"
-              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+              className="h-16 w-auto object-contain group-hover:scale-105 transition-transform"
             />
             <span
               className="text-xl font-black tracking-wider gradient-text hidden sm:block"
