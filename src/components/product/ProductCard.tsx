@@ -17,6 +17,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [mounted, setMounted] = useState(false);
+  const [imgError, setImgError] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -120,13 +121,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Image */}
           <div className="product-img-wrapper aspect-square">
-            {product.images[0] ? (
+            {product.images[0] && !imgError ? (
               <Image
                 src={product.images[0]}
                 alt={product.title}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-106"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                onError={() => setImgError(true)}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center aspect-square"

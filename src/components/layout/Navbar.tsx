@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ShoppingBag, Heart, Search, User, Menu, X, LogOut,
+  ShoppingBag, Heart, User, Menu, X, LogOut,
   ChevronDown, Shield, Package
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -52,45 +52,57 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
         className="fixed top-0 left-0 right-0 z-50 glass"
         style={{ borderBottom: "1px solid var(--glass-border)" }}
       >
-        <div className="container-lg flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <img
-              src={logoUrl || "/logo2.png"}
-              alt="MIAKSAAA Logo"
-              className="h-16 w-auto object-contain group-hover:scale-105 transition-transform"
-            />
-            <span
-              className="text-xl font-black tracking-wider gradient-text hidden sm:block"
-              style={{ fontFamily: "Playfair Display, serif" }}
-            >
-              MIAKSAAA
-            </span>
-          </Link>
+        {/* 3-column grid: left=nav, center=brand, right=actions */}
+        <div className="container-lg grid grid-cols-3 items-center h-16">
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="relative px-4 py-2 text-sm font-medium transition-colors rounded-lg"
-                style={{ color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)" }}
+          {/* LEFT: Desktop nav links */}
+          <div className="flex items-center gap-1 min-w-0">
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="relative px-3 py-2 text-sm font-medium transition-colors rounded-lg whitespace-nowrap"
+                  style={{ color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)" }}
+                >
+                  {pathname === href && (
+                    <motion.div
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-lg"
+                      style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
+                    />
+                  )}
+                  <span className="relative z-10">{label}</span>
+                </Link>
+              ))}
+            </nav>
+            {/* Mobile hamburger (left side) */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl md:hidden">
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+
+          {/* CENTER: Brand name and tagline */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <Link href="/" className="flex flex-col items-center group">
+              <span
+                className="text-lg sm:text-xl md:text-2xl font-black tracking-wider gradient-text leading-tight"
+                style={{ fontFamily: "Playfair Display, serif" }}
               >
-                {pathname === href && (
-                  <motion.div
-                    layoutId="nav-pill"
-                    className="absolute inset-0 rounded-lg"
-                    style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
-                  />
-                )}
-                <span className="relative z-10">{label}</span>
-              </Link>
-            ))}
-          </nav>
+                MIAKSAAA
+              </span>
+              <span
+                className="text-[7px] sm:text-[9px] md:text-[10px] tracking-[0.15em] uppercase leading-none mt-0.5"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Fashion and Fun World
+              </span>
+            </Link>
+          </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-1">
+          {/* RIGHT: Cart, Wishlist, Profile */}
+          <div className="flex items-center justify-end gap-1">
             {/* Wishlist */}
             <Link href="/wishlist" className="relative btn-ghost p-2 rounded-xl hidden sm:flex">
               <Heart size={20} />
@@ -118,9 +130,9 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 btn-ghost px-2 py-1.5 rounded-xl"
+                  className="flex items-center gap-1.5 btn-ghost px-2 py-1.5 rounded-xl"
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2" style={{ borderColor: "var(--purple-500)" }}>
+                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 shrink-0" style={{ borderColor: "var(--purple-500)" }}>
                     {user.photoURL ? (
                       <Image src={user.photoURL} alt={user.displayName ?? "User"} width={32} height={32} className="w-full h-full object-cover" />
                     ) : (
@@ -139,7 +151,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-12 w-52 glass rounded-xl overflow-hidden"
+                      className="absolute right-0 top-12 w-52 glass rounded-xl overflow-hidden z-50"
                       style={{ border: "1px solid var(--glass-border)" }}
                     >
                       <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
@@ -174,15 +186,10 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </AnimatePresence>
               </div>
             ) : (
-              <button onClick={handleLogin} className="btn-primary py-2 px-4 text-sm hidden sm:flex">
+              <button onClick={handleLogin} className="btn-primary py-2 px-3 text-sm hidden sm:flex">
                 Sign In
               </button>
             )}
-
-            {/* Mobile menu toggle */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl md:hidden">
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
           </div>
         </div>
 
