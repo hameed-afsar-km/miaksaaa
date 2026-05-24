@@ -10,7 +10,7 @@ const CONTACT_LINKS = [
     hoverColor: "#4ade80",
   },
   {
-    label: "Phone Number",
+    label: "+91 72920 70080",
     href: "tel:+917292070080",
     icon: Phone,
     hoverColor: "var(--purple-300)",
@@ -32,7 +32,7 @@ const CONTACT_LINKS = [
 export function Footer({ logoUrl }: { logoUrl?: string }) {
   return (
     <footer
-      className="border-t mt-20 pb-24 md:pb-0"
+      className="border-t mt-20 pb-24 md:pb-0 overflow-x-hidden"
       style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
     >
       {/* Main section: fills viewport height on desktop */}
@@ -59,14 +59,14 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
         </Link>
 
         {/* Right — vertical stack of named links, pushed to bottom */}
-        <div className="flex flex-col gap-5 md:self-end md:pb-2">
+        <div className="flex flex-col gap-5 md:self-end md:pb-2 md:pr-4">
           {CONTACT_LINKS.map(({ label, href, icon: Icon, hoverColor }) => (
             <a
               key={label}
               href={href}
               target={href.startsWith("http") ? "_blank" : undefined}
               rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="group flex items-center gap-3 text-sm font-medium transition-colors duration-200"
+              className="group flex items-center gap-3 text-sm font-medium transition-colors duration-200 whitespace-nowrap"
               style={{ color: "var(--text-secondary)" }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.color = hoverColor;
@@ -76,7 +76,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
               }}
             >
               <span
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-110"
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-110 overflow-hidden"
                 style={{
                   background: "rgba(147,51,234,0.1)",
                   border: "1px solid var(--border)",

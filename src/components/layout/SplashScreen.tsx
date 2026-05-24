@@ -41,7 +41,7 @@ export function SplashScreen() {
                 initial={{ scale: 0.55, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-1"
+                className="mb-0"
               >
                 <img
                   src="/logo2.png"
@@ -55,7 +55,7 @@ export function SplashScreen() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-0"
+                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-0 leading-none -mt-3"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA
@@ -65,7 +65,7 @@ export function SplashScreen() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="text-sm md:text-base tracking-[0.3em] uppercase"
+                className="text-sm md:text-base tracking-[0.3em] uppercase leading-tight"
                 style={{ color: "var(--text-muted)" }}
               >
                 Fashion and Fun World
