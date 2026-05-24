@@ -29,20 +29,24 @@ export function SplashScreen() {
         >
           <BeamsBackground
             intensity="strong"
-            className="w-full h-full flex flex-col items-center justify-center min-h-screen"
+            className="w-full h-full"
+            style={{ minHeight: "100dvh" }}
           >
-            {/* Content */}
-            <div className="flex flex-col items-center justify-center text-center px-6">
+            {/* Full-height centered content wrapper */}
+            <div
+              className="flex flex-col items-center justify-center text-center px-6"
+              style={{ minHeight: "100dvh" }}
+            >
               <motion.div
                 initial={{ scale: 0.55, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-8"
+                className="mb-4"
               >
                 <img
                   src="/logo2.png"
                   alt="MIAKSAAA Logo"
-                  className="w-56 h-56 md:w-72 md:h-72 object-contain"
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
                   style={{ filter: "drop-shadow(0 0 56px rgba(147,51,234,0.95))" }}
                 />
               </motion.div>
@@ -51,7 +55,7 @@ export function SplashScreen() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-3"
+                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-2"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA

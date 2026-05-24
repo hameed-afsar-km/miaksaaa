@@ -18,7 +18,6 @@ import toast from "react-hot-toast";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Shop" },
-  { href: "/wishlist", label: "Wishlist" },
   { href: "/orders", label: "Orders" },
 ];
 
@@ -78,7 +77,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               ))}
             </nav>
             {/* Mobile hamburger (left side) — hidden on desktop */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl lg:hidden">
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 rounded-xl lg:hidden" aria-label="Open menu">
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -216,18 +215,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                     {label}
                   </Link>
                 ))}
-                {/* Wishlist link — only in mobile burger */}
-                <Link href="/wishlist" onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                  style={{ color: "var(--text-secondary)" }}>
-                  <Heart size={15} /> Wishlist
-                  {wishCount > 0 && (
-                    <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                      {wishCount}
-                    </span>
-                  )}
-                </Link>
+
                 {!user && (
                   <button onClick={() => { handleLogin(); setMobileOpen(false); }}
                     className="btn-primary mt-2">Sign In with Google</button>

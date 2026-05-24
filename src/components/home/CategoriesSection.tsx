@@ -2,7 +2,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Category } from "@/lib/types";
-import { Tag } from "lucide-react";
 
 const DEFAULT_CATEGORIES = [
   { id: "1", name: "Fashion",      slug: "fashion",      isActive: true },
@@ -28,31 +27,34 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
           <span className="gradient-text">Shop by Category</span>
         </motion.h2>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        {/* Centered pill-style text buttons, one after another */}
+        <div className="flex flex-wrap justify-center gap-3">
           {displayCats.map((cat, i) => (
             <motion.div
               key={cat.id}
-              initial={{ opacity: 0, scale: 0.85 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
             >
               <Link
                 href={`/products?category=${cat.slug}`}
-                className="flex flex-col items-center gap-3 p-4 rounded-2xl card text-center group"
+                className="inline-block px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105"
+                style={{
+                  background: "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(251,191,36,0.07))",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-secondary)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(147,51,234,0.5)";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--purple-300)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)";
+                }}
               >
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3"
-                  style={{
-                    background: "linear-gradient(135deg,rgba(147,51,234,0.15),rgba(251,191,36,0.08))",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <Tag size={20} className="text-amber-400" />
-                </div>
-                <span className="text-xs font-semibold leading-tight" style={{ color: "var(--text-secondary)" }}>
-                  {cat.name}
-                </span>
+                {cat.name}
               </Link>
             </motion.div>
           ))}
