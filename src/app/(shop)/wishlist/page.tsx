@@ -1,16 +1,29 @@
 "use client";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
 
 export default function WishlistPage() {
+  const router = useRouter();
   const { items, removeItem } = useWishlistStore();
   const addToCart = useCartStore((s) => s.addItem);
+  const [addedItem, setAddedItem] = useState<{
+    productId: string;
+    title: string;
+    price: number;
+    discountedPrice?: number;
+    image: string;
+    quantity: number;
+    category?: string;
+  } | null>(null);
 
   function handleMove(item: typeof items[0]) {
     addToCart({
@@ -23,7 +36,14 @@ export default function WishlistPage() {
       stock: 99,
     });
     removeItem(item.productId);
-    toast.success("Moved to cart!");
+    setAddedItem({
+      productId: item.productId,
+      title: item.title,
+      price: item.price,
+      discountedPrice: item.discountedPrice,
+      image: item.image,
+      quantity: 1,
+    });
   }
 
   if (items.length === 0) {
@@ -88,6 +108,12 @@ export default function WishlistPage() {
           </motion.div>
         ))}
       </div>
+      <AddedToCartModal
+        isOpen={addedItem !== null}
+        onClose={() => setAddedItem(null)}
+        onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
+        item={addedItem}
+      />
     </div>
   );
 }

@@ -68,6 +68,7 @@ export interface CartItem {
   stock: number;
   selectedColor?: string;
   selectedSize?: string;
+  category?: string;
 }
 
 export interface CartState {
@@ -75,13 +76,15 @@ export interface CartState {
   couponCode: string;
   couponDiscount: number;
   couponType: "percent" | "fixed";
+  couponCategories: string[];
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  applyCoupon: (code: string, discount: number, type: "percent" | "fixed") => void;
+  applyCoupon: (code: string, discount: number, type: "percent" | "fixed", categories?: string[]) => void;
   removeCoupon: () => void;
   getSubtotal: () => number;
+  getEligibleSubtotal: () => number;
   getDiscount: () => number;
   getTotal: () => number;
   getTotalItems: () => number;
@@ -156,6 +159,7 @@ export interface Coupon {
   expiresAt: Timestamp | null;
   oneTimeUse: boolean;
   usedBy: string[];
+  categories?: string[];
 }
 
 // ─── BANNER ───────────────────────────────────────────────────────────────────

@@ -1,14 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Star, Zap, Sparkles, Flame } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, Star, Zap, Sparkles, Flame } from "lucide-react";
 import { Product } from "@/lib/types";
 import { useCartStore } from "@/lib/store/cartStore";
-import { useWishlistStore } from "@/lib/store/wishlistStore";
-import { formatPrice, getDiscountPercent, truncate } from "@/lib/utils";
-import toast from "react-hot-toast";
+import { formatPrice, getDiscountPercent } from "@/lib/utils";
+import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
 
 interface ProductCardProps {
   product: Product;
@@ -16,15 +16,19 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
   const [imgError, setImgError] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [addedItem, setAddedItem] = useState<{
+    productId: string;
+    title: string;
+    price: number;
+    discountedPrice?: number;
+    image: string;
+    quantity: number;
+    category?: string;
+  } | null>(null);
 
   const addToCart = useCartStore((s) => s.addItem);
-  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
-  const inWishlist = mounted && isInWishlist(product.id);
   const discountPct = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
   const outOfStock = product.stock === 0;
@@ -41,25 +45,15 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       quantity: 1,
       stock: product.stock,
     });
-    toast.success("Added to cart!");
-  }
-
-  function handleWishlist(e: React.MouseEvent) {
-    e.preventDefault();
-    if (inWishlist) {
-      removeFromWishlist(product.id);
-      toast("Removed from wishlist", { icon: "💔" });
-    } else {
-      addToWishlist({
-        productId: product.id,
-        title: product.title,
-        price: product.price,
-        discountedPrice: product.discountedPrice,
-        image: product.images[0] ?? "",
-        addedAt: new Date(),
-      });
-      toast.success("Added to wishlist!");
-    }
+    setAddedItem({
+      productId: product.id,
+      title: product.title,
+      price: product.price,
+      discountedPrice: product.discountedPrice,
+      image: product.images[0] ?? "",
+      quantity: 1,
+      category: product.category,
+    });
   }
 
   return (
@@ -68,10 +62,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.07 }}
+      className="h-full"
     >
-      <Link href={`/products/${product.id}`} className="group block">
+      <Link href={`/products/${product.id}`} className="group block h-full">
         <div
-          className="relative rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl"
+          className="relative rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl h-full flex flex-col"
           style={{
             background: "var(--bg-card)",
             border: "1px solid var(--border)",
@@ -102,23 +97,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
           </div>
 
-          {/* Wishlist */}
-          <button
-            onClick={handleWishlist}
-            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
-            style={{
-              background: inWishlist ? "rgba(239,68,68,0.2)" : "rgba(0,0,0,0.4)",
-              border: "1px solid",
-              borderColor: inWishlist ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)",
-            }}
-          >
-            <Heart
-              size={14}
-              fill={inWishlist ? "#ef4444" : "none"}
-              style={{ color: inWishlist ? "#ef4444" : "#fff" }}
-            />
-          </button>
-
           {/* Image */}
           <div className="product-img-wrapper aspect-square">
             {product.images[0] && !imgError ? (
@@ -136,27 +114,15 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 <ShoppingBag size={40} style={{ color: "var(--text-muted)" }} />
               </div>
             )}
-            {/* Hover overlay */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3 px-3"
-              style={{ background: "linear-gradient(to top, rgba(10,6,20,0.9) 0%, transparent 50%)" }}>
-              <button
-                onClick={handleAddToCart}
-                disabled={outOfStock}
-                className="btn-primary w-full text-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ShoppingBag size={15} />
-                {outOfStock ? "Out of Stock" : "Add to Cart"}
-              </button>
-            </div>
           </div>
 
           {/* Info */}
-          <div className="p-3.5">
+          <div className="p-3.5 flex flex-col flex-1">
             <p className="text-xs mb-1 uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
               {product.category}
             </p>
-            <h3 className="font-semibold text-sm leading-snug mb-2" style={{ color: "var(--text-primary)" }}>
-              {truncate(product.title, 50)}
+            <h3 className="font-semibold text-sm leading-snug mb-2 line-clamp-2" style={{ color: "var(--text-primary)" }}>
+              {product.title}
             </h3>
 
             {/* Rating */}
@@ -175,7 +141,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
 
             {/* Price */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="font-bold" style={{ color: "var(--purple-300)" }}>
                   {formatPrice(product.discountedPrice ?? product.price)}
@@ -192,9 +158,25 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 </span>
               )}
             </div>
+            <div className="mt-auto">
+              <button
+                onClick={handleAddToCart}
+                disabled={outOfStock}
+                className="btn-primary w-full text-xs py-1.5 sm:text-sm sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShoppingBag size={13} />
+                {outOfStock ? "Out of Stock" : "Add to Cart"}
+              </button>
+            </div>
           </div>
         </div>
       </Link>
+      <AddedToCartModal
+        isOpen={addedItem !== null}
+        onClose={() => setAddedItem(null)}
+        onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
+        item={addedItem}
+      />
     </motion.div>
   );
 }

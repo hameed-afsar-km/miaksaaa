@@ -8,13 +8,14 @@ import {
   Minus, Plus, Truck, Shield, RefreshCw, Share2, Flame, Sparkles, Zap
 } from "lucide-react";
 import { Product, Review } from "@/lib/types";
-import { getProductById, getProductReviews, addReview } from "@/lib/firebase/firestore";
+import { getProductById, getProductReviews, addReview, deleteReview, updateReview } from "@/lib/firebase/firestore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +39,20 @@ export default function ProductDetailPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editingReviewRating, setEditingReviewRating] = useState(5);
+  const [editingReviewComment, setEditingReviewComment] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [addedItem, setAddedItem] = useState<{
+    productId: string;
+    title: string;
+    price: number;
+    discountedPrice?: number;
+    image: string;
+    quantity: number;
+    category?: string;
+  } | null>(null);
 
   useEffect(() => {
     getProductById(id)
@@ -76,6 +91,47 @@ export default function ProductDetailPage() {
     }
   }
 
+  async function handleDeleteReview(reviewId: string) {
+    if (!product || !confirm("Delete this review?")) return;
+    try {
+      await deleteReview(reviewId, product.id);
+      toast.success("Review deleted");
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      const refreshed = await getProductById(product.id);
+      if (refreshed) setProduct(refreshed);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete review");
+    }
+  }
+
+  function startEditReview(review: Review) {
+    setEditingReviewId(review.id);
+    setEditingReviewRating(review.rating);
+    setEditingReviewComment(review.comment);
+    setEditingReviewId(review.id);
+  }
+
+  async function handleUpdateReview(e: React.FormEvent) {
+    e.preventDefault();
+    if (!product || !editingReviewId || !editingReviewComment.trim()) return;
+    setSavingEdit(true);
+    try {
+      await updateReview(editingReviewId, product.id, editingReviewRating, editingReviewComment.trim());
+      toast.success("Review updated");
+      setEditingReviewId(null);
+      const updated = await getProductReviews(product.id);
+      setReviews(updated);
+      const refreshed = await getProductById(product.id);
+      if (refreshed) setProduct(refreshed);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update review");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   function handleAddToCart() {
     if (!product || product.stock === 0) return;
     addToCart({
@@ -88,9 +144,17 @@ export default function ProductDetailPage() {
       stock: product.stock,
       selectedColor: selectedColor?.name,
       selectedSize: selectedSize ?? undefined,
+      category: product.category,
     });
-    toast.success("Added to cart!");
-    setCartOpen(true);
+    setAddedItem({
+      productId: product.id,
+      title: product.title,
+      price: product.price,
+      discountedPrice: product.discountedPrice,
+      image: displayImages[0] ?? "",
+      quantity: qty,
+      category: product.category,
+    });
   }
 
   function toggleWishlist() {
@@ -563,34 +627,74 @@ export default function ProductDetailPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review.id} className="p-4 rounded-xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-300">
-                    {review.userPhotoURL ? (
-                      <Image src={review.userPhotoURL} alt={review.userName} width={36} height={36} className="object-cover w-full h-full" />
-                    ) : (
-                      review.userName.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{review.userName}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} size={11} fill={star <= review.rating ? "#fbbf24" : "none"} style={{ color: star <= review.rating ? "#fbbf24" : "var(--text-muted)" }} />
-                      ))}
-                      <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>
-                        {review.createdAt?.toDate?.() ? new Date(review.createdAt.toDate()).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                  </div>
+            {reviews.map((review) => {
+              const isOwn = authUser?.uid === review.userId;
+              const isEditing = editingReviewId === review.id;
+              return (
+                <div key={review.id} className="p-4 rounded-xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                  {isEditing ? (
+                    <form onSubmit={handleUpdateReview}>
+                      <div className="flex items-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button type="button" key={star} onClick={() => setEditingReviewRating(star)} className="p-0.5 cursor-pointer">
+                            <Star size={18} fill={star <= editingReviewRating ? "#fbbf24" : "none"} style={{ color: star <= editingReviewRating ? "#fbbf24" : "var(--text-muted)" }} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea rows={2} value={editingReviewComment} onChange={(e) => setEditingReviewComment(e.target.value)} className="input text-sm resize-none mb-2" required />
+                      <div className="flex gap-2">
+                        <button type="submit" disabled={savingEdit || !editingReviewComment.trim()} className="btn-primary text-[10px] py-1.5 px-3">
+                          {savingEdit ? "Saving..." : "Save"}
+                        </button>
+                        <button type="button" onClick={() => setEditingReviewId(null)} className="btn-outline text-[10px] py-1.5 px-3">Cancel</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-300 flex-shrink-0">
+                            {review.userPhotoURL ? (
+                              <Image src={review.userPhotoURL} alt={review.userName} width={36} height={36} className="object-cover w-full h-full" />
+                            ) : (
+                              review.userName.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">{review.userName}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} size={11} fill={star <= review.rating ? "#fbbf24" : "none"} style={{ color: star <= review.rating ? "#fbbf24" : "var(--text-muted)" }} />
+                              ))}
+                              <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>
+                                {review.createdAt?.toDate?.() ? new Date(review.createdAt.toDate()).toLocaleDateString() : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {isOwn && (
+                          <div className="flex gap-1 flex-shrink-0">
+                            <button onClick={() => startEditReview(review)} className="p-1.5 rounded-lg text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 text-[10px] font-bold">Edit</button>
+                            <button onClick={() => handleDeleteReview(review.id)} className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 text-[10px] font-bold">Delete</button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{review.comment}</p>
+                    </>
+                  )}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{review.comment}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      <AddedToCartModal
+        isOpen={addedItem !== null}
+        onClose={() => setAddedItem(null)}
+        onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
+        item={addedItem}
+      />
     </div>
   );
 }

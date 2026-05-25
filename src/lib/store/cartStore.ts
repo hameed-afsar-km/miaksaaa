@@ -10,6 +10,7 @@ export const useCartStore = create<CartState>()(
       couponCode: "",
       couponDiscount: 0,
       couponType: "percent" as const,
+      couponCategories: [] as string[],
 
       addItem: (newItem: CartItem) => {
         set((state) => {
@@ -48,18 +49,20 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [], couponCode: "", couponDiscount: 0 }),
+      clearCart: () =>
+        set({ items: [], couponCode: "", couponDiscount: 0, couponCategories: [] }),
 
       applyCoupon: (
         code: string,
         discount: number,
-        type: "percent" | "fixed"
+        type: "percent" | "fixed",
+        categories?: string[]
       ) => {
-        set({ couponCode: code, couponDiscount: discount, couponType: type });
+        set({ couponCode: code, couponDiscount: discount, couponType: type, couponCategories: categories ?? [] });
       },
 
       removeCoupon: () =>
-        set({ couponCode: "", couponDiscount: 0, couponType: "percent" }),
+        set({ couponCode: "", couponDiscount: 0, couponType: "percent", couponCategories: [] }),
 
       getSubtotal: () => {
         const { items } = get();
@@ -69,14 +72,25 @@ export const useCartStore = create<CartState>()(
         }, 0);
       },
 
+      getEligibleSubtotal: () => {
+        const { items, couponCategories } = get();
+        if (couponCategories.length === 0) return get().getSubtotal();
+        return items.reduce((sum, item) => {
+          if (!item.category || !couponCategories.includes(item.category)) return sum;
+          const price = item.discountedPrice ?? item.price;
+          return sum + price * item.quantity;
+        }, 0);
+      },
+
       getDiscount: () => {
-        const { couponDiscount, couponType, getSubtotal } = get();
+        const { couponDiscount, couponType, getEligibleSubtotal } = get();
         if (!couponDiscount) return 0;
-        const subtotal = getSubtotal();
+        const eligible = getEligibleSubtotal();
+        if (eligible === 0) return 0;
         if (couponType === "percent") {
-          return Math.round(subtotal * (couponDiscount / 100) * 100) / 100;
+          return Math.round(eligible * (couponDiscount / 100) * 100) / 100;
         }
-        return Math.min(couponDiscount, subtotal);
+        return Math.min(couponDiscount, eligible);
       },
 
       getTotal: () => {

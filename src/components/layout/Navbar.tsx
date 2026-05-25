@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ShoppingBag, Heart, User, Menu, X, LogOut,
-  ChevronDown, Shield, Package
+  ChevronDown, Shield, Package, Star
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useCartStore } from "@/lib/store/cartStore";
@@ -165,6 +165,10 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                         <Link href="/orders" onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
                           <Package size={15} style={{ color: "var(--purple-400)" }} /> My Orders
+                        </Link>
+                        <Link href="/reviews" onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
+                          <Star size={15} style={{ color: "var(--purple-400)" }} /> My Reviews
                         </Link>
                         {isAdmin && (
                           <Link href="/admin/dashboard" onClick={() => setProfileOpen(false)}

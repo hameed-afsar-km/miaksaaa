@@ -13,14 +13,15 @@ import {
   X,
   Clock,
 } from "lucide-react";
-import { getAllCoupons, saveCoupon, deleteCoupon } from "@/lib/firebase/firestore";
-import { Coupon } from "@/lib/types";
+import { getAllCoupons, saveCoupon, deleteCoupon, getAllCategoriesAdmin } from "@/lib/firebase/firestore";
+import { Coupon, Category } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { Timestamp } from "firebase/firestore";
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCoupon, setEditingCoupon] = useState<Partial<Coupon> | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -28,8 +29,14 @@ export default function AdminCouponsPage() {
 
   const loadCoupons = () => {
     setLoading(true);
-    getAllCoupons()
-      .then(setCoupons)
+    Promise.all([
+      getAllCoupons().catch(() => [] as Coupon[]),
+      getAllCategoriesAdmin().catch(() => [] as Category[]),
+    ])
+      .then(([couponsData, categoriesData]) => {
+        setCoupons(couponsData);
+        setCategories(categoriesData);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   };
@@ -92,6 +99,7 @@ export default function AdminCouponsPage() {
         oneTimeUse: !!editingCoupon.oneTimeUse,
         usedBy: editingCoupon.usedBy ?? [],
         expiresAt: editingCoupon.expiresAt ?? null,
+        categories: editingCoupon.categories ?? [],
       };
 
       await saveCoupon(editingCoupon.id ?? null, submitData as Omit<Coupon, "id">);
@@ -182,6 +190,18 @@ export default function AdminCouponsPage() {
                       <Clock size={11} /> {coupon.expiresAt.toDate().toLocaleDateString()}
                     </span>
                   </p>
+                )}
+                {coupon.categories && coupon.categories.length > 0 && (
+                  <div className="pt-1.5">
+                    <p className="text-[10px] mb-1" style={{ color: "var(--text-muted)" }}>Categories:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {coupon.categories.map((cat) => (
+                        <span key={cat} className="text-[9px] px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(147,51,234,0.15)", color: "var(--purple-300)" }}>
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -353,6 +373,46 @@ export default function AdminCouponsPage() {
                       onChange={(e) => setEditingCoupon({ ...editingCoupon, oneTimeUse: e.target.checked })}
                       className="w-4 h-4 cursor-pointer accent-purple-500"
                     />
+                  </div>
+
+                  {/* Category Restriction */}
+                  <div className="p-4 rounded-2xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <div className="mb-2">
+                      <h5 className="text-xs font-bold text-white">Restrict to Categories</h5>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>leave empty to apply to all products</p>
+                    </div>
+                    {categories.length === 0 ? (
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>No categories available</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {categories.map((cat) => {
+                          const selected = (editingCoupon.categories ?? []).includes(cat.name);
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => {
+                                const current = editingCoupon.categories ?? [];
+                                setEditingCoupon({
+                                  ...editingCoupon,
+                                  categories: selected
+                                    ? current.filter((c) => c !== cat.name)
+                                    : [...current, cat.name],
+                                });
+                              }}
+                              className="px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all"
+                              style={{
+                                background: selected ? "rgba(147,51,234,0.25)" : "rgba(147,51,234,0.05)",
+                                borderColor: selected ? "var(--purple-500)" : "var(--border)",
+                                color: selected ? "var(--purple-300)" : "var(--text-muted)",
+                              }}
+                            >
+                              {cat.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>

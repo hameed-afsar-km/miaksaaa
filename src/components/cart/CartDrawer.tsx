@@ -16,8 +16,8 @@ export function CartDrawer() {
   const { cartOpen, setCartOpen } = useUIStore();
   const {
     items, removeItem, updateQuantity,
-    getSubtotal, getDiscount, getTotal,
-    applyCoupon, removeCoupon, couponCode,
+    getSubtotal, getEligibleSubtotal, getDiscount, getTotal,
+    applyCoupon, removeCoupon, couponCode, couponCategories,
   } = useCartStore();
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -28,8 +28,25 @@ export function CartDrawer() {
     try {
       const { valid, coupon, message } = await validateCoupon(couponInput, getSubtotal(), user?.uid);
       if (valid && coupon) {
-        applyCoupon(coupon.code, coupon.discount, coupon.type);
-        toast.success(`Coupon applied! ${coupon.type === "percent" ? `${coupon.discount}% off` : formatPrice(coupon.discount) + " off"}`);
+        const cats = coupon.categories ?? [];
+        const eligibleTotal = cats.length === 0
+          ? getSubtotal()
+          : items.reduce((sum, item) => {
+              if (!item.category || !cats.includes(item.category)) return sum;
+              return sum + (item.discountedPrice ?? item.price) * item.quantity;
+            }, 0);
+        if (eligibleTotal < coupon.minOrder) {
+          toast.error(`Minimum eligible order of ₹${coupon.minOrder} required`);
+          setCouponLoading(false);
+          return;
+        }
+        if (eligibleTotal === 0) {
+          toast.error("No items in your cart match this coupon's categories");
+          setCouponLoading(false);
+          return;
+        }
+        applyCoupon(coupon.code, coupon.discount, coupon.type, cats);
+        toast.success(`Coupon applied! ${coupon.type === "percent" ? `${coupon.discount}% off` : formatPrice(coupon.discount) + " off"}${cats.length ? " on eligible items" : ""}`);
         setCouponInput("");
       } else {
         toast.error(message ?? "Invalid coupon");
@@ -168,13 +185,21 @@ export function CartDrawer() {
                 <div className="p-4 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
                   {/* Coupon */}
                   {couponCode ? (
-                    <div className="flex items-center justify-between px-3 py-2 rounded-lg"
-                      style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
-                      <div className="flex items-center gap-2">
-                        <Tag size={14} style={{ color: "var(--gold-400)" }} />
-                        <span className="text-sm font-semibold" style={{ color: "var(--gold-400)" }}>{couponCode}</span>
+                    <div>
+                      <div className="flex items-center justify-between px-3 py-2 rounded-lg"
+                        style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                        <div className="flex items-center gap-2">
+                          <Tag size={14} style={{ color: "var(--gold-400)" }} />
+                          <span className="text-sm font-semibold" style={{ color: "var(--gold-400)" }}>{couponCode}</span>
+                        </div>
+                        <button onClick={removeCoupon} className="text-xs hover:text-red-400 transition-colors" style={{ color: "var(--text-muted)" }}>Remove</button>
                       </div>
-                      <button onClick={removeCoupon} className="text-xs hover:text-red-400 transition-colors" style={{ color: "var(--text-muted)" }}>Remove</button>
+                      {couponCategories.length > 0 && (
+                        <p className="text-[10px] mt-1.5 px-1" style={{ color: "var(--text-muted)" }}>
+                          Eligible categories: {couponCategories.join(", ")}
+                          <br />Eligible subtotal: {formatPrice(getEligibleSubtotal())}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="flex gap-2">

@@ -89,6 +89,29 @@ export async function getProductsByCategory(category: string): Promise<Product[]
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
 }
 
+export async function getSimilarProducts(
+  category: string,
+  excludeId: string,
+  maxCount: number = 4
+): Promise<Product[]> {
+  try {
+    const q = query(
+      collection(db, "products"),
+      where("category", "==", category),
+      where("isVisible", "==", true),
+      limit(maxCount + 1)
+    );
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => ({ id: d.id, ...d.data() } as Product))
+      .filter((p) => p.id !== excludeId)
+      .slice(0, maxCount);
+  } catch (err) {
+    console.error("Failed to fetch similar products:", err);
+    return [];
+  }
+}
+
 export async function addProduct(
   data: Omit<Product, "id" | "createdAt" | "updatedAt">
 ): Promise<string> {
@@ -485,5 +508,28 @@ export async function updateProductRating(productId: string): Promise<void> {
 
 export async function deleteReview(reviewId: string, productId: string): Promise<void> {
   await deleteDoc(doc(db, "reviews", reviewId));
+  await updateProductRating(productId);
+}
+
+export async function getUserReviews(userId: string): Promise<Review[]> {
+  const q = query(
+    collection(db, "reviews"),
+    where("userId", "==", userId),
+    orderBy("createdAt", "desc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Review));
+}
+
+export async function updateReview(
+  reviewId: string,
+  productId: string,
+  rating: number,
+  comment: string
+): Promise<void> {
+  await updateDoc(doc(db, "reviews", reviewId), {
+    rating,
+    comment,
+  });
   await updateProductRating(productId);
 }
