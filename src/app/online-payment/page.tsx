@@ -10,7 +10,7 @@ import { CartItem, DeliveryAddress } from "@/lib/types";
 import toast from "react-hot-toast";
 
 const UPI_ID = "daezar24@okicici";
-const STORE_NAME = "MIAKSAAA Store";
+const STORE_NAME = "MIAKSAAA-Store";
 
 interface PaymentData {
   userId: string;
@@ -28,12 +28,24 @@ interface PaymentData {
 const TIMER_DURATION = 5 * 60;
 
 function generateTxnRef(): string {
-  return Math.random().toString(36).substring(2, 12).toUpperCase();
+  return `ORD${Date.now()}`;
 }
 
-function getGpayIntentUrl(amount: number, txnRef: string): string {
-  const params = `pa=${UPI_ID}&pn=${encodeURIComponent(STORE_NAME)}&am=${amount.toFixed(2)}&cu=INR&tn=${txnRef}`;
-  return `intent://pay?${params}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`;
+function getUPIUrl(amount: number, txnRef: string): string {
+  if (!amount || amount <= 0) {
+    throw new Error("Invalid amount");
+  }
+
+  const params = new URLSearchParams({
+    pa: UPI_ID,
+    pn: STORE_NAME,
+    am: amount.toFixed(2),
+    cu: "INR",
+    tn: txnRef,
+    tr: txnRef,
+  });
+
+  return `upi://pay?${params.toString()}`;
 }
 
 export default function OnlinePaymentPage() {
@@ -256,8 +268,7 @@ export default function OnlinePaymentPage() {
 
           {/* Google Pay button */}
           <a
-            href={getGpayIntentUrl(paymentData.total, txnRef)}
-            className="flex items-center justify-center gap-2 w-full max-w-sm py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] mb-4"
+          href={getUPIUrl(paymentData.total, txnRef)}            className="flex items-center justify-center gap-2 w-full max-w-sm py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] mb-4"
             style={{ background: "#000", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
@@ -266,8 +277,7 @@ export default function OnlinePaymentPage() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Pay with Google Pay
-          </a>
+            Pay with UPI          </a>
 
           {/* Confirm Button */}
           <button
@@ -294,7 +304,7 @@ export default function OnlinePaymentPage() {
 
           {/* Instructions */}
           <p className="text-[10px] mt-6 text-center max-w-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            Tap "Pay with Google Pay" to open the app with the amount pre-filled, or scan the QR code with any UPI app. 
+            Tap "Pay with UPI" to open the app with the amount pre-filled, or scan the QR code with any UPI app. 
             After paying, click "I've Paid — Place Order" to confirm.
           </p>
         </motion.div>
