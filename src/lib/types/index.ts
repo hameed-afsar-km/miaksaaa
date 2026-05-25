@@ -184,6 +184,18 @@ export interface Category {
   isActive: boolean;
 }
 
+// ─── REVIEW ────────────────────────────────────────────────────────────────────
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userPhotoURL?: string;
+  rating: number;
+  comment: string;
+  createdAt: Timestamp;
+}
+
 // ─── STORE SETTINGS ───────────────────────────────────────────────────────────
 export interface StoreSettings {
   isOpen: boolean;

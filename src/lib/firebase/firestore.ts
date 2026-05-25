@@ -27,6 +27,7 @@ import {
   StoreSettings,
   CartItem,
   DeliveryAddress,
+  Review,
 } from "@/lib/types";
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
@@ -428,4 +429,61 @@ export async function addAdmin(uid: string, email: string, displayName?: string,
 
 export async function removeAdmin(uid: string): Promise<void> {
   await deleteDoc(doc(db, "admins", uid));
+}
+
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+
+export async function addReview(
+  productId: string,
+  userId: string,
+  userName: string,
+  userPhotoURL: string | null,
+  rating: number,
+  comment: string
+): Promise<void> {
+  await addDoc(collection(db, "reviews"), {
+    productId,
+    userId,
+    userName,
+    userPhotoURL,
+    rating,
+    comment,
+    createdAt: serverTimestamp(),
+  });
+  await updateProductRating(productId);
+}
+
+export async function getProductReviews(productId: string): Promise<Review[]> {
+  const q = query(
+    collection(db, "reviews"),
+    where("productId", "==", productId),
+    orderBy("createdAt", "desc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Review));
+}
+
+export async function updateProductRating(productId: string): Promise<void> {
+  const reviewsSnap = await getDocs(
+    query(collection(db, "reviews"), where("productId", "==", productId))
+  );
+  const reviewCount = reviewsSnap.size;
+  let rating = 0;
+  if (reviewCount > 0) {
+    const total = reviewsSnap.docs.reduce(
+      (sum, d) => sum + (d.data().rating || 0),
+      0
+    );
+    rating = Math.round((total / reviewCount) * 10) / 10;
+  }
+  await updateDoc(doc(db, "products", productId), {
+    rating,
+    reviewCount,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteReview(reviewId: string, productId: string): Promise<void> {
+  await deleteDoc(doc(db, "reviews", reviewId));
+  await updateProductRating(productId);
 }

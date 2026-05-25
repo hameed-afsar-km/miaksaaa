@@ -71,8 +71,6 @@ export default function AdminProductsPage() {
       isHot: false,
       isOnSale: false,
       isVisible: true,
-      rating: 5,
-      reviewCount: 1,
       colorVariants: [],
       sizeVariants: [
         { size: "S", enabled: false, stock: 0 },
@@ -140,8 +138,8 @@ export default function AdminProductsPage() {
         isHot: !!editingProduct.isHot,
         isOnSale: !!editingProduct.isOnSale,
         isVisible: !!editingProduct.isVisible,
-        rating: Number(editingProduct.rating ?? 5),
-        reviewCount: Number(editingProduct.reviewCount ?? 1),
+        rating: 0,
+        reviewCount: 0,
         colorVariants: (editingProduct.colorVariants ?? []).filter(c => c.name.trim() !== ""),
         sizeVariants: editingProduct.sizeVariants ?? [],
         limitedTimeOffer: editingProduct.limitedTimeOffer ?? { enabled: false },
@@ -438,21 +436,35 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  {/* Display tags */}
+                  {/* Admin Tags (internal only) */}
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Tags (Comma separated)</label>
-                    <input
-                      type="text"
-                      value={(editingProduct.tags ?? []).join(", ")}
-                      onChange={(e) =>
-                        setEditingProduct({
-                          ...editingProduct,
-                          tags: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                        })
-                      }
-                      className="input text-xs py-2"
-                      placeholder="leather, premium, black"
-                    />
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Admin Tags</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {(editingProduct.tags ?? []).map((tag, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(147,51,234,0.2)", color: "var(--purple-300)", border: "1px solid rgba(147,51,234,0.3)" }}>
+                          {tag}
+                          <button type="button" onClick={() => setEditingProduct({ ...editingProduct, tags: (editingProduct.tags ?? []).filter((_, i) => i !== idx) })} className="hover:text-white">&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="input text-xs py-2 flex-1"
+                        placeholder="Type and press comma or Enter to add"
+                        onKeyDown={(e) => {
+                          if (e.key === "," || e.key === "Enter") {
+                            e.preventDefault();
+                            const val = (e.target as HTMLInputElement).value.replace(",", "").trim();
+                            if (val && !(editingProduct.tags ?? []).includes(val)) {
+                              setEditingProduct({ ...editingProduct, tags: [...(editingProduct.tags ?? []), val] });
+                            }
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>Tags are internal — not visible to customers</p>
                   </div>
 
                   {/* Product Images Drag & Drop / Upload */}

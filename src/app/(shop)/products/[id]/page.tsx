@@ -7,10 +7,11 @@ import {
   ShoppingBag, Heart, Star, ChevronLeft, ChevronRight,
   Minus, Plus, Truck, Shield, RefreshCw, Share2, Flame, Sparkles, Zap
 } from "lucide-react";
-import { Product } from "@/lib/types";
-import { getProductById } from "@/lib/firebase/firestore";
+import { Product, Review } from "@/lib/types";
+import { getProductById, getProductReviews, addReview } from "@/lib/firebase/firestore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
+import { useAuthStore } from "@/lib/store/authStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -26,16 +27,54 @@ export default function ProductDetailPage() {
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
+  const authUser = useAuthStore((s) => s.user);
   const addToCart = useCartStore((s) => s.addItem);
   const { setCartOpen } = useUIStore();
   const { addItem, removeItem, isInWishlist } = useWishlistStore();
   const inWishlist = product ? isInWishlist(product.id) : false;
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     getProductById(id)
       .then((p) => { setProduct(p); setLoading(false); })
       .catch(() => setLoading(false));
+    getProductReviews(id)
+      .then((r) => { setReviews(r); setReviewsLoading(false); })
+      .catch(() => setReviewsLoading(false));
   }, [id]);
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault();
+    if (!authUser || !product || !reviewComment.trim()) return;
+    setSubmittingReview(true);
+    try {
+      await addReview(
+        product.id,
+        authUser.uid,
+        authUser.displayName || authUser.email || "Anonymous",
+        authUser.photoURL,
+        reviewRating,
+        reviewComment.trim()
+      );
+      toast.success("Review submitted!");
+      setReviewComment("");
+      setReviewRating(5);
+      const updated = await getProductReviews(product.id);
+      setReviews(updated);
+      const refreshed = await getProductById(product.id);
+      if (refreshed) setProduct(refreshed);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  }
 
   function handleAddToCart() {
     if (!product || product.stock === 0) return;
@@ -456,7 +495,6 @@ export default function ProductDetailPage() {
                     <div className="space-y-2">
                       {[
                         ["Category", product.category],
-                        ["Tags", product.tags.join(", ") || "—"],
                         ["Stock", `${product.stock} units`],
                         ["Rating", `${product.rating}/5`],
                       ].map(([k, v]) => (
@@ -472,6 +510,86 @@ export default function ProductDetailPage() {
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-16 border-t pt-10" style={{ borderColor: "var(--border)" }}>
+        <h2 className="text-2xl font-black mb-8" style={{ fontFamily: "Playfair Display,serif" }}>
+          Customer Reviews
+        </h2>
+
+        {/* Review Form */}
+        {authUser ? (
+          <form onSubmit={handleSubmitReview} className="mb-10 p-5 rounded-2xl border" style={{ background: "rgba(147,51,234,0.04)", borderColor: "var(--border)" }}>
+            <h3 className="text-sm font-bold mb-3 text-white">Write a Review</h3>
+            <div className="flex items-center gap-1 mb-3">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const active = star <= (hoverRating || reviewRating);
+                return (
+                  <button
+                    type="button"
+                    key={star}
+                    onClick={() => setReviewRating(star === reviewRating ? 0 : star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 transition-transform hover:scale-110 cursor-pointer"
+                    title={`${star} star${star > 1 ? "s" : ""}`}
+                  >
+                    <Star size={22} fill={active ? "#fbbf24" : "transparent"} style={{ color: active ? "#fbbf24" : "var(--text-muted)" }} />
+                  </button>
+                );
+              })}
+              {reviewRating > 0 && <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>{reviewRating}/5</span>}
+            </div>
+            <textarea rows={3} value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Share your experience with this product..." className="input text-sm resize-none mb-3" required />
+            <button type="submit" disabled={submittingReview || reviewRating === 0 || !reviewComment.trim()} className="btn-primary text-xs py-2.5 px-5">
+              {submittingReview ? "Submitting..." : "Submit Review"}
+            </button>
+          </form>
+        ) : (
+          <div className="mb-10 p-5 rounded-2xl border text-center" style={{ background: "rgba(147,51,234,0.04)", borderColor: "var(--border)" }}>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Sign in to leave a review</p>
+          </div>
+        )}
+
+        {/* Review Cards */}
+        {reviewsLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((s) => (<div key={s} className="h-28 skeleton rounded-xl" />))}
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>No reviews yet. Be the first to review!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review.id} className="p-4 rounded-xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-300">
+                    {review.userPhotoURL ? (
+                      <Image src={review.userPhotoURL} alt={review.userName} width={36} height={36} className="object-cover w-full h-full" />
+                    ) : (
+                      review.userName.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{review.userName}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} size={11} fill={star <= review.rating ? "#fbbf24" : "none"} style={{ color: star <= review.rating ? "#fbbf24" : "var(--text-muted)" }} />
+                      ))}
+                      <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>
+                        {review.createdAt?.toDate?.() ? new Date(review.createdAt.toDate()).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

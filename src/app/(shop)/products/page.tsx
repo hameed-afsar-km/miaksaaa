@@ -37,8 +37,7 @@ function ProductsContent() {
   const filtered = products
     .filter((p) => {
       const matchSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase()) ||
-        p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+        p.description.toLowerCase().includes(search.toLowerCase());
       const matchCat = !category || p.category === category;
       const price = p.discountedPrice ?? p.price;
       const matchPrice = price >= priceRange[0] && price <= priceRange[1];
