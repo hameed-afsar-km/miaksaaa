@@ -51,7 +51,7 @@ export function AddedToCartModal({ isOpen, onClose, onGoToCart, item }: AddedToC
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 z-50"
-            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)" }}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}

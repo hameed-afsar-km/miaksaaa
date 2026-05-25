@@ -176,7 +176,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
                 src={banner.imageUrl}
                 alt={banner.title}
                 fill
-                className="object-cover object-[center_35%]"
+                className="object-cover object-top"
                 priority
                 sizes="100vw"
               />
@@ -336,7 +336,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
           ───────────────────────────────────────────────────────── */}
       <div
         className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] h-screen pt-[88px] max-w-screen-xl mx-auto px-8 xl:px-12 items-center relative z-10"
-        style={{ transform: "translateY(-40px)" }}
+        style={{ transform: "translateY(-65px)" }}
       >
 
         {/* Left Column — Brand & Text Details */}

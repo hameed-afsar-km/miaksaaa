@@ -56,9 +56,14 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 glass"
-        style={{ borderBottom: "1px solid var(--glass-border)" }}
-      >
+  className="fixed top-0 left-0 right-0 z-50"
+  style={{
+    background: "rgba(6,4,13,0.92)",
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+  }}
+>
         {/* 3-column grid: left=nav, center=brand, right=actions */}
         <div className="container-lg grid grid-cols-3 items-center h-[88px] lg:h-[80px]">
 
@@ -105,10 +110,15 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               )}
             </Link>
             {/* Hamburger menu button — mobile only */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2.5 rounded-xl !lg:hidden" aria-label="Open menu">
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
+            <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            style={{ display: "none" }}
+            className="lg:hidden btn-ghost p-2.5 rounded-xl"
+            aria-label="Open menu"
+            >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+         </div>
 
           {/* CENTER: Brand name and tagline */}
           <div className="flex flex-col items-center justify-center text-center">

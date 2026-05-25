@@ -163,7 +163,7 @@ export default function ProfilePage() {
               </div>
 
               <Link href="/admin/dashboard" className="btn-gold w-full mt-6 py-3 justify-center gap-2 cursor-pointer">
-                Enter Admin Sanctum <ArrowRight size={16} />
+                Go to Admin Dashboard <ArrowRight size={16} />
               </Link>
             </motion.div>
           ) : (

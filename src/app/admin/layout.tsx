@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <ShieldAlert className="w-16 h-16 text-red-500 animate-bounce mb-4" />
         <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Playfair Display, serif" }}>Access Denied</h1>
         <p className="text-sm mt-2 max-w-sm" style={{ color: "var(--text-secondary)" }}>
-          You do not possess the required administrator credentials to enter the MIAKSAAA control sanctum.
+          You do not possess the required administrator credentials to access the MIAKSAAA admin dashboard.
         </p>
         <Link href="/" className="btn-primary mt-6 text-xs px-6">Return to Main Shop</Link>
       </div>
@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center justify-between">
             <Link href="/admin/dashboard">
               <span className="text-2xl font-black tracking-widest gradient-text" style={{ fontFamily: "Playfair Display, serif" }}>
-                SANCTUM
+                ADMIN
               </span>
             </Link>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 rounded-lg text-purple-300">
