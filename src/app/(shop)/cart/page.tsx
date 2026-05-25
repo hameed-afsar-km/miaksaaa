@@ -169,12 +169,31 @@ export default function CartPage() {
                   <span>Discount</span><span>− {formatPrice(getDiscount())}</span>
                 </div>
               )}
-              <div className="flex justify-between" style={{ color: "var(--text-secondary)" }}>
-                <span>Delivery</span><span style={{ color: "#86efac" }}>Free</span>
-              </div>
-              <div className="flex justify-between font-black text-lg border-t pt-3" style={{ borderColor: "var(--border)" }}>
-                <span>Total</span><span className="gradient-text">{formatPrice(getTotal())}</span>
-              </div>
+              {(() => {
+                const subtotal = getSubtotal();
+                const afterDiscount = Math.max(0, subtotal - getDiscount());
+                const delivery = afterDiscount >= 499 ? 0 : 49;
+                const total = afterDiscount + delivery;
+                return (
+                  <>
+                    <div className="flex justify-between" style={{ color: "var(--text-secondary)" }}>
+                      <span>Delivery</span>
+                      {delivery === 0
+                        ? <span style={{ color: "#86efac" }}>FREE 🎉</span>
+                        : <span>{formatPrice(delivery)}</span>
+                      }
+                    </div>
+                    {delivery > 0 && (
+                      <p className="text-[10px] text-right" style={{ color: "var(--text-muted)" }}>
+                        Add ₹{499 - afterDiscount} more for free delivery
+                      </p>
+                    )}
+                    <div className="flex justify-between font-black text-lg border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                      <span>Total</span><span className="gradient-text">{formatPrice(total)}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <Link href="/checkout" className="btn-primary w-full justify-center gap-2">

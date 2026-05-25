@@ -9,7 +9,7 @@ import { formatPrice } from "@/lib/utils";
 import { CartItem, DeliveryAddress } from "@/lib/types";
 import toast from "react-hot-toast";
 
-const UPI_ID = "8122823074@upi";
+const UPI_ID = "daezar24@okicici";
 const STORE_NAME = "MIAKSAAA Store";
 
 interface PaymentData {

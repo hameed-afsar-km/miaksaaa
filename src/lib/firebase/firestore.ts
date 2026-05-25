@@ -16,6 +16,7 @@ import {
   setDoc,
   increment,
   arrayUnion,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "./config";
 import {
@@ -353,39 +354,36 @@ export async function updateOrderStatus(
   status: Order["status"]
 ): Promise<void> {
   const orderRef = doc(db, "orders", id);
-  
+  const isCancelled = status === "cancelled by user" || status === "cancelled by admin";
+
   try {
-    const snap = await getDoc(orderRef);
-    if (snap.exists()) {
-      const orderData = snap.data();
-      const oldStatus = orderData.status;
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(orderRef);
+      if (!snap.exists()) return;
 
-      // Check if changing to a cancelled status from a non-cancelled status
-      const isNowCancelled = status === "cancelled by user" || status === "cancelled by admin";
-      const wasAlreadyCancelled = oldStatus === "cancelled by user" || oldStatus === "cancelled by admin";
+      const oldStatus = snap.data().status;
+      const alreadyCancelled = oldStatus === "cancelled by user" || oldStatus === "cancelled by admin";
 
-      if (isNowCancelled && !wasAlreadyCancelled) {
-        const items = orderData.items || [];
+      // If already cancelled, don't restore stock again
+      if (isCancelled && !alreadyCancelled) {
+        const items = snap.data().items || [];
         for (const item of items) {
-          try {
-            const productRef = doc(db, "products", item.productId);
-            await updateDoc(productRef, {
-              stock: increment(item.quantity),
-            });
-          } catch (err) {
-            console.error(`Failed to restore stock for product ${item.productId}:`, err);
-          }
+          const productRef = doc(db, "products", item.productId);
+          transaction.update(productRef, {
+            stock: increment(item.quantity),
+          });
         }
       }
-    }
-  } catch (err) {
-    console.error("Error reading order for stock check:", err);
-  }
 
-  await updateDoc(orderRef, {
-    status,
-    updatedAt: serverTimestamp(),
-  });
+      transaction.update(orderRef, {
+        status,
+        updatedAt: serverTimestamp(),
+      });
+    });
+  } catch (err) {
+    console.error("Failed to update order status:", err);
+    throw err;
+  }
 }
 
 export async function deleteOrder(id: string): Promise<void> {

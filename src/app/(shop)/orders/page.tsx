@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -62,7 +62,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const cancellingRef = useRef<string | null>(null);
 
   const loadOrders = useCallback(() => {
     if (!user) return;
@@ -94,8 +94,8 @@ export default function OrdersPage() {
   }
 
   async function handleCancel(orderId: string) {
-    if (cancellingId) return;
-    setCancellingId(orderId);
+    if (cancellingRef.current) return;
+    cancellingRef.current = orderId;
     try {
       await updateOrderStatus(orderId, "cancelled by user");
       toast.success("Order cancelled successfully.");
@@ -103,7 +103,7 @@ export default function OrdersPage() {
     } catch {
       toast.error("Failed to cancel order. Please try again.");
     } finally {
-      setCancellingId(null);
+      cancellingRef.current = null;
     }
   }
 
@@ -148,7 +148,7 @@ export default function OrdersPage() {
           const cancelled = isCancelledStatus(order.status);
           const currentStep = getStepIndex(order.status);
           const style = getStatusStyle(order.status);
-          const isCancelling = cancellingId === order.id;
+          const isCancelling = cancellingRef.current === order.id;
           const canCancel = order.status === "waiting";
 
           return (
@@ -177,13 +177,33 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
                   <div className="text-right">
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>Total</p>
                     <p className="text-sm font-bold gradient-text">{formatPrice(order.total)}</p>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  {canCancel && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCancel(order.id); }}
+                      disabled={isCancelling}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap"
+                      style={{
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.25)",
+                        color: "#f87171",
+                      }}
+                    >
+                      {isCancelling ? (
+                        <span className="w-3 h-3 border-2 border-t-red-400 border-red-900/30 rounded-full animate-spin inline-block" />
+                      ) : (
+                        <XCircle size={12} />
+                      )}
+                      {isCancelling ? "Cancelling…" : "Cancel"}
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2">
                     {/* Status badge */}
                     <span
                       className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full"
@@ -208,41 +228,6 @@ export default function OrdersPage() {
                     style={{ borderColor: "var(--border)" }}
                   >
                     <div className="p-6 space-y-6">
-                      {/* Cancel button — only for waiting orders */}
-                      {canCancel && (
-                        <div
-                          className="flex items-center justify-between p-4 rounded-2xl"
-                          style={{ background: "rgba(234,179,8,0.07)", border: "1px solid rgba(234,179,8,0.2)" }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Clock size={15} className="text-amber-400" />
-                            <div>
-                              <p className="text-xs font-bold text-amber-300">Awaiting store confirmation</p>
-                              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                                You can cancel this order while it&apos;s still pending.
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleCancel(order.id); }}
-                            disabled={isCancelling}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                            style={{
-                              background: "rgba(239,68,68,0.1)",
-                              border: "1px solid rgba(239,68,68,0.3)",
-                              color: "#f87171",
-                            }}
-                          >
-                            {isCancelling ? (
-                              <span className="w-3.5 h-3.5 border-2 border-t-red-400 border-red-900/30 rounded-full animate-spin inline-block" />
-                            ) : (
-                              <XCircle size={13} />
-                            )}
-                            {isCancelling ? "Cancelling…" : "Cancel Order"}
-                          </button>
-                        </div>
-                      )}
-
                       {/* Cancelled notice */}
                       {cancelled && (
                         <div

@@ -35,9 +35,9 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "Online">("Online");
 
-  // Delivery charge: free above ₹999, else ₹49
+  // Delivery charge: free above ₹499, else ₹80
   const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
-  const deliveryCharge = subtotalAfterDiscount >= 999 ? 0 : 49;
+  const deliveryCharge = subtotalAfterDiscount >= 499 ? 0 : 49;
   const orderTotal = subtotalAfterDiscount + deliveryCharge;
 
   // Redirect if cart is empty
@@ -463,7 +463,7 @@ export default function CheckoutPage() {
                 }
               </div>
               {deliveryCharge > 0 && (
-                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Add ₹{999 - subtotalAfterDiscount} more for free delivery</p>
+                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Add ₹{499 - subtotalAfterDiscount} more for free delivery</p>
               )}
               <div className="flex justify-between font-black text-base border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <span>Total Amount</span><span className="gradient-text text-lg">{formatPrice(orderTotal)}</span>
