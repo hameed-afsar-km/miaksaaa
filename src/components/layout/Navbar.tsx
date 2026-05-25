@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ShoppingBag, Heart, User, Menu, X, LogOut,
+  ShoppingBag, User, Menu, X, LogOut,
   ChevronDown, Shield, Package, Star
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -84,8 +84,28 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </Link>
               ))}
             </nav>
-            {/* Hamburger menu button — always visible on both desktop & mobile */}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2.5 rounded-xl" aria-label="Open menu">
+            {/* Wishlist — desktop only */}
+            <Link href="/wishlist"
+              className="hidden lg:flex relative px-3 py-2 text-sm font-medium transition-colors rounded-lg whitespace-nowrap items-center gap-1.5"
+              style={{ color: pathname === "/wishlist" ? "var(--purple-300)" : "var(--text-secondary)" }}
+            >
+              {pathname === "/wishlist" && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-lg"
+                  style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
+                />
+              )}
+              <span className="relative z-10">Wishlist</span>
+              {mounted && wishCount > 0 && (
+                <span className="relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                  {wishCount}
+                </span>
+              )}
+            </Link>
+            {/* Hamburger menu button — mobile only */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2.5 rounded-xl !lg:hidden" aria-label="Open menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -100,7 +120,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 MIAKSAAA
               </span>
               <span
-                className="text-[10px] lg:text-xs tracking-[0.15em] uppercase leading-none mt-0.5"
+                className="text-[10px] lg:text-xs tracking-[0.15em] uppercase leading-none mt-0.5 whitespace-nowrap"
                 style={{ color: "var(--text-muted)" }}
               >
                 Fashion and Fun World
@@ -243,7 +263,6 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                   }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Heart size={16} className={wishCount > 0 ? "fill-amber-400 text-amber-400" : ""} />
                     <span>Wishlist</span>
                   </div>
                   {wishCount > 0 && (
