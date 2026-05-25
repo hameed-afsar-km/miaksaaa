@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/ProductCard";
 import { Product } from "@/lib/types";
-import { getAllProducts } from "@/lib/firebase/firestore";
+import { getAllProducts, getCategories } from "@/lib/firebase/firestore";
 import { useSearchParams } from "next/navigation";
 
 const SORT_OPTIONS = [
@@ -19,6 +19,7 @@ function ProductsContent() {
   const categoryParam = searchParams.get("category") ?? "";
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
@@ -27,12 +28,14 @@ function ProductsContent() {
   const [priceRange, setPriceRange] = useState([0, 100000]);
 
   useEffect(() => {
-    getAllProducts()
-      .then(setProducts)
-      .finally(() => setLoading(false));
+    Promise.all([
+      getAllProducts(),
+      getCategories(),
+    ]).then(([productsData, categoriesData]) => {
+      setProducts(productsData);
+      setAllCategories(categoriesData.map((c) => c.name).filter(Boolean));
+    }).finally(() => setLoading(false));
   }, []);
-
-  const categories = [...new Set(products.map((p) => p.category))].filter(Boolean);
 
   const filtered = products
     .filter((p) => {
@@ -119,7 +122,7 @@ function ProductsContent() {
             >
               All
             </button>
-            {categories.map((c) => (
+            {allCategories.map((c) => (
               <button
                 key={c}
                 onClick={() => setCategory(c === category ? "" : c)}

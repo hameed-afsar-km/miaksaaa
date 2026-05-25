@@ -2,9 +2,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CheckCircle, AlertTriangle, ArrowLeft, CreditCard, Fingerprint } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, ArrowLeft } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
-import { placeOrder, updateOrderUTR } from "@/lib/firebase/firestore";
+import { placeOrder } from "@/lib/firebase/firestore";
 import { formatPrice } from "@/lib/utils";
 import { CartItem, DeliveryAddress } from "@/lib/types";
 import toast from "react-hot-toast";
@@ -45,8 +45,6 @@ export default function OnlinePaymentPage() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [status, setStatus] = useState<"pending" | "completed" | "expired">("pending");
   const [submitting, setSubmitting] = useState(false);
-  const [utr, setUtr] = useState("");
-  const [utrError, setUtrError] = useState("");
   const [qrLoaded, setQrLoaded] = useState(false);
   const [txnRef] = useState(generateTxnRef);
   const qrContainerRef = useRef<HTMLDivElement>(null);
@@ -126,23 +124,13 @@ export default function OnlinePaymentPage() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
 
-  function validateUtr(val: string): string {
-    const digits = val.replace(/\D/g, "");
-    if (digits.length === 0) return "Please enter your UPI Transaction ID";
-    if (digits.length < 12) return "UTR must be exactly 12 digits";
-    return "";
-  }
-
   async function handleConfirmPayment() {
     if (!paymentData || submitting) return;
-    const error = validateUtr(utr);
-    setUtrError(error);
-    if (error) return;
 
     setSubmitting(true);
     if (timerRef.current) clearInterval(timerRef.current);
     try {
-      const orderId = await placeOrder(
+      await placeOrder(
         paymentData.userId,
         paymentData.userEmail,
         paymentData.items,
@@ -155,11 +143,10 @@ export default function OnlinePaymentPage() {
         paymentData.notes,
         "Online"
       );
-      await updateOrderUTR(orderId, utr.replace(/\D/g, ""));
       setStatus("completed");
       clearCart();
       sessionStorage.removeItem("online-payment-data");
-      toast.success("Payment recorded! Order placed successfully.");
+      toast.success("Order placed successfully!");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message ?? "Failed to place order.");
@@ -230,7 +217,7 @@ export default function OnlinePaymentPage() {
         )}
       </AnimatePresence>
 
-      {/* QR full-screen overlay + UTR input */}
+      {/* QR full-screen overlay */}
       {!showModal && status === "pending" && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -282,30 +269,6 @@ export default function OnlinePaymentPage() {
             Pay with Google Pay
           </a>
 
-          {/* UTR Input */}
-          <div className="w-full max-w-sm space-y-2 mb-6">
-            <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              <Fingerprint size={12} className="inline mr-1" />
-              Enter 12-digit UPI Transaction ID (UTR)
-            </label>
-            <div className="relative">
-              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={12}
-                value={utr}
-                onChange={(e) => { setUtr(e.target.value.replace(/\D/g, "").slice(0, 12)); setUtrError(""); }}
-                className="input pl-11 text-sm text-center tracking-widest font-mono"
-                placeholder="Enter 12-digit UTR number"
-                style={{ borderColor: utrError ? "rgba(239,68,68,0.5)" : undefined }}
-              />
-            </div>
-            {utrError && (
-              <p className="text-xs" style={{ color: "#ef4444" }}>{utrError}</p>
-            )}
-          </div>
-
           {/* Confirm Button */}
           <button
             onClick={handleConfirmPayment}
@@ -317,7 +280,7 @@ export default function OnlinePaymentPage() {
             ) : (
               <>
                 <CheckCircle size={20} />
-                Confirm Payment
+                I've Paid — Place Order
               </>
             )}
           </button>
@@ -331,8 +294,8 @@ export default function OnlinePaymentPage() {
 
           {/* Instructions */}
           <p className="text-[10px] mt-6 text-center max-w-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            Tap "Pay with Google Pay" above to open the app directly with the amount pre-filled, or scan the QR code with any UPI app.
-            After paying, enter the 12-digit UTR (Transaction Reference Number) from your payment app and click Confirm.
+            Tap "Pay with Google Pay" to open the app with the amount pre-filled, or scan the QR code with any UPI app. 
+            After paying, click "I've Paid — Place Order" to confirm.
           </p>
         </motion.div>
       )}
@@ -345,14 +308,11 @@ export default function OnlinePaymentPage() {
             <CheckCircle size={40} style={{ color: "#22c55e" }} />
           </div>
           <h2 className="text-2xl font-black gradient-text" style={{ fontFamily: "Playfair Display,serif" }}>
-            Payment Submitted!
+            Order Placed Successfully!
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Thank you for your purchase! Your UTR has been recorded and your order is now being reviewed.
+            Thank you for your purchase! Your order has been placed and is now being reviewed by our team.
             We will notify you once the payment is verified.
-          </p>
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            UTR: <span className="font-mono font-bold text-white">{utr.replace(/\D/g, "")}</span>
           </p>
           <button
             onClick={() => router.replace("/orders")}
