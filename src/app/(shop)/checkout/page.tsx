@@ -18,6 +18,17 @@ export default function CheckoutPage() {
     items, clearCart, getSubtotal, getDiscount, getTotal, couponCode,
   } = useCartStore();
 
+  function updateField(field: string, value: string) {
+    setAddress((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  }
+
   const [address, setAddress] = useState({
     fullName: "",
     phone: "",
@@ -34,6 +45,7 @@ export default function CheckoutPage() {
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "Online">("Online");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Delivery charge: free above ₹499, else ₹80
   const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
@@ -122,6 +134,20 @@ export default function CheckoutPage() {
     captureLocation(true);
   }
 
+  function validateFields() {
+    const errors: Record<string, string> = {};
+    if (!address.fullName.trim()) errors.fullName = "Please enter your full name";
+    if (!address.phone.trim()) errors.phone = "Phone number is required";
+    else if (!/^\d{10}$/.test(address.phone.trim())) errors.phone = "Enter a valid 10-digit phone number";
+    if (!address.addressLine1.trim()) errors.addressLine1 = "Please enter your address";
+    if (!address.city.trim()) errors.city = "City is required";
+    if (!address.state.trim()) errors.state = "State is required";
+    if (!address.postalCode.trim()) errors.postalCode = "Postal code is required";
+    else if (!/^\d{6}$/.test(address.postalCode.trim())) errors.postalCode = "Enter a valid 6-digit postal code";
+    if (!address.country.trim()) errors.country = "Country is required";
+    return errors;
+  }
+
   async function handleCheckout(e: React.FormEvent) {
     e.preventDefault();
     if (!user) {
@@ -131,6 +157,16 @@ export default function CheckoutPage() {
     }
     if (items.length === 0) {
       toast.error("Your cart is empty.");
+      return;
+    }
+
+    const errors = validateFields();
+    setFieldErrors(errors);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      const firstField = document.querySelector<HTMLElement>(`[name="${errorKeys[0]}"]`);
+      firstField?.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstField?.focus();
       return;
     }
 
@@ -217,6 +253,21 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form area */}
         <form onSubmit={handleCheckout} className="lg:col-span-2 space-y-6">
+          {/* Validation error banner */}
+          {Object.keys(fieldErrors).length > 0 && (
+            <div className="p-4 rounded-2xl flex items-start gap-3" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+              <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-black" style={{ background: "rgba(239,68,68,0.8)" }}>
+                {Object.keys(fieldErrors).length}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-red-400">Please complete all required fields</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  Fill in the highlighted fields below to proceed with your order
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Address Details */}
           <div className="p-6 rounded-3xl space-y-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -233,11 +284,13 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    name="fullName"
                     value={address.fullName}
-                    onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
-                    className="input pl-11 text-sm"
+                    onChange={(e) => updateField("fullName", e.target.value)}
+                    className={`input pl-11 text-sm ${fieldErrors.fullName ? "border-red-500" : ""}`}
                     placeholder="Enter full name"
                   />
+                  {fieldErrors.fullName && <p className="text-red-400 text-xs mt-1">{fieldErrors.fullName}</p>}
                 </div>
               </div>
 
@@ -250,11 +303,16 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     required
+                    name="phone"
                     value={address.phone}
-                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    className="input pl-11 text-sm"
+                    onChange={(e) => updateField("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className={`input pl-11 text-sm ${fieldErrors.phone ? "border-red-500" : ""}`}
                     placeholder="Enter 10-digit number"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    title="Enter a valid 10-digit phone number"
                   />
+                  {fieldErrors.phone && <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                 </div>
               </div>
 
@@ -265,11 +323,13 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
+                  name="addressLine1"
                   value={address.addressLine1}
-                  onChange={(e) => setAddress({ ...address, addressLine1: e.target.value })}
-                  className="input text-sm"
+                  onChange={(e) => updateField("addressLine1", e.target.value)}
+                  className={`input text-sm ${fieldErrors.addressLine1 ? "border-red-500" : ""}`}
                   placeholder="House No, Street, Apartment Name"
                 />
+                {fieldErrors.addressLine1 && <p className="text-red-400 text-xs mt-1">{fieldErrors.addressLine1}</p>}
               </div>
 
               <div className="md:col-span-2">
@@ -292,11 +352,13 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
+                  name="city"
                   value={address.city}
-                  onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                  className="input text-sm"
+                  onChange={(e) => updateField("city", e.target.value)}
+                  className={`input text-sm ${fieldErrors.city ? "border-red-500" : ""}`}
                   placeholder="City"
                 />
+                {fieldErrors.city && <p className="text-red-400 text-xs mt-1">{fieldErrors.city}</p>}
               </div>
 
               <div>
@@ -306,11 +368,13 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
+                  name="state"
                   value={address.state}
-                  onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                  className="input text-sm"
+                  onChange={(e) => updateField("state", e.target.value)}
+                  className={`input text-sm ${fieldErrors.state ? "border-red-500" : ""}`}
                   placeholder="State"
                 />
+                {fieldErrors.state && <p className="text-red-400 text-xs mt-1">{fieldErrors.state}</p>}
               </div>
 
               <div>
@@ -320,11 +384,16 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
+                  name="postalCode"
                   value={address.postalCode}
-                  onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
-                  className="input text-sm"
+                  onChange={(e) => updateField("postalCode", e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className={`input text-sm ${fieldErrors.postalCode ? "border-red-500" : ""}`}
                   placeholder="6-digit ZIP code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  title="Enter a valid 6-digit postal code"
                 />
+                {fieldErrors.postalCode && <p className="text-red-400 text-xs mt-1">{fieldErrors.postalCode}</p>}
               </div>
 
               <div>
@@ -334,11 +403,13 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
+                  name="country"
                   value={address.country}
-                  onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                  className="input text-sm"
+                  onChange={(e) => updateField("country", e.target.value)}
+                  className={`input text-sm ${fieldErrors.country ? "border-red-500" : ""}`}
                   placeholder="Country"
                 />
+                {fieldErrors.country && <p className="text-red-400 text-xs mt-1">{fieldErrors.country}</p>}
               </div>
             </div>
 
