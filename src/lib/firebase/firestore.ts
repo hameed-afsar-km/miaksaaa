@@ -398,6 +398,18 @@ export async function deleteAllOrders(): Promise<void> {
   await Promise.all(batch);
 }
 
+export async function updateOrderUTR(
+  orderId: string,
+  utr: string
+): Promise<void> {
+  const orderRef = doc(db, "orders", orderId);
+  await updateDoc(orderRef, {
+    utr,
+    status: "waiting",
+    updatedAt: serverTimestamp(),
+  });
+}
+
 // ─── STORE SETTINGS ──────────────────────────────────────────────────────────
 
 const SETTINGS_DOC = doc(db, "settings", "store");

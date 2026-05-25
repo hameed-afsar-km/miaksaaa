@@ -1,14 +1,16 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CheckCircle, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, ArrowLeft, CreditCard, Fingerprint } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
-import { placeOrder } from "@/lib/firebase/firestore";
+import { placeOrder, updateOrderUTR } from "@/lib/firebase/firestore";
 import { formatPrice } from "@/lib/utils";
 import { CartItem, DeliveryAddress } from "@/lib/types";
 import toast from "react-hot-toast";
+
+const UPI_ID = "8122823074@upi";
+const STORE_NAME = "MIAKSAAA Store";
 
 interface PaymentData {
   userId: string;
@@ -25,6 +27,15 @@ interface PaymentData {
 
 const TIMER_DURATION = 5 * 60;
 
+function generateTxnRef(): string {
+  return Math.random().toString(36).substring(2, 12).toUpperCase();
+}
+
+function getGpayIntentUrl(amount: number, txnRef: string): string {
+  const params = `pa=${UPI_ID}&pn=${encodeURIComponent(STORE_NAME)}&am=${amount.toFixed(2)}&cu=INR&tn=${txnRef}`;
+  return `intent://pay?${params}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`;
+}
+
 export default function OnlinePaymentPage() {
   const router = useRouter();
   const { clearCart } = useCartStore();
@@ -34,6 +45,11 @@ export default function OnlinePaymentPage() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [status, setStatus] = useState<"pending" | "completed" | "expired">("pending");
   const [submitting, setSubmitting] = useState(false);
+  const [utr, setUtr] = useState("");
+  const [utrError, setUtrError] = useState("");
+  const [qrLoaded, setQrLoaded] = useState(false);
+  const [txnRef] = useState(generateTxnRef);
+  const qrContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -72,18 +88,61 @@ export default function OnlinePaymentPage() {
     };
   }, [showModal, status, paymentData]);
 
+  useEffect(() => {
+    if (!showModal && status === "pending" && !qrLoaded) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      script.async = true;
+      script.onload = () => setQrLoaded(true);
+      document.body.appendChild(script);
+      return () => {
+        if (document.body.contains(script)) document.body.removeChild(script);
+      };
+    }
+  }, [showModal, status, qrLoaded]);
+
+  useEffect(() => {
+    if (qrLoaded && qrContainerRef.current && paymentData) {
+      qrContainerRef.current.innerHTML = "";
+      const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(STORE_NAME)}&am=${paymentData.total.toFixed(2)}&cu=INR&tn=${txnRef}`;
+      try {
+        new (window as any).QRCode(qrContainerRef.current, {
+          text: upiLink,
+          width: 220,
+          height: 220,
+          colorDark: "#ffffff",
+          colorLight: "#0a0614",
+          correctLevel: (window as any).QRCode.CorrectLevel?.H || 3,
+        });
+      } catch {
+        toast.error("Failed to generate QR code. Please refresh.");
+      }
+    }
+  }, [qrLoaded, paymentData, txnRef]);
+
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
 
-  async function handleDone() {
+  function validateUtr(val: string): string {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length === 0) return "Please enter your UPI Transaction ID";
+    if (digits.length < 12) return "UTR must be exactly 12 digits";
+    return "";
+  }
+
+  async function handleConfirmPayment() {
     if (!paymentData || submitting) return;
+    const error = validateUtr(utr);
+    setUtrError(error);
+    if (error) return;
+
     setSubmitting(true);
     if (timerRef.current) clearInterval(timerRef.current);
     try {
-      await placeOrder(
+      const orderId = await placeOrder(
         paymentData.userId,
         paymentData.userEmail,
         paymentData.items,
@@ -96,10 +155,11 @@ export default function OnlinePaymentPage() {
         paymentData.notes,
         "Online"
       );
+      await updateOrderUTR(orderId, utr.replace(/\D/g, ""));
       setStatus("completed");
       clearCart();
       sessionStorage.removeItem("online-payment-data");
-      toast.success("Payment successful! Order placed. 🍾");
+      toast.success("Payment recorded! Order placed successfully.");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message ?? "Failed to place order.");
@@ -150,7 +210,7 @@ export default function OnlinePaymentPage() {
                 <span className="text-lg font-bold" style={{ color: "var(--gold-400)" }}>
                   {formatPrice(paymentData.total)}
                 </span>
-                . Once the payment is verified by the seller, you will be intimated and your goodies will be delivered. Thank You
+                {" "}via UPI. Once the payment is verified by the seller, you will be intimated and your goodies will be delivered. Thank You
               </p>
               <button
                 onClick={() => setShowModal(false)}
@@ -170,50 +230,111 @@ export default function OnlinePaymentPage() {
         )}
       </AnimatePresence>
 
-      {/* QR full-screen background + bottom controls */}
+      {/* QR full-screen overlay + UTR input */}
       {!showModal && status === "pending" && (
-        <div className="fixed inset-0">
-          <Image src="/qr.png" alt="Payment QR Code" fill className="object-cover" priority />
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-5 pb-12 px-4"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-[#0a0614]/95 backdrop-blur-sm p-4"
+        >
+          {/* Timer */}
+          <div className="flex items-center gap-3 px-6 py-3 rounded-full mb-6"
             style={{
-              background: "linear-gradient(transparent, rgba(0,0,0,0.7) 40%)",
-              paddingTop: "6rem",
+              background: timeLeft <= 60 ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.06)",
+              border: `1px solid ${timeLeft <= 60 ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`,
+              backdropFilter: "blur(8px)",
             }}>
-            <div className="flex items-center gap-3 px-6 py-3 rounded-full"
-              style={{
-                background: timeLeft <= 60 ? "rgba(239,68,68,0.25)" : "rgba(0,0,0,0.55)",
-                border: `1px solid ${timeLeft <= 60 ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.15)"}`,
-                backdropFilter: "blur(8px)",
-              }}>
-              <Clock size={18} style={{ color: timeLeft <= 60 ? "#ef4444" : "white" }} />
-              <span className="font-mono text-xl font-bold text-white">
-                {formatTime(timeLeft)}
-              </span>
-            </div>
-
-            <button
-              onClick={handleDone}
-              disabled={submitting}
-              className="btn-primary w-full max-w-sm py-4 text-lg gap-2 cursor-pointer"
-            >
-              {submitting ? (
-                "Processing..."
-              ) : (
-                <>
-                  <CheckCircle size={20} />
-                  Done - Payment Completed
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleGoBack}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/60 hover:text-white transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={14} /> Back to Cart
-            </button>
+            <Clock size={18} style={{ color: timeLeft <= 60 ? "#ef4444" : "white" }} />
+            <span className="font-mono text-xl font-bold text-white">
+              {formatTime(timeLeft)}
+            </span>
           </div>
-        </div>
+
+          {/* QR Code */}
+          <div className="p-4 rounded-2xl mb-4" style={{ background: "#0a0614", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div ref={qrContainerRef} className="flex items-center justify-center w-[220px] h-[220px]">
+              {!qrLoaded && (
+                <div className="w-10 h-10 rounded-full border-4 border-t-purple-500 border-purple-900/30 animate-spin" />
+              )}
+            </div>
+          </div>
+
+          {/* Amount */}
+          <p className="text-lg font-bold mb-1" style={{ color: "var(--gold-400)" }}>
+            {formatPrice(paymentData.total)}
+          </p>
+          <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
+            UPI ID: {UPI_ID}
+          </p>
+
+          {/* Google Pay button */}
+          <a
+            href={getGpayIntentUrl(paymentData.total, txnRef)}
+            className="flex items-center justify-center gap-2 w-full max-w-sm py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] mb-4"
+            style={{ background: "#000", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Pay with Google Pay
+          </a>
+
+          {/* UTR Input */}
+          <div className="w-full max-w-sm space-y-2 mb-6">
+            <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+              <Fingerprint size={12} className="inline mr-1" />
+              Enter 12-digit UPI Transaction ID (UTR)
+            </label>
+            <div className="relative">
+              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={12}
+                value={utr}
+                onChange={(e) => { setUtr(e.target.value.replace(/\D/g, "").slice(0, 12)); setUtrError(""); }}
+                className="input pl-11 text-sm text-center tracking-widest font-mono"
+                placeholder="Enter 12-digit UTR number"
+                style={{ borderColor: utrError ? "rgba(239,68,68,0.5)" : undefined }}
+              />
+            </div>
+            {utrError && (
+              <p className="text-xs" style={{ color: "#ef4444" }}>{utrError}</p>
+            )}
+          </div>
+
+          {/* Confirm Button */}
+          <button
+            onClick={handleConfirmPayment}
+            disabled={submitting}
+            className="btn-primary w-full max-w-sm py-4 text-lg gap-2 cursor-pointer"
+          >
+            {submitting ? (
+              "Processing..."
+            ) : (
+              <>
+                <CheckCircle size={20} />
+                Confirm Payment
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleGoBack}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-white/60 hover:text-white transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={14} /> Back to Cart
+          </button>
+
+          {/* Instructions */}
+          <p className="text-[10px] mt-6 text-center max-w-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            Tap "Pay with Google Pay" above to open the app directly with the amount pre-filled, or scan the QR code with any UPI app.
+            After paying, enter the 12-digit UTR (Transaction Reference Number) from your payment app and click Confirm.
+          </p>
+        </motion.div>
       )}
 
       {/* Success State */}
@@ -224,11 +345,14 @@ export default function OnlinePaymentPage() {
             <CheckCircle size={40} style={{ color: "#22c55e" }} />
           </div>
           <h2 className="text-2xl font-black gradient-text" style={{ fontFamily: "Playfair Display,serif" }}>
-            Payment Successful!
+            Payment Submitted!
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Thank you for your purchase! Your order has been placed and is now being reviewed by our team.
-            You will be notified once the payment is verified and your goodies are on the way.
+            Thank you for your purchase! Your UTR has been recorded and your order is now being reviewed.
+            We will notify you once the payment is verified.
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            UTR: <span className="font-mono font-bold text-white">{utr.replace(/\D/g, "")}</span>
           </p>
           <button
             onClick={() => router.replace("/orders")}
@@ -247,7 +371,7 @@ export default function OnlinePaymentPage() {
             <AlertTriangle size={40} style={{ color: "#ef4444" }} />
           </div>
           <h2 className="text-2xl font-black" style={{ color: "#ef4444", fontFamily: "Playfair Display,serif" }}>
-            Payment Not Completed
+            Payment Window Expired
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             The payment window has expired. Your order was not placed. Please try again.
