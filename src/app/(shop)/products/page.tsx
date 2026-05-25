@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/ProductCard";
-import { Product } from "@/lib/types";
+import { Product, Category } from "@/lib/types";
 import { getAllProducts, getCategories } from "@/lib/firebase/firestore";
 import { useSearchParams } from "next/navigation";
 
@@ -19,11 +19,11 @@ function ProductsContent() {
   const categoryParam = searchParams.get("category") ?? "";
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [category, setCategory] = useState(categoryParam);
+  const [category, setCategory] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 100000]);
 
@@ -33,7 +33,13 @@ function ProductsContent() {
       getCategories(),
     ]).then(([productsData, categoriesData]) => {
       setProducts(productsData);
-      setAllCategories(categoriesData.map((c) => c.name).filter(Boolean));
+      setCategoryList(categoriesData);
+      // Resolve URL param — could be slug or name
+      const param = categoryParam.toLowerCase();
+      const matched = categoriesData.find(
+        (c) => c.slug.toLowerCase() === param || c.name.toLowerCase() === param
+      );
+      setCategory(matched ? matched.name : "");
     }).finally(() => setLoading(false));
   }, []);
 
@@ -122,13 +128,13 @@ function ProductsContent() {
             >
               All
             </button>
-            {allCategories.map((c) => (
+            {categoryList.map((c) => (
               <button
-                key={c}
-                onClick={() => setCategory(c === category ? "" : c)}
-                className={`badge text-xs py-1.5 px-3 cursor-pointer transition-all ${category === c ? "badge-gold" : "badge-purple opacity-50"}`}
+                key={c.name}
+                onClick={() => setCategory(c.name === category ? "" : c.name)}
+                className={`badge text-xs py-1.5 px-3 cursor-pointer transition-all ${category === c.name ? "badge-gold" : "badge-purple opacity-50"}`}
               >
-                {c}
+                {c.name}
               </button>
             ))}
           </div>
