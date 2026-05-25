@@ -21,7 +21,7 @@ import {
   deleteProduct,
   getAllCategoriesAdmin,
 } from "@/lib/firebase/firestore";
-import { Product, Category } from "@/lib/types";
+import { Product, Category, ColorVariant, SizeVariant, LimitedTimeOffer } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -72,6 +72,18 @@ export default function AdminProductsPage() {
       isVisible: true,
       rating: 5,
       reviewCount: 1,
+      colorVariants: [],
+      sizeVariants: [
+        { size: "S", enabled: false, stock: 0 },
+        { size: "M", enabled: false, stock: 0 },
+        { size: "L", enabled: false, stock: 0 },
+        { size: "XL", enabled: false, stock: 0 },
+        { size: "2XL", enabled: false, stock: 0 },
+        { size: "3XL", enabled: false, stock: 0 },
+        { size: "4XL", enabled: false, stock: 0 },
+        { size: "5XL", enabled: false, stock: 0 },
+      ],
+      limitedTimeOffer: { enabled: false },
     });
     setCustomCategoryActive(categoriesList.length === 0);
     setFormOpen(true);
@@ -129,6 +141,9 @@ export default function AdminProductsPage() {
         isVisible: !!editingProduct.isVisible,
         rating: Number(editingProduct.rating ?? 5),
         reviewCount: Number(editingProduct.reviewCount ?? 1),
+        colorVariants: (editingProduct.colorVariants ?? []).filter(c => c.name.trim() !== ""),
+        sizeVariants: editingProduct.sizeVariants ?? [],
+        limitedTimeOffer: editingProduct.limitedTimeOffer ?? { enabled: false },
       };
 
       if (editingProduct.id) {
@@ -491,6 +506,166 @@ export default function AdminProductsPage() {
                         onChange={(e) => setEditingProduct({ ...editingProduct, isNew: e.target.checked })}
                         className="w-4 h-4 cursor-pointer accent-purple-500"
                       />
+                    </div>
+                  </div>
+
+                  {/* Limited Time Offer */}
+                  <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(251,191,36,0.05)", borderColor: "rgba(251,191,36,0.2)" }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="text-xs font-bold text-white">Limited Time Offer</h5>
+                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Shows quick tag below price</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={editingProduct.limitedTimeOffer?.enabled ?? false}
+                        onChange={(e) =>
+                          setEditingProduct({
+                            ...editingProduct,
+                            limitedTimeOffer: { ...editingProduct.limitedTimeOffer, enabled: e.target.checked },
+                          })
+                        }
+                        className="w-4 h-4 cursor-pointer accent-amber-500"
+                      />
+                    </div>
+
+                    {editingProduct.limitedTimeOffer?.enabled && (
+                      <div className="space-y-2 border-t border-amber-500/10 pt-3">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Tag Label</label>
+                          <input
+                            type="text"
+                            value={editingProduct.limitedTimeOffer?.label ?? ""}
+                            onChange={(e) =>
+                              setEditingProduct({
+                                ...editingProduct,
+                                limitedTimeOffer: { ...editingProduct.limitedTimeOffer, label: e.target.value },
+                              })
+                            }
+                            className="input text-xs py-2"
+                            placeholder="e.g., 'Limited Stock', 'Flash Sale'"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Color Variants */}
+                  <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-xs font-bold text-white">Color Variants</h5>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProduct({
+                            ...editingProduct,
+                            colorVariants: [
+                              ...(editingProduct.colorVariants ?? []),
+                              { name: "", hexCode: "#000000", stock: 0 },
+                            ],
+                          });
+                        }}
+                        className="text-purple-400 hover:text-purple-300 text-xs font-bold"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {(editingProduct.colorVariants ?? []).map((color, idx) => (
+                        <div key={idx} className="flex gap-2 items-start p-2 rounded-lg bg-purple-950/20 border border-purple-500/10">
+                          <input
+                            type="text"
+                            placeholder="Color name"
+                            value={color.name}
+                            onChange={(e) => {
+                              const newVariants = [...(editingProduct.colorVariants ?? [])];
+                              newVariants[idx] = { ...color, name: e.target.value };
+                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                            }}
+                            className="input text-xs py-1.5 flex-1"
+                          />
+                          <input
+                            type="color"
+                            value={color.hexCode}
+                            onChange={(e) => {
+                              const newVariants = [...(editingProduct.colorVariants ?? [])];
+                              newVariants[idx] = { ...color, hexCode: e.target.value };
+                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                            }}
+                            className="w-10 h-10 rounded cursor-pointer"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Stock"
+                            value={color.stock}
+                            onChange={(e) => {
+                              const newVariants = [...(editingProduct.colorVariants ?? [])];
+                              newVariants[idx] = { ...color, stock: Number(e.target.value) };
+                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                            }}
+                            className="input text-xs py-1.5 w-16"
+                            min="0"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingProduct({
+                                ...editingProduct,
+                                colorVariants: editingProduct.colorVariants?.filter((_, i) => i !== idx),
+                              });
+                            }}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Size Variants */}
+                  <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <h5 className="text-xs font-bold text-white">Available Sizes</h5>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(editingProduct.sizeVariants ?? []).map((sizeVar, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2 rounded-lg border transition-all"
+                          style={{
+                            background: sizeVar.enabled ? "rgba(147,51,234,0.2)" : "rgba(147,51,234,0.05)",
+                            borderColor: sizeVar.enabled ? "rgba(147,51,234,0.4)" : "var(--border)",
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <input
+                              type="checkbox"
+                              checked={sizeVar.enabled}
+                              onChange={(e) => {
+                                const newSizes = [...(editingProduct.sizeVariants ?? [])];
+                                newSizes[idx] = { ...sizeVar, enabled: e.target.checked };
+                                setEditingProduct({ ...editingProduct, sizeVariants: newSizes });
+                              }}
+                              className="w-3.5 h-3.5 cursor-pointer accent-purple-500"
+                            />
+                            <span className="text-xs font-bold text-white">{sizeVar.size}</span>
+                          </div>
+                          {sizeVar.enabled && (
+                            <input
+                              type="number"
+                              placeholder="Stock"
+                              value={sizeVar.stock}
+                              onChange={(e) => {
+                                const newSizes = [...(editingProduct.sizeVariants ?? [])];
+                                newSizes[idx] = { ...sizeVar, stock: Number(e.target.value) };
+                                setEditingProduct({ ...editingProduct, sizeVariants: newSizes });
+                              }}
+                              className="input text-xs py-1 w-full"
+                              min="0"
+                            />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </form>

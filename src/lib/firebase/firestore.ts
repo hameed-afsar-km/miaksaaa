@@ -400,3 +400,32 @@ export async function updateStoreSettings(
 ): Promise<void> {
   await setDoc(SETTINGS_DOC, data, { merge: true });
 }
+
+// ─── ADMIN MANAGEMENT ────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  uid: string;
+  email: string;
+  displayName?: string;
+  createdAt: Timestamp;
+  createdBy?: string;
+}
+
+export async function getAllAdmins(): Promise<AdminUser[]> {
+  const snap = await getDocs(collection(db, "admins"));
+  return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as AdminUser));
+}
+
+export async function addAdmin(uid: string, email: string, displayName?: string, createdBy?: string): Promise<void> {
+  await setDoc(doc(db, "admins", uid), {
+    uid,
+    email,
+    displayName,
+    createdAt: serverTimestamp(),
+    createdBy,
+  });
+}
+
+export async function removeAdmin(uid: string): Promise<void> {
+  await deleteDoc(doc(db, "admins", uid));
+}

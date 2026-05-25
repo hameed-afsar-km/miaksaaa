@@ -14,8 +14,8 @@ service cloud.firestore {
 
     // ─── ADMINS ──────────────────────────────────────────────────────────────
     match /admins/{adminId} {
-      // Users can read their own admin document to check role without permission crash
-      allow read: if request.auth != null && request.auth.uid == adminId;
+      // Users can read their own admin document; admins can list all
+      allow read: if request.auth != null && (request.auth.uid == adminId || isAdmin());
       // Only existing admins can write/delete or read all admin listings
       allow write: if isAdmin();
     }

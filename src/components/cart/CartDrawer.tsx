@@ -47,7 +47,7 @@ export function CartDrawer() {
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
               onClick={() => setCartOpen(false)}
             />
 
@@ -55,8 +55,16 @@ export function CartDrawer() {
             <motion.aside
               initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm flex flex-col"
-              style={{ background: "var(--bg-card)", borderLeft: "1px solid var(--border)" }}
+              className="fixed right-0 top-0 bottom-0"
+              style={{
+                zIndex: 999,
+                background: "var(--bg-card)",
+                borderLeft: "1px solid var(--border)",
+                width: "100%",
+                maxWidth: "24rem",
+                display: "flex",
+                flexDirection: "column"
+              }}
             >
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--border)" }}>

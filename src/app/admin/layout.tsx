@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   ArrowLeft,
+  Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -25,6 +26,7 @@ const SIDEBAR_ITEMS = [
   { label: "Banners",    path: "/admin/banners",   icon: ImageIcon },
   { label: "Categories", path: "/admin/categories",icon: Tag },
   { label: "Coupons",    path: "/admin/coupons",   icon: Tag },
+  { label: "Team",       path: "/admin/team",      icon: Users },
   { label: "Settings",   path: "/admin/settings",  icon: Settings },
 ];
 

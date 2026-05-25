@@ -14,6 +14,25 @@ export interface UserProfile {
 }
 
 // ─── PRODUCT ─────────────────────────────────────────────────────────────────
+export interface ColorVariant {
+  name: string;
+  hexCode: string;
+  image?: string;
+  stock: number;
+}
+
+export interface SizeVariant {
+  size: "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL" | "5XL";
+  enabled: boolean;
+  stock: number;
+}
+
+export interface LimitedTimeOffer {
+  enabled: boolean;
+  label?: string;
+  expiresAt?: Timestamp;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -31,6 +50,9 @@ export interface Product {
   isVisible: boolean;
   rating: number;
   reviewCount: number;
+  colorVariants?: ColorVariant[];
+  sizeVariants?: SizeVariant[];
+  limitedTimeOffer?: LimitedTimeOffer;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

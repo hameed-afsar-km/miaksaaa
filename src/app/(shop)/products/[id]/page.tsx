@@ -205,7 +205,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-3 flex-wrap">
             <span className="text-3xl font-black gradient-text-purple">
               {formatPrice(product.discountedPrice ?? product.price)}
             </span>
@@ -216,6 +216,11 @@ export default function ProductDetailPage() {
                 </span>
                 <span className="badge badge-gold">{discount}% off</span>
               </>
+            )}
+            {product.limitedTimeOffer?.enabled && (
+              <span className="badge" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
+                ⏱️ {product.limitedTimeOffer.label || "Limited Offer"}
+              </span>
             )}
           </div>
 
@@ -250,6 +255,69 @@ export default function ProductDetailPage() {
                 >
                   <Plus size={14} />
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Color Variants */}
+          {(product.colorVariants ?? []).length > 0 && (
+            <div>
+              <label className="text-sm font-semibold mb-2 block" style={{ color: "var(--text-secondary)" }}>
+                Available Colors
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {product.colorVariants.map((color, idx) => (
+                  <button
+                    key={idx}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+                    style={{
+                      background: color.stock > 0 ? "rgba(147,51,234,0.1)" : "rgba(100,100,100,0.05)",
+                      borderColor: color.stock > 0 ? "rgba(147,51,234,0.3)" : "rgba(100,100,100,0.2)",
+                      opacity: color.stock > 0 ? 1 : 0.6,
+                      cursor: color.stock > 0 ? "pointer" : "not-allowed",
+                    }}
+                    disabled={color.stock === 0}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border"
+                      style={{
+                        backgroundColor: color.hexCode,
+                        borderColor: "rgba(147,51,234,0.5)",
+                      }}
+                    />
+                    <span className="text-xs font-medium">{color.name}</span>
+                    {color.stock === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>Out of stock</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Size Variants */}
+          {(product.sizeVariants ?? []).some((s) => s.enabled) && (
+            <div>
+              <label className="text-sm font-semibold mb-2 block" style={{ color: "var(--text-secondary)" }}>
+                Select Size
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {product.sizeVariants
+                  .filter((s) => s.enabled)
+                  .map((size, idx) => (
+                    <button
+                      key={idx}
+                      className="w-10 h-10 rounded-lg border font-semibold transition-all flex items-center justify-center text-xs"
+                      style={{
+                        background: size.stock > 0 ? "rgba(147,51,234,0.1)" : "rgba(100,100,100,0.05)",
+                        borderColor: size.stock > 0 ? "rgba(147,51,234,0.3)" : "rgba(100,100,100,0.2)",
+                        opacity: size.stock > 0 ? 1 : 0.6,
+                        cursor: size.stock > 0 ? "pointer" : "not-allowed",
+                      }}
+                      disabled={size.stock === 0}
+                      title={size.stock > 0 ? `${size.size} - ${size.stock} in stock` : `${size.size} - Out of stock`}
+                    >
+                      {size.size}
+                    </button>
+                  ))}
               </div>
             </div>
           )}

@@ -27,11 +27,15 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const { setCartOpen } = useUIStore();
   const totalItems = useCartStore((s) => s.getTotalItems());
   const wishCount = useWishlistStore((s) => s.items.length);
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   async function handleLogin() {
     try {
@@ -48,6 +52,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     toast.success("Signed out");
   }
 
+  if (!mounted) return null;
   return (
     <>
       <header
