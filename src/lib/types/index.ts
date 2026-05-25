@@ -66,6 +66,8 @@ export interface CartItem {
   image: string;
   quantity: number;
   stock: number;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 export interface CartState {

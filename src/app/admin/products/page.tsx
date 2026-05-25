@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -36,6 +36,7 @@ export default function AdminProductsPage() {
   const [customCategoryActive, setCustomCategoryActive] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const variantFileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const loadProducts = () => {
     setLoading(true);
@@ -539,7 +540,7 @@ export default function AdminProductsPage() {
                             onChange={(e) =>
                               setEditingProduct({
                                 ...editingProduct,
-                                limitedTimeOffer: { ...editingProduct.limitedTimeOffer, label: e.target.value },
+                                limitedTimeOffer: { ...editingProduct.limitedTimeOffer, enabled: editingProduct.limitedTimeOffer?.enabled ?? false, label: e.target.value },
                               })
                             }
                             className="input text-xs py-2"
@@ -571,54 +572,110 @@ export default function AdminProductsPage() {
                       </button>
                     </div>
 
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-3 max-h-72 overflow-y-auto">
                       {(editingProduct.colorVariants ?? []).map((color, idx) => (
-                        <div key={idx} className="flex gap-2 items-start p-2 rounded-lg bg-purple-950/20 border border-purple-500/10">
-                          <input
-                            type="text"
-                            placeholder="Color name"
-                            value={color.name}
-                            onChange={(e) => {
-                              const newVariants = [...(editingProduct.colorVariants ?? [])];
-                              newVariants[idx] = { ...color, name: e.target.value };
-                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
-                            }}
-                            className="input text-xs py-1.5 flex-1"
-                          />
-                          <input
-                            type="color"
-                            value={color.hexCode}
-                            onChange={(e) => {
-                              const newVariants = [...(editingProduct.colorVariants ?? [])];
-                              newVariants[idx] = { ...color, hexCode: e.target.value };
-                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
-                            }}
-                            className="w-10 h-10 rounded cursor-pointer"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Stock"
-                            value={color.stock}
-                            onChange={(e) => {
-                              const newVariants = [...(editingProduct.colorVariants ?? [])];
-                              newVariants[idx] = { ...color, stock: Number(e.target.value) };
-                              setEditingProduct({ ...editingProduct, colorVariants: newVariants });
-                            }}
-                            className="input text-xs py-1.5 w-16"
-                            min="0"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingProduct({
-                                ...editingProduct,
-                                colorVariants: editingProduct.colorVariants?.filter((_, i) => i !== idx),
-                              });
-                            }}
-                            className="text-red-400 hover:text-red-300 p-1"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                        <div key={idx} className="p-2.5 rounded-lg bg-purple-950/20 border border-purple-500/10 space-y-2">
+                          <div className="flex gap-2 items-start">
+                            <input
+                              type="text"
+                              placeholder="Color name"
+                              value={color.name}
+                              onChange={(e) => {
+                                const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                newVariants[idx] = { ...color, name: e.target.value };
+                                setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                              }}
+                              className="input text-xs py-1.5 flex-1"
+                            />
+                            <input
+                              type="color"
+                              value={color.hexCode}
+                              onChange={(e) => {
+                                const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                newVariants[idx] = { ...color, hexCode: e.target.value };
+                                setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                              }}
+                              className="w-8 h-8 rounded cursor-pointer"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Stock"
+                              value={color.stock}
+                              onChange={(e) => {
+                                const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                newVariants[idx] = { ...color, stock: Number(e.target.value) };
+                                setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                              }}
+                              className="input text-xs py-1.5 w-14"
+                              min="0"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  colorVariants: editingProduct.colorVariants?.filter((_, i) => i !== idx),
+                                });
+                              }}
+                              className="text-red-400 hover:text-red-300 p-1"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {color.image && (
+                              <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 border border-purple-500/20">
+                                <Image src={color.image} alt="" width={40} height={40} className="object-cover" />
+                              </div>
+                            )}
+                            <input
+                              type="text"
+                              placeholder="Image URL (optional)"
+                              value={color.image ?? ""}
+                              onChange={(e) => {
+                                const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                newVariants[idx] = { ...color, image: e.target.value || undefined };
+                                setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                              }}
+                              className="input text-xs py-1 flex-1"
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              ref={(el) => {
+                                variantFileRefs.current[idx] = el;
+                                if (el) {
+                                  el.onchange = async () => {
+                                    const file = el.files?.[0];
+                                    if (!file) return;
+                                    const formData = new FormData();
+                                    formData.append("file", file);
+                                    try {
+                                      const res = await fetch("/api/upload", { method: "POST", body: formData });
+                                      const data = await res.json();
+                                      if (data.url) {
+                                        const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                        newVariants[idx] = { ...color, image: data.url };
+                                        setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                      toast.error("Failed to upload image");
+                                    }
+                                    el.value = "";
+                                  };
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => variantFileRefs.current[idx]?.click()}
+                              className="text-[10px] font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg border border-purple-500/20 hover:bg-purple-500/10"
+                            >
+                              Upload
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

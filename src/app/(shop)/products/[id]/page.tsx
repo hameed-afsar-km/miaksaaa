@@ -23,6 +23,8 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"desc" | "details">("desc");
+  const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   const addToCart = useCartStore((s) => s.addItem);
   const { setCartOpen } = useUIStore();
@@ -42,9 +44,11 @@ export default function ProductDetailPage() {
       title: product.title,
       price: product.price,
       discountedPrice: product.discountedPrice,
-      image: product.images[0] ?? "",
+      image: displayImages[0] ?? "",
       quantity: qty,
       stock: product.stock,
+      selectedColor: selectedColor?.name,
+      selectedSize: selectedSize ?? undefined,
     });
     toast.success("Added to cart!");
     setCartOpen(true);
@@ -97,7 +101,10 @@ export default function ProductDetailPage() {
 
   const discount = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
-  const images = product.images.length > 0 ? product.images : ["/placeholder.jpg"];
+  const selectedColor = selectedColorIdx !== null ? product.colorVariants?.[selectedColorIdx] : null;
+  const displayImages = selectedColor?.image
+    ? [selectedColor.image, ...product.images]
+    : (product.images.length > 0 ? product.images : ["/placeholder.jpg"]);
 
   return (
     <div className="container-lg py-8 md:py-12">
@@ -124,7 +131,7 @@ export default function ProductDetailPage() {
                 className="absolute inset-0"
               >
                 <Image
-                  src={images[activeImg]}
+                  src={displayImages[activeImg]}
                   alt={product.title}
                   fill
                   className="object-cover"
@@ -134,16 +141,16 @@ export default function ProductDetailPage() {
             </AnimatePresence>
 
             {/* Prev/Next */}
-            {images.length > 1 && (
+            {displayImages.length > 1 && (
               <>
                 <button
-                  onClick={() => setActiveImg((i) => (i - 1 + images.length) % images.length)}
+                  onClick={() => setActiveImg((i) => (i - 1 + displayImages.length) % displayImages.length)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center"
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button
-                  onClick={() => setActiveImg((i) => (i + 1) % images.length)}
+                  onClick={() => setActiveImg((i) => (i + 1) % displayImages.length)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center"
                 >
                   <ChevronRight size={18} />
@@ -160,9 +167,9 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Thumbnails */}
-          {images.length > 1 && (
+          {displayImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {images.map((img, i) => (
+              {displayImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
@@ -260,67 +267,114 @@ export default function ProductDetailPage() {
           )}
 
           {/* Color Variants */}
-          {(product.colorVariants ?? []).length > 0 && (
+          {(() => {
+            const colorVariants = product.colorVariants ?? [];
+            if (colorVariants.length === 0) return null;
+            return (
             <div>
               <label className="text-sm font-semibold mb-2 block" style={{ color: "var(--text-secondary)" }}>
                 Available Colors
               </label>
               <div className="flex flex-wrap gap-2">
-                {product.colorVariants.map((color, idx) => (
-                  <button
-                    key={idx}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
-                    style={{
-                      background: color.stock > 0 ? "rgba(147,51,234,0.1)" : "rgba(100,100,100,0.05)",
-                      borderColor: color.stock > 0 ? "rgba(147,51,234,0.3)" : "rgba(100,100,100,0.2)",
-                      opacity: color.stock > 0 ? 1 : 0.6,
-                      cursor: color.stock > 0 ? "pointer" : "not-allowed",
-                    }}
-                    disabled={color.stock === 0}
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full border"
-                      style={{
-                        backgroundColor: color.hexCode,
-                        borderColor: "rgba(147,51,234,0.5)",
+                {colorVariants.map((color, idx) => {
+                  const isSelected = selectedColorIdx === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (color.stock === 0) return;
+                        if (isSelected) {
+                          setSelectedColorIdx(null);
+                          setActiveImg(0);
+                        } else {
+                          setSelectedColorIdx(idx);
+                          setActiveImg(0);
+                        }
                       }}
-                    />
-                    <span className="text-xs font-medium">{color.name}</span>
-                    {color.stock === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>Out of stock</span>}
-                  </button>
-                ))}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+                      style={{
+                        background: isSelected
+                          ? "rgba(147,51,234,0.25)"
+                          : color.stock > 0
+                            ? "rgba(147,51,234,0.08)"
+                            : "rgba(100,100,100,0.05)",
+                        borderColor: isSelected
+                          ? "var(--purple-500)"
+                          : color.stock > 0
+                            ? "rgba(147,51,234,0.3)"
+                            : "rgba(100,100,100,0.2)",
+                        opacity: color.stock > 0 ? 1 : 0.5,
+                        cursor: color.stock > 0 ? "pointer" : "not-allowed",
+                      }}
+                      disabled={color.stock === 0}
+                    >
+                      <div
+                        className="w-4 h-4 rounded-full border-2"
+                        style={{
+                          backgroundColor: color.hexCode,
+                          borderColor: isSelected ? "var(--purple-500)" : "rgba(147,51,234,0.5)",
+                        }}
+                      />
+                      <span className="text-xs font-medium">{color.name}</span>
+                      {isSelected && color.image && (
+                        <span className="text-[10px] text-purple-400">✓</span>
+                      )}
+                      {color.stock === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>Out of stock</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Size Variants */}
-          {(product.sizeVariants ?? []).some((s) => s.enabled) && (
+          {(() => {
+            const sizeVariants = product.sizeVariants ?? [];
+            if (!sizeVariants.some((s) => s.enabled)) return null;
+            return (
             <div>
               <label className="text-sm font-semibold mb-2 block" style={{ color: "var(--text-secondary)" }}>
                 Select Size
               </label>
               <div className="flex flex-wrap gap-2">
-                {product.sizeVariants
+                {sizeVariants
                   .filter((s) => s.enabled)
-                  .map((size, idx) => (
-                    <button
-                      key={idx}
-                      className="w-10 h-10 rounded-lg border font-semibold transition-all flex items-center justify-center text-xs"
-                      style={{
-                        background: size.stock > 0 ? "rgba(147,51,234,0.1)" : "rgba(100,100,100,0.05)",
-                        borderColor: size.stock > 0 ? "rgba(147,51,234,0.3)" : "rgba(100,100,100,0.2)",
-                        opacity: size.stock > 0 ? 1 : 0.6,
-                        cursor: size.stock > 0 ? "pointer" : "not-allowed",
-                      }}
-                      disabled={size.stock === 0}
-                      title={size.stock > 0 ? `${size.size} - ${size.stock} in stock` : `${size.size} - Out of stock`}
-                    >
-                      {size.size}
-                    </button>
-                  ))}
+                  .map((size, idx) => {
+                    const isSelected = selectedSize === size.size;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (size.stock === 0) return;
+                          setSelectedSize(isSelected ? null : size.size);
+                        }}
+                        className="w-10 h-10 rounded-lg border font-semibold transition-all flex items-center justify-center text-xs"
+                        style={{
+                          background: isSelected
+                            ? "rgba(147,51,234,0.3)"
+                            : size.stock > 0
+                              ? "rgba(147,51,234,0.1)"
+                              : "rgba(100,100,100,0.05)",
+                          borderColor: isSelected
+                            ? "var(--purple-500)"
+                            : size.stock > 0
+                              ? "rgba(147,51,234,0.3)"
+                              : "rgba(100,100,100,0.2)",
+                          opacity: size.stock > 0 ? 1 : 0.5,
+                          cursor: size.stock > 0 ? "pointer" : "not-allowed",
+                        }}
+                        disabled={size.stock === 0}
+                        title={size.stock > 0 ? `${size.size} - ${size.stock} in stock` : `${size.size} - Out of stock`}
+                      >
+                        {size.size}
+                      </button>
+                    );
+                  })}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* CTAs */}
           <div className="flex gap-3">

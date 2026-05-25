@@ -116,6 +116,11 @@ export function CartDrawer() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{item.title}</p>
+                        {(item.selectedColor || item.selectedSize) && (
+                          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            {[item.selectedColor, item.selectedSize].filter(Boolean).join(" / ")}
+                          </p>
+                        )}
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-sm font-bold" style={{ color: "var(--purple-300)" }}>
                             {formatPrice(item.discountedPrice ?? item.price)}
