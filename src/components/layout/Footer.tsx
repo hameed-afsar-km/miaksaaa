@@ -5,89 +5,185 @@ import { Instagram, MessageCircle, Phone, Mail } from "lucide-react";
 const CONTACT_LINKS = [
   {
     label: "WhatsApp",
+    sublabel: "Chat with us",
     href: "https://wa.me/917292070080",
     icon: MessageCircle,
-    hoverColor: "#4ade80",
+    accent: "#4ade80",
+    accentBg: "rgba(74,222,128,0.08)",
+    accentBorder: "rgba(74,222,128,0.2)",
   },
   {
     label: "+91 72920 70080",
+    sublabel: "Call us directly",
     href: "tel:+917292070080",
     icon: Phone,
-    hoverColor: "var(--purple-300)",
+    accent: "#c084fc",
+    accentBg: "rgba(192,132,252,0.08)",
+    accentBorder: "rgba(192,132,252,0.2)",
   },
   {
-    label: "Email",
+    label: "miaksaa1989@gmail.com",
+    sublabel: "Drop us a mail",
     href: "mailto:miaksaa1989@gmail.com",
     icon: Mail,
-    hoverColor: "var(--purple-300)",
+    accent: "#fbbf24",
+    accentBg: "rgba(251,191,36,0.08)",
+    accentBorder: "rgba(251,191,36,0.2)",
   },
   {
-    label: "Instagram",
+    label: "@miaksaaa_collections",
+    sublabel: "Follow on Instagram",
     href: "https://www.instagram.com/miaksaaa_collections/",
     icon: Instagram,
-    hoverColor: "#f472b6",
+    accent: "#f472b6",
+    accentBg: "rgba(244,114,182,0.08)",
+    accentBorder: "rgba(244,114,182,0.2)",
   },
 ];
 
 export function Footer({ logoUrl }: { logoUrl?: string }) {
   return (
     <footer
-      className="border-t mt-20 pb-24 md:pb-0 overflow-x-hidden"
-      style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
+      className="relative mt-20 pb-24 md:pb-0 overflow-hidden"
+      style={{ background: "var(--bg-dark)" }}
     >
-      {/* Main section: fills viewport height on desktop */}
+      {/* Top glowing border */}
       <div
-        className="container-lg flex flex-col md:flex-row md:items-end md:justify-between gap-10 py-16 md:min-h-[29vh]"
-      >
-        {/* Left — LARGE brand name scaled to fill available height */}
-        <Link href="/" className="group shrink-0 self-start md:self-end">
-          <span
-            className="font-black gradient-text leading-none tracking-wider block"
-            style={{
-              fontFamily: "Playfair Display, serif",
-              fontSize: "clamp(1.5rem, 12vw, 10rem)",
-            }}
-          >
-            MIAKSAAA
-          </span>
-          <span
-            className="text-xs tracking-[0.22em] uppercase mt-1 block mr-6"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Fashion and Fun World
-          </span>
-        </Link>
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(147,51,234,0.6) 30%, rgba(251,191,36,0.5) 50%, rgba(147,51,234,0.6) 70%, transparent 100%)",
+        }}
+      />
 
-        {/* Right — vertical stack of named links, pushed to bottom */}
-        <div className="flex flex-col gap-5 md:self-end md:pb-2 md:pr-4">
-          {CONTACT_LINKS.map(({ label, href, icon: Icon, hoverColor }) => (
+      {/* Subtle grid texture */}
+      <div
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(147,51,234,1) 1px, transparent 1px), linear-gradient(90deg, rgba(147,51,234,1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* Radial purple glow at top-center */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center top, rgba(147,51,234,0.12) 0%, transparent 70%)",
+        }}
+      />
+
+      <div className="container-lg relative z-10">
+
+        {/* ── Brand Monument ── */}
+        <div className="flex flex-col items-center text-center pt-16 pb-10">
+          <Link href="/" className="group inline-block">
+            <div
+              className="h-[2px] w-16 mx-auto mb-5 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(147,51,234,0.8), rgba(251,191,36,0.6), transparent)",
+              }}
+            />
+            <h2
+              className="font-black gradient-text leading-none tracking-widest select-none transition-all duration-500 group-hover:tracking-[0.12em]"
+              style={{
+                fontFamily: "Playfair Display, serif",
+                fontSize: "clamp(3rem, 13vw, 9rem)",
+                textShadow: "0 0 80px rgba(168,85,247,0.2)",
+              }}
+            >
+              MIAKSAAA
+            </h2>
+            <p
+              className="text-[11px] tracking-[0.35em] uppercase font-medium mt-3"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Fashion and Fun World
+            </p>
+          </Link>
+        </div>
+
+        {/* ── Divider ── */}
+        <div
+          className="h-px my-2"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(147,51,234,0.25), transparent)",
+          }}
+        />
+
+        {/* ── Contact Grid ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-10">
+          {CONTACT_LINKS.map(({ label, sublabel, href, icon: Icon, accent, accentBg, accentBorder }) => (
             <a
-              key={label}
+              key={href}
               href={href}
               target={href.startsWith("http") ? "_blank" : undefined}
               rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="group flex items-center gap-3 text-sm font-medium transition-colors duration-200 whitespace-nowrap"
-              style={{ color: "var(--text-secondary)" }}
+              className="group flex flex-col items-center text-center gap-3 px-4 py-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 active:scale-95"
+              style={{
+                background: "rgba(255,255,255,0.02)",
+                borderColor: "rgba(147,51,234,0.12)",
+              }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color = hoverColor;
+                const el = e.currentTarget;
+                el.style.background = accentBg;
+                el.style.borderColor = accentBorder;
+                el.style.boxShadow = `0 8px 32px ${accent}28`;
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)";
+                const el = e.currentTarget;
+                el.style.background = "rgba(255,255,255,0.02)";
+                el.style.borderColor = "rgba(147,51,234,0.12)";
+                el.style.boxShadow = "none";
               }}
             >
-              <span
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-110 overflow-hidden"
+              {/* Icon bubble */}
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
                 style={{
                   background: "rgba(147,51,234,0.1)",
-                  border: "1px solid var(--border)",
+                  border: "1px solid rgba(147,51,234,0.2)",
                 }}
               >
-                <Icon size={16} style={{ color: "var(--purple-400)" }} />
-              </span>
-              {label}
+                <Icon size={18} style={{ color: "var(--purple-400)" }} />
+              </div>
+
+              {/* Label */}
+              <div className="flex flex-col gap-0.5 min-w-0 w-full">
+                <span
+                  className="text-[9px] uppercase tracking-widest font-bold"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {sublabel}
+                </span>
+                <span
+                  className="text-xs font-semibold leading-tight truncate"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {label}
+                </span>
+              </div>
             </a>
           ))}
         </div>
+
+        {/* ── Copyright Bar ── */}
+        <div
+          className="py-5 flex items-center justify-center border-t"
+          style={{ borderColor: "rgba(147,51,234,0.1)" }}
+        >
+          <p
+            className="text-[11px] tracking-widest uppercase font-medium"
+            style={{ color: "var(--text-muted)" }}
+          >
+            © {new Date().getFullYear()} MIAKSAAA — All rights reserved
+          </p>
+        </div>
+
       </div>
     </footer>
   );
