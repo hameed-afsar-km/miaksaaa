@@ -56,7 +56,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   return (
     <>
       <header
-  className="fixed top-0 left-0 right-0 z-50"
+  className="sticky top-0 z-50"
   style={{
     background: "rgba(6,4,13,0.92)",
     backdropFilter: "blur(18px)",

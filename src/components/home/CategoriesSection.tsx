@@ -29,15 +29,17 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
 
         {/* Responsive grid — mobile 2 cols, tablet 3 cols, desktop centered flex */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:flex lg:flex-wrap lg:justify-center">
-          {displayCats.map((cat, i) => (
-            <motion.div
-              key={cat.id}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
-              className="h-full lg:w-[calc(100%/6)] lg:max-w-[200px]"
-            >
+          {displayCats.map((cat, i) => {
+            const spanFull = displayCats.length % 2 !== 0 && i === displayCats.length - 1;
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className={`h-full lg:w-1/6 lg:max-w-[200px] ${spanFull ? "col-span-full lg:col-auto" : ""}`}
+              >
                 <Link
                   href={`/products?category=${cat.slug}`}
                   className="w-full h-full flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg text-center"

@@ -11,10 +11,10 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   return (
     <>
       <SplashScreen />
+      <CouponTicker />
       <Navbar logoUrl={settings?.logoUrl} />
       <CartDrawer />
-      <main className="min-h-screen pt-[88px] lg:pt-[80px] pb-20 md:pb-0">
-        <CouponTicker />
+      <main className="min-h-screen pb-20 md:pb-0">
         {children}
       </main>
       <Footer logoUrl={settings?.logoUrl} />

@@ -117,7 +117,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.0 }}
+          transition={{ duration: 0.1 }}
           className="absolute inset-0 pointer-events-none z-[1]"
           style={{
             background: `radial-gradient(ellipse at 70% 35%, ${(banner.bgColor || '#120a24')}bd 0%, #06040d 75%)`,
@@ -169,10 +169,10 @@ export function HeroSection({ banners }: HeroSectionProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.9, ease: "easeInOut" }}
-              className="absolute inset-0"
-            >
-              <Image
+               transition={{ duration: 0.1, ease: "easeInOut" }}
+               className="absolute inset-0"
+             >
+               <Image
                 src={banner.imageUrl}
                 alt={banner.title}
                 fill
@@ -200,7 +200,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.0 }}
+            transition={{ duration: 0.1 }}
             className="absolute inset-0 pointer-events-none z-[1]"
             style={{
               background: `radial-gradient(ellipse at 50% 20%, ${banner.bgColor || '#120a24'}70 0%, transparent 65%)`,
@@ -262,7 +262,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-2.5"
             >
               {/* Title */}
@@ -347,7 +347,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 40 }}
-              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-6"
             >
               {/* Badges layout */}
@@ -498,7 +498,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  transition={{ duration: 0.15, ease: "easeInOut" }}
                   className="absolute inset-0 w-full h-full"
                 >
                   <Image

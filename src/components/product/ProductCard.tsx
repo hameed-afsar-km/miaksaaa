@@ -164,7 +164,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 disabled={outOfStock}
                 className="btn-primary w-full text-xs py-1.5 sm:text-sm sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ShoppingBag size={13} />
+                <ShoppingBag className="w-4 h-4 sm:w-[13px] sm:h-[13px]" />
                 {outOfStock ? "Out of Stock" : "Add to Cart"}
               </button>
             </div>
