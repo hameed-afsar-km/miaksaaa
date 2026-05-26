@@ -27,8 +27,8 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
           <span className="gradient-text">Shop by Category</span>
         </motion.h2>
 
-        {/* Centered pill-style text buttons, one after another */}
-        <div className="flex flex-wrap justify-center gap-3">
+        {/* Responsive grid — mobile 2 cols, tablet 3 cols, desktop centered flex */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:flex lg:flex-wrap lg:justify-center">
           {displayCats.map((cat, i) => (
             <motion.div
               key={cat.id}
@@ -36,28 +36,32 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
+              className="h-full lg:w-[calc(100%/6)] lg:max-w-[200px]"
             >
-              <Link
-                href={`/products?category=${cat.slug}`}
-                className="inline-block px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105"
-                style={{
-                  background: "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(251,191,36,0.07))",
-                  border: "1px solid var(--border)",
-                  color: "var(--text-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(147,51,234,0.5)";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--purple-300)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)";
-                }}
-              >
-                {cat.name}
-              </Link>
-            </motion.div>
-          ))}
+                <Link
+                  href={`/products?category=${cat.slug}`}
+                  className="w-full h-full flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg text-center"
+                  style={{
+                    background: "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(251,191,36,0.07))",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-secondary)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(147,51,234,0.5)";
+                    (e.currentTarget as HTMLAnchorElement).style.color = "var(--purple-300)";
+                    (e.currentTarget as HTMLAnchorElement).style.background = "linear-gradient(135deg,rgba(147,51,234,0.2),rgba(251,191,36,0.12))";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
+                    (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)";
+                    (e.currentTarget as HTMLAnchorElement).style.background = "linear-gradient(135deg,rgba(147,51,234,0.12),rgba(251,191,36,0.07))";
+                  }}
+                >
+                  {cat.name}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

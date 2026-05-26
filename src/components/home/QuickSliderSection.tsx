@@ -53,15 +53,15 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
         </div>
 
         {/* Mobile: draggable carousel with peek */}
-        <div className="md:hidden -mx-4">
+        <div className="md:hidden">
           <div
-            className="flex gap-2 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none pl-4 pr-4"
+            className="flex gap-3 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none px-4"
             style={{ scrollbarWidth: "none" }}
           >
             {products.map((product, i) => (
               <div
                 key={product.id}
-                className="flex-[0_0_calc(100vw-3.5rem)] snap-start"
+                className="flex-shrink-0 w-[calc(90vw-1rem)] snap-start"
               >
                 <ProductCard product={product} index={i} />
               </div>

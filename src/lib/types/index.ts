@@ -156,10 +156,13 @@ export interface Coupon {
   maxUses: number;
   usedCount: number;
   isActive: boolean;
+  isVisible: boolean;
+  startsAt: Timestamp | null;
   expiresAt: Timestamp | null;
   oneTimeUse: boolean;
   usedBy: string[];
   categories?: string[];
+  description?: string;
 }
 
 // ─── BANNER ───────────────────────────────────────────────────────────────────

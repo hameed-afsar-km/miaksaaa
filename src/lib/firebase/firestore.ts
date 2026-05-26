@@ -222,7 +222,16 @@ export async function validateCoupon(
 
   const coupon = { id: snap.docs[0].id, ...snap.docs[0].data() } as Coupon;
 
-  if (coupon.expiresAt && coupon.expiresAt.toDate() < new Date()) {
+  const now = new Date();
+
+  if (coupon.startsAt && coupon.startsAt.toDate() > now) {
+    return {
+      valid: false,
+      message: `Coupon starts on ${coupon.startsAt.toDate().toLocaleDateString()}`,
+    };
+  }
+
+  if (coupon.expiresAt && coupon.expiresAt.toDate() < now) {
     return { valid: false, message: "Coupon has expired" };
   }
 
@@ -247,6 +256,21 @@ export async function validateCoupon(
 export async function getAllCoupons(): Promise<Coupon[]> {
   const snap = await getDocs(collection(db, "coupons"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Coupon));
+}
+
+export async function getAvailableCoupons(): Promise<Coupon[]> {
+  const snap = await getDocs(collection(db, "coupons"));
+  const now = new Date();
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Coupon))
+    .filter((c) => {
+      if (!c.isActive) return false;
+      if (!c.isVisible) return false;
+      if (c.startsAt && c.startsAt.toDate() > now) return false;
+      if (c.expiresAt && c.expiresAt.toDate() < now) return false;
+      if (c.usedCount >= c.maxUses) return false;
+      return true;
+    });
 }
 
 export async function saveCoupon(

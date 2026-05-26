@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Phone, User, CreditCard, ChevronLeft, Calendar, ArrowRight, ShieldCheck } from "lucide-react";
+import { MapPin, Phone, User, CreditCard, ChevronLeft, Calendar, ArrowRight, ShieldCheck, Tag, Check, X } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
-import { placeOrder } from "@/lib/firebase/firestore";
+import { getAvailableCoupons, validateCoupon, placeOrder } from "@/lib/firebase/firestore";
+import { Coupon } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -47,10 +48,37 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "Online">("Online");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const { applyCoupon, removeCoupon } = useCartStore();
+
   // Delivery charge: free above ₹499, else ₹80
   const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
   const deliveryCharge = subtotalAfterDiscount >= 499 ? 0 : 49;
   const orderTotal = subtotalAfterDiscount + deliveryCharge;
+
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
+  const [couponsLoading, setCouponsLoading] = useState(true);
+
+  useEffect(() => {
+    getAvailableCoupons()
+      .then(setAvailableCoupons)
+      .catch(console.error)
+      .finally(() => setCouponsLoading(false));
+  }, []);
+
+  async function handleApplyCoupon(c: Coupon) {
+    const result = await validateCoupon(c.code, getSubtotal(), user?.uid);
+    if (!result.valid || !result.coupon) {
+      toast.error(result.message || "This coupon cannot be applied");
+      return;
+    }
+    applyCoupon(c.code, c.discount, c.type, c.categories);
+    toast.success(`Coupon "${c.code}" applied!`);
+  }
+
+  function handleRemoveCoupon() {
+    removeCoupon();
+    toast.success("Coupon removed");
+  }
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -495,6 +523,56 @@ export default function CheckoutPage() {
 
         {/* Sidebar Summary */}
         <div className="space-y-6">
+          {/* Available Offers */}
+          {!couponsLoading && availableCoupons.length > 0 && (
+            <div className="p-6 rounded-3xl space-y-3" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <h3 className="font-bold text-sm flex items-center gap-1.5">
+                <Tag size={14} className="text-amber-400" /> Available Offers
+              </h3>
+              <div className="space-y-2">
+                {availableCoupons.map((c) => {
+                  const isApplied = couponCode === c.code;
+                  return (
+                    <div
+                      key={c.id}
+                      className="p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all"
+                      style={{
+                        background: isApplied ? "rgba(147,51,234,0.1)" : "rgba(255,255,255,0.02)",
+                        border: isApplied ? "1px solid rgba(147,51,234,0.4)" : "1px solid rgba(255,255,255,0.04)",
+                      }}
+                      onClick={() => isApplied ? handleRemoveCoupon() : handleApplyCoupon(c)}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isApplied ? "bg-purple-500/20" : "bg-amber-500/10"}`}>
+                        {isApplied ? <Check size={14} className="text-purple-400" /> : <Tag size={14} className="text-amber-400" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-black font-mono tracking-wider text-white">{c.code}</span>
+                          <span className="text-[10px] font-bold text-emerald-400">
+                            {c.type === "percent" ? `${c.discount}% OFF` : `₹${c.discount} OFF`}
+                          </span>
+                        </div>
+                        {c.minOrder > 0 && (
+                          <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            Min. order ₹{c.minOrder}
+                          </p>
+                        )}
+                      </div>
+                      {isApplied && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRemoveCoupon(); }}
+                          className="p-1 rounded-full hover:bg-white/5 transition-colors"
+                        >
+                          <X size={12} className="text-red-400" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="p-6 rounded-3xl space-y-5 lg:sticky lg:top-24" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
             <h2 className="font-bold text-lg border-b pb-3" style={{ borderColor: "var(--border)" }}>Luxury Cart Summary</h2>
 

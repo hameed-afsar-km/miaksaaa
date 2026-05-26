@@ -54,9 +54,12 @@ export default function AdminCouponsPage() {
       maxUses: 100,
       usedCount: 0,
       isActive: true,
+      isVisible: true,
+      startsAt: null,
       expiresAt: null,
       oneTimeUse: false,
       usedBy: [],
+      description: "",
     });
     setFormOpen(true);
   };
@@ -96,6 +99,9 @@ export default function AdminCouponsPage() {
         maxUses: Number(editingCoupon.maxUses ?? 100),
         usedCount: Number(editingCoupon.usedCount ?? 0),
         isActive: !!editingCoupon.isActive,
+        isVisible: !!editingCoupon.isVisible,
+        startsAt: editingCoupon.startsAt ?? null,
+        description: editingCoupon.description ?? "",
         oneTimeUse: !!editingCoupon.oneTimeUse,
         usedBy: editingCoupon.usedBy ?? [],
         expiresAt: editingCoupon.expiresAt ?? null,
@@ -160,11 +166,28 @@ export default function AdminCouponsPage() {
                   <Tag size={16} className="text-amber-400" />
                   <span className="font-black text-base text-white tracking-wider font-mono">{coupon.code}</span>
                 </div>
-                <span className={`badge text-[9px] py-0.5 px-2 ${coupon.isActive ? "badge-green" : "badge-red"}`}>
-                  {coupon.isActive ? "Active" : "Disabled"}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`badge text-[9px] py-0.5 px-2 ${coupon.isActive ? "badge-green" : "badge-red"}`}>
+                    {coupon.isActive ? "Active" : "Disabled"}
+                  </span>
+                  {coupon.isVisible !== undefined && (
+                    <span
+                      className="text-[9px] py-0.5 px-2 rounded font-semibold"
+                      style={{
+                        background: coupon.isVisible ? "rgba(96,165,250,0.2)" : "rgba(156,163,175,0.2)",
+                        color: coupon.isVisible ? "#93c5fd" : "#9ca3af",
+                        border: `1px solid ${coupon.isVisible ? "rgba(96,165,250,0.35)" : "rgba(156,163,175,0.2)"}`,
+                      }}
+                    >
+                      {coupon.isVisible ? "Visible" : "Hidden"}
+                    </span>
+                  )}
+                </div>
               </div>
 
+              {coupon.description && (
+                <p className="text-[10px] text-purple-200/60 leading-relaxed pt-0.5">{coupon.description}</p>
+              )}
               <div className="border-t border-purple-500/5 pt-2 space-y-1.5 text-xs text-purple-200">
                 <p className="flex justify-between">
                   <span>Reduction Value:</span>
@@ -188,6 +211,14 @@ export default function AdminCouponsPage() {
                     <span>Expiry Schedule:</span>
                     <span className="font-semibold text-red-300 flex items-center gap-1">
                       <Clock size={11} /> {coupon.expiresAt.toDate().toLocaleDateString()}
+                    </span>
+                  </p>
+                )}
+                {coupon.startsAt && (
+                  <p className="flex justify-between">
+                    <span>Valid From:</span>
+                    <span className="font-semibold text-emerald-300 flex items-center gap-1">
+                      <Calendar size={11} /> {coupon.startsAt.toDate().toLocaleDateString()}
                     </span>
                   </p>
                 )}
@@ -255,7 +286,7 @@ export default function AdminCouponsPage() {
                 </div>
 
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
-                  {/* Code */}
+                  {/* Coupon Code */}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Coupon Code</label>
                     <input
@@ -268,7 +299,7 @@ export default function AdminCouponsPage() {
                     />
                   </div>
 
-                  {/* Discount amount & Type */}
+                  {/* Discount Value | Reduction Mode */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Discount Value</label>
@@ -281,7 +312,6 @@ export default function AdminCouponsPage() {
                         placeholder="10"
                       />
                     </div>
-
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Reduction Mode</label>
                       <select
@@ -295,7 +325,7 @@ export default function AdminCouponsPage() {
                     </div>
                   </div>
 
-                  {/* Limit fields */}
+                  {/* Min Spend | Max System Uses */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Min Spend (₹)</label>
@@ -307,23 +337,61 @@ export default function AdminCouponsPage() {
                         placeholder="1000"
                       />
                     </div>
-
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Max System Uses</label>
-                      <input
-                        type="number"
-                        value={editingCoupon.maxUses ?? 100}
-                        onChange={(e) => setEditingCoupon({ ...editingCoupon, maxUses: Number(e.target.value) })}
-                        className="input text-xs py-2"
-                        placeholder="100"
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={editingCoupon.maxUses ?? ""}
+                          onChange={(e) => setEditingCoupon({ ...editingCoupon, maxUses: Number(e.target.value) })}
+                          className="input text-xs py-2 flex-1"
+                          placeholder="100"
+                          disabled={editingCoupon.maxUses === 999999}
+                        />
+                        <label className="flex items-center gap-1.5 text-[9px] font-semibold whitespace-nowrap cursor-pointer" style={{ color: "var(--text-muted)" }}>
+                          <input
+                            type="checkbox"
+                            checked={editingCoupon.maxUses === 999999}
+                            onChange={(e) => setEditingCoupon({ ...editingCoupon, maxUses: e.target.checked ? 999999 : 100 })}
+                            className="w-3.5 h-3.5 cursor-pointer accent-purple-500"
+                          />
+                          Unlimited
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Expiry Schedules */}
+                  {/* Valid From */}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <Calendar size={11} /> Expiry Schedule (Optional)
+                      <Calendar size={11} /> Valid From (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={
+                        editingCoupon.startsAt
+                          ? new Date(editingCoupon.startsAt.toDate()).toISOString().split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        if (!e.target.value) {
+                          setEditingCoupon({ ...editingCoupon, startsAt: null });
+                        } else {
+                          const dateObj = new Date(e.target.value);
+                          setEditingCoupon({
+                            ...editingCoupon,
+                            startsAt: Timestamp.fromDate(dateObj),
+                          });
+                        }
+                      }}
+                      className="input text-xs py-2 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Expires On */}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Calendar size={11} /> Expires On (Optional)
                     </label>
                     <input
                       type="date"
@@ -347,7 +415,7 @@ export default function AdminCouponsPage() {
                     />
                   </div>
 
-                  {/* Status Toggle */}
+                  {/* Active Status */}
                   <div className="p-4 rounded-2xl flex items-center justify-between border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
                     <div>
                       <h5 className="text-xs font-bold text-white">Active Status</h5>
@@ -361,7 +429,21 @@ export default function AdminCouponsPage() {
                     />
                   </div>
 
-                  {/* One-Time Use Toggle */}
+                  {/* Show in Offers */}
+                  <div className="p-4 rounded-2xl flex items-center justify-between border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">Show in Offers</h5>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>display this coupon on the checkout page &amp; ticker bar</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editingCoupon.isVisible ?? true}
+                      onChange={(e) => setEditingCoupon({ ...editingCoupon, isVisible: e.target.checked })}
+                      className="w-4 h-4 cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
+                  {/* One-Time Use */}
                   <div className="p-4 rounded-2xl flex items-center justify-between border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
                     <div>
                       <h5 className="text-xs font-bold text-white">One-Time Use</h5>
@@ -375,7 +457,7 @@ export default function AdminCouponsPage() {
                     />
                   </div>
 
-                  {/* Category Restriction */}
+                  {/* Restrict to Categories */}
                   <div className="p-4 rounded-2xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
                     <div className="mb-2">
                       <h5 className="text-xs font-bold text-white">Restrict to Categories</h5>

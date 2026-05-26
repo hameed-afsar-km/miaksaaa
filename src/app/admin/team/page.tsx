@@ -186,8 +186,10 @@ export default function AdminTeamPage() {
                           {admin.uid.slice(0, 12)}...
                         </code>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(admin.uid);
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(admin.uid);
+                            } catch {}
                             setCopied(admin.uid);
                             setTimeout(() => setCopied(null), 2000);
                           }}
