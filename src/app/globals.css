@@ -318,10 +318,7 @@ body {
   overflow: hidden;
   background: var(--bg-surface);
 }
-.product-img-wrapper img {
-  transition: transform 0.5s ease;
-}
-.product-img-wrapper:hover img { transform: scale(1.06); }
+
 
 /* ─── Mobile bottom nav safe area ───────────────────────────── */
 .bottom-nav-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }

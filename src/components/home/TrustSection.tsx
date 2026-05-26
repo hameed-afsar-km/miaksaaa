@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Shield, Truck, RefreshCw, Headphones, CreditCard, Star } from "lucide-react";
 
 const TRUST_ITEMS = [
-  { icon: Truck,        title: "Free Delivery",     desc: "On orders above ₹999" },
+  { icon: Truck,        title: "Free Delivery",     desc: "On orders above ₹499" },
   { icon: Shield,       title: "Secure Payments",   desc: "100% safe & protected" },
   { icon: RefreshCw,    title: "Easy Returns",      desc: "7-day return policy" },
   { icon: Headphones,   title: "24/7 Support",      desc: "Always here for you" },

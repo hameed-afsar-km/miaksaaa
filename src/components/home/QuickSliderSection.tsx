@@ -1,29 +1,43 @@
 "use client";
-import { useRef } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import { Product } from "@/lib/types";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 export function QuickSliderSection({ products }: { products: Product[] }) {
-  const sliderRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
+  const perPage = 4;
+  const totalPages = Math.ceil(products.length / perPage);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [pageWidth, setPageWidth] = useState(0);
 
-  function scroll(direction: "left" | "right") {
-    if (sliderRef.current) {
-      const scrollAmount = 340;
-      sliderRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+  useEffect(() => {
+    function updateWidth() {
+      if (viewportRef.current) {
+        setPageWidth(viewportRef.current.clientWidth);
+      }
     }
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
+
+  const pages: Product[][] = [];
+  for (let i = 0; i < products.length; i += perPage) {
+    pages.push(products.slice(i, i + perPage));
+  }
+
+  function goTo(direction: "prev" | "next") {
+    if (direction === "next" && page < totalPages - 1) setPage(page + 1);
+    if (direction === "prev" && page > 0) setPage(page - 1);
   }
 
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12 border-b border-purple-500/5 relative overflow-hidden" style={{ background: "rgba(14,8,30,0.4)" }}>
+    <section className="py-12 border-b border-purple-500/5 relative" style={{ background: "rgba(14,8,30,0.4)" }}>
       {/* Background ambient light */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-purple-600/5 blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-purple-600/5 blur-[80px] pointer-events-none overflow-hidden" />
 
       <div className="container-lg">
         {/* Header */}
@@ -36,44 +50,70 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
               Quick Discoveries
             </h2>
           </div>
+        </div>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scroll("left")}
-              className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all hover:bg-purple-950/15 cursor-pointer text-purple-300"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="w-9 h-9 rounded-xl border flex items-center justify-center transition-all hover:bg-purple-950/15 cursor-pointer text-purple-300"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <ChevronRight size={16} />
-            </button>
+        {/* Mobile: draggable carousel with peek */}
+        <div className="md:hidden -mx-4">
+          <div
+            className="flex gap-2 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none pl-4 pr-4"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {products.map((product, i) => (
+              <div
+                key={product.id}
+                className="flex-[0_0_calc(100vw-3.5rem)] snap-start"
+              >
+                <ProductCard product={product} index={i} />
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Horizontal Slider */}
-        <div
-          ref={sliderRef}
-          className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x scrollbar-none"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {products.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="w-[260px] sm:w-[280px] flex-shrink-0 snap-start"
+        {/* Desktop: paginated grid with arrow navigation */}
+        <div className="hidden md:block relative">
+          {/* Left Arrow */}
+          <button
+            onClick={() => goTo("prev")}
+            disabled={page === 0}
+            className="absolute -left-15 top-1/2 -translate-y-1/2 z-10 w-10 h-20 rounded-full border flex items-center justify-center transition-all hover:bg-purple-950/30 cursor-pointer text-purple-300 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ borderColor: "var(--border)", background: "rgba(14,8,30,0.8)", backdropFilter: "blur(8px)" }}
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          {/* Viewport */}
+          <div ref={viewportRef} className="overflow-hidden rounded-xl">
+            <div
+              className="flex transition-transform duration-500 ease-in-out will-change-transform"
+              style={{ transform: `translateX(-${page * pageWidth}px)` }}
             >
-              <ProductCard product={product} index={i} />
-            </motion.div>
-          ))}
+              {pages.map((pageProducts, pi) => (
+                <div
+                  key={pi}
+                  className="grid grid-cols-4 gap-4 flex-shrink-0 pb-4 pt-1"
+                  style={{ width: pageWidth || "100%" }}
+                >
+                  {pageProducts.map((product, i) => (
+                    <div key={product.id}>
+                      <ProductCard product={product} index={pi * perPage + i} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Arrow */}
+          <button
+            onClick={() => goTo("next")}
+            disabled={page >= totalPages - 1}
+            className="absolute -right-15 top-1/2 -translate-y-1/2 z-10 w-10 h-20 rounded-full border flex items-center justify-center transition-all hover:bg-purple-950/30 cursor-pointer text-purple-300 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ borderColor: "var(--border)", background: "rgba(14,8,30,0.8)", backdropFilter: "blur(8px)" }}
+            aria-label="Next page"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
       </div>
     </section>

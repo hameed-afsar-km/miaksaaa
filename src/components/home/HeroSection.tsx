@@ -178,7 +178,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
                 fill
                 className="object-cover object-top"
                 priority
-                sizes="100vw"
+                sizes="(max-width: 1023px) 100vw, 0px"
               />
             </motion.div>
           ) : (
@@ -531,7 +531,7 @@ export function HeroSection({ banners }: HeroSectionProps) {
       </div>
 
       {/* Premium Side Index Navigation strip */}
-      <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col gap-7 z-20">
+      <div className="hidden lg:flex absolute right-28 top-1/2 -translate-y-1/2 flex-col gap-7 z-20">
         {displayBanners.map((_, i) => (
           <button
             key={i}
