@@ -36,7 +36,7 @@ const STATIC_BANNERS: Omit<Banner, "id">[] = [
   {
     imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop",
     title: "Free Delivery",
-    subtitle: "On all orders above ₹999 — Cash On Delivery available",
+    subtitle: "On all orders above ₹499 — Cash On Delivery available",
     ctaText: "Start Shopping",
     ctaLink: "/products",
     ctaColor: "#9333ea",

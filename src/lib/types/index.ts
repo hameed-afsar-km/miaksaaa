@@ -16,8 +16,8 @@ export interface UserProfile {
 // ─── PRODUCT ─────────────────────────────────────────────────────────────────
 export interface ColorVariant {
   name: string;
-  hexCode: string;
-  image?: string;
+  hexCode?: string;
+  images: string[];
   stock: number;
 }
 
@@ -50,6 +50,7 @@ export interface Product {
   isVisible: boolean;
   rating: number;
   reviewCount: number;
+  hasVariants?: boolean;
   colorVariants?: ColorVariant[];
   sizeVariants?: SizeVariant[];
   limitedTimeOffer?: LimitedTimeOffer;

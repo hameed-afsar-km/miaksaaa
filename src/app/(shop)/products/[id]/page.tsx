@@ -204,10 +204,31 @@ export default function ProductDetailPage() {
 
   const discount = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
-  const selectedColor = selectedColorIdx !== null ? product.colorVariants?.[selectedColorIdx] : null;
-  const displayImages = selectedColor?.image
-    ? [selectedColor.image, ...product.images]
-    : (product.images.length > 0 ? product.images : ["/placeholder.jpg"]);
+  const colorVariants = (product.colorVariants ?? []).map((cv) => ({
+    ...cv,
+    images: (cv as any).images ?? ((cv as any).image ? [(cv as any).image] : []),
+  }));
+  const selectedColor = selectedColorIdx !== null && colorVariants[selectedColorIdx]
+    ? colorVariants[selectedColorIdx]
+    : null;
+  
+  // Determine display images based on selected variant
+  let displayImages: string[] = [];
+  if (selectedColorIdx !== null && selectedColor) {
+    // If a variant is selected, use its images
+    displayImages = selectedColor.images && selectedColor.images.length > 0
+      ? selectedColor.images
+      : (product.images.length > 0 ? product.images : ["/placeholder.jpg"]);
+  } else if (colorVariants.length > 0 && colorVariants[0]?.images?.length) {
+    // If no variant selected, use first variant's images
+    displayImages = colorVariants[0].images;
+  } else {
+    // Fall back to product images
+    displayImages = product.images.length > 0 ? product.images : ["/placeholder.jpg"];
+  }
+  
+  // Ensure activeImg is within bounds
+  const validActiveImg = Math.min(activeImg, displayImages.length - 1);
 
   return (
     <div className="container-lg py-8 md:py-12">
@@ -226,7 +247,7 @@ export default function ProductDetailPage() {
           >
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeImg}
+                key={validActiveImg}
                 initial={{ opacity: 0, scale: 1.03 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
@@ -234,7 +255,7 @@ export default function ProductDetailPage() {
                 className="absolute inset-0"
               >
                 <Image
-                  src={displayImages[activeImg]}
+                  src={displayImages[validActiveImg]}
                   alt={product.title}
                   fill
                   className="object-cover"
@@ -272,14 +293,14 @@ export default function ProductDetailPage() {
           {/* Thumbnails */}
           {displayImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {displayImages.map((img, i) => (
+              {displayImages.map((img: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
                   className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all"
                   style={{
-                    border: `2px solid ${i === activeImg ? "var(--purple-500)" : "var(--border)"}`,
-                    opacity: i === activeImg ? 1 : 0.6,
+                    border: `2px solid ${i === validActiveImg ? "var(--purple-500)" : "var(--border)"}`,
+                    opacity: i === validActiveImg ? 1 : 0.6,
                   }}
                 >
                   <Image src={img} alt="" width={64} height={64} className="w-full h-full object-cover" />
@@ -394,7 +415,7 @@ export default function ProductDetailPage() {
                           setActiveImg(0);
                         }
                       }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+                      className="group flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all"
                       style={{
                         background: isSelected
                           ? "rgba(147,51,234,0.25)"
@@ -408,21 +429,35 @@ export default function ProductDetailPage() {
                             : "rgba(100,100,100,0.2)",
                         opacity: color.stock > 0 ? 1 : 0.5,
                         cursor: color.stock > 0 ? "pointer" : "not-allowed",
+                        borderWidth: isSelected ? "2px" : "1px",
                       }}
                       disabled={color.stock === 0}
+                      title={color.hexCode ? `${color.name} - ${color.hexCode}` : color.name}
                     >
-                      <div
-                        className="w-4 h-4 rounded-full border-2"
-                        style={{
-                          backgroundColor: color.hexCode,
-                          borderColor: isSelected ? "var(--purple-500)" : "rgba(147,51,234,0.5)",
-                        }}
-                      />
-                      <span className="text-xs font-medium">{color.name}</span>
-                      {isSelected && color.image && (
-                        <span className="text-[10px] text-purple-400">✓</span>
+                      {color.hexCode ? (
+                        <div
+                          className="w-8 h-8 rounded-full border-2 flex-shrink-0 shadow-sm transition-transform group-hover:scale-110"
+                          style={{
+                            backgroundColor: color.hexCode,
+                            borderColor: isSelected ? "var(--purple-500)" : "rgba(147,51,234,0.5)",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-8 h-8 rounded-full border-2 flex-shrink-0 shadow-sm transition-transform group-hover:scale-110"
+                          style={{
+                            background: "conic-gradient(#9333ea, #a855f7, #c084fc, #9333ea)",
+                            borderColor: isSelected ? "var(--purple-500)" : "rgba(147,51,234,0.5)",
+                          }}
+                        />
                       )}
-                      {color.stock === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>Out of stock</span>}
+                      <span className="text-xs font-medium text-center">{color.name}</span>
+                      <div className="flex items-center gap-1">
+                        {isSelected && (color.images?.length ?? 0) > 0 && (
+                          <span className="text-[10px] text-purple-400">✓</span>
+                        )}
+                        {color.stock === 0 && <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>OOS</span>}
+                      </div>
                     </button>
                   );
                 })}
@@ -512,7 +547,7 @@ export default function ProductDetailPage() {
           {/* Delivery info */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: Truck, label: "Free Delivery", sub: "Orders above ₹999" },
+              { icon: Truck, label: "Free Delivery", sub: "Orders above ₹499" },
               { icon: Shield, label: "Secure", sub: "100% protected" },
               { icon: RefreshCw, label: "7-Day Return", sub: "Easy returns" },
             ].map(({ icon: Icon, label, sub }) => (

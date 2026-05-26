@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -27,6 +27,17 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { ImageUploadZone } from "@/components/admin/ImageUploadZone";
 
+const DEFAULT_SIZE_VARIANTS: SizeVariant[] = [
+  { size: "S", enabled: false, stock: 0 },
+  { size: "M", enabled: false, stock: 0 },
+  { size: "L", enabled: false, stock: 0 },
+  { size: "XL", enabled: false, stock: 0 },
+  { size: "2XL", enabled: false, stock: 0 },
+  { size: "3XL", enabled: false, stock: 0 },
+  { size: "4XL", enabled: false, stock: 0 },
+  { size: "5XL", enabled: false, stock: 0 },
+];
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
@@ -36,7 +47,7 @@ export default function AdminProductsPage() {
   const [customCategoryActive, setCustomCategoryActive] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const variantFileRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [hasVariants, setHasVariants] = useState(false);
 
   const loadProducts = () => {
     setLoading(true);
@@ -72,24 +83,28 @@ export default function AdminProductsPage() {
       isOnSale: false,
       isVisible: true,
       colorVariants: [],
-      sizeVariants: [
-        { size: "S", enabled: false, stock: 0 },
-        { size: "M", enabled: false, stock: 0 },
-        { size: "L", enabled: false, stock: 0 },
-        { size: "XL", enabled: false, stock: 0 },
-        { size: "2XL", enabled: false, stock: 0 },
-        { size: "3XL", enabled: false, stock: 0 },
-        { size: "4XL", enabled: false, stock: 0 },
-        { size: "5XL", enabled: false, stock: 0 },
-      ],
+      sizeVariants: DEFAULT_SIZE_VARIANTS.map((s) => ({ ...s })),
       limitedTimeOffer: { enabled: false },
     });
+    setHasVariants(false);
     setCustomCategoryActive(categoriesList.length === 0);
     setFormOpen(true);
   };
 
   const openEditForm = (p: Product) => {
-    setEditingProduct(p);
+    setHasVariants(p.hasVariants ?? false);
+    setEditingProduct({
+      ...p,
+      colorVariants: (p.colorVariants ?? []).map((cv) => ({
+        name: cv.name,
+        hexCode: cv.hexCode,
+        stock: cv.stock,
+        images: (cv as any).images ?? ((cv as any).image ? [(cv as any).image] : []),
+      })),
+      sizeVariants: p.sizeVariants?.length
+        ? p.sizeVariants.map((s) => ({ ...s }))
+        : DEFAULT_SIZE_VARIANTS.map((s) => ({ ...s })),
+    });
     const isCustom = p.category && !categoriesList.some(c => c.name.toLowerCase() === p.category.toLowerCase());
     setCustomCategoryActive(isCustom || categoriesList.length === 0);
     setFormOpen(true);
@@ -115,24 +130,15 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Filter empty image URLs
-    const cleanedImages = (editingProduct.images ?? []).filter((url) => url.trim() !== "");
-    if (cleanedImages.length === 0) {
-      toast.error("Add at least one valid image URL!");
-      return;
-    }
-
     setSaving(true);
     try {
-      const submitData = {
+      const baseData = {
         title: editingProduct.title,
         description: editingProduct.description ?? "",
         price: Number(editingProduct.price),
-        discountedPrice: editingProduct.discountedPrice ? Number(editingProduct.discountedPrice) : undefined,
-        images: cleanedImages,
+        discountedPrice: editingProduct.discountedPrice ? Number(editingProduct.discountedPrice) : (null as any),
         category: editingProduct.category,
         tags: editingProduct.tags ?? [],
-        stock: Number(editingProduct.stock),
         isFeatured: !!editingProduct.isFeatured,
         isNew: !!editingProduct.isNew,
         isHot: !!editingProduct.isHot,
@@ -140,10 +146,39 @@ export default function AdminProductsPage() {
         isVisible: !!editingProduct.isVisible,
         rating: 0,
         reviewCount: 0,
-        colorVariants: (editingProduct.colorVariants ?? []).filter(c => c.name.trim() !== ""),
         sizeVariants: editingProduct.sizeVariants ?? [],
         limitedTimeOffer: editingProduct.limitedTimeOffer ?? { enabled: false },
+        hasVariants,
       };
+
+      let submitData: any;
+      if (hasVariants) {
+        const variants = (editingProduct.colorVariants ?? []).filter((v) => v.name.trim() !== "");
+        if (variants.length === 0) {
+          toast.error("Add at least one variant!");
+          setSaving(false);
+          return;
+        }
+        submitData = {
+          ...baseData,
+          images: variants[0].images.length > 0 ? [variants[0].images[0]] : [""],
+          stock: variants.reduce((sum, v) => sum + v.stock, 0),
+          colorVariants: variants,
+        };
+      } else {
+        const cleanedImages = (editingProduct.images ?? []).filter((url) => url.trim() !== "");
+        if (cleanedImages.length === 0) {
+          toast.error("Add at least one valid image URL!");
+          setSaving(false);
+          return;
+        }
+        submitData = {
+          ...baseData,
+          images: cleanedImages,
+          stock: Number(editingProduct.stock),
+          colorVariants: (editingProduct.colorVariants ?? []).filter((c) => c.name.trim() !== ""),
+        };
+      }
 
       if (editingProduct.id) {
         await updateProduct(editingProduct.id, submitData);
@@ -314,7 +349,34 @@ export default function AdminProductsPage() {
                 </div>
 
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
+                  {/* Has Variants Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "rgba(147,51,234,0.05)", borderColor: "var(--border)" }}>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">Has Variants</h5>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Product with multiple style/color options</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={hasVariants}
+                      onChange={(e) => setHasVariants(e.target.checked)}
+                      className="w-4 h-4 cursor-pointer accent-purple-500"
+                    />
+                  </div>
+
                   {/* Title & Category */}
+                  {hasVariants ? (
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingProduct.title || ""}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                        className="input text-xs py-2"
+                        placeholder="Luxury leather tote"
+                      />
+                    </div>
+                  ) : (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Title</label>
@@ -384,14 +446,230 @@ export default function AdminProductsPage() {
                       <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Stock Units</label>
                       <input
                         type="number"
-                        required
-                        value={editingProduct.stock ?? 0}
+                        value={editingProduct.stock ?? ""}
                         onChange={(e) => setEditingProduct({ ...editingProduct, stock: Number(e.target.value) })}
                         className="input text-xs py-2"
-                        placeholder="10"
+                        placeholder="0"
+                        min="0"
                       />
                     </div>
                   </div>
+                )}
+
+                {hasVariants && (
+                  <>
+                    {/* Category for variants mode */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Category</label>
+                      {!customCategoryActive ? (
+                        <select
+                          value={editingProduct.category || ""}
+                          onChange={(e) => {
+                            if (e.target.value === "__custom__") {
+                              setCustomCategoryActive(true);
+                              setEditingProduct({ ...editingProduct, category: "" });
+                            } else {
+                              setEditingProduct({ ...editingProduct, category: e.target.value });
+                            }
+                          }}
+                          className="input text-xs py-2 appearance-none cursor-pointer pr-8"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" disabled style={{ backgroundColor: "#120a24" }}>Select Category...</option>
+                          {categoriesList.map((cat) => (
+                            <option key={cat.id} value={cat.name} style={{ backgroundColor: "#120a24" }}>
+                              {cat.name}
+                            </option>
+                          ))}
+                          <option value="__custom__" style={{ backgroundColor: "#120a24", color: "var(--gold-400)", fontWeight: "bold" }}>
+                            + Add custom category...
+                          </option>
+                        </select>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            required
+                            value={editingProduct.category || ""}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                            className="input text-xs py-2 flex-1"
+                            placeholder="Type custom category..."
+                          />
+                          {categoriesList.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCustomCategoryActive(false);
+                                setEditingProduct({ ...editingProduct, category: categoriesList[0]?.name || "" });
+                              }}
+                              className="px-3 border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 text-[10px] font-bold rounded-xl"
+                            >
+                              List
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Variants Section */}
+                      <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-bold text-white">Variants</h5>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingProduct({
+                                ...editingProduct,
+                                colorVariants: [
+                                  ...(editingProduct.colorVariants ?? []),
+                                  { name: "", stock: 0, images: [] },
+                                ],
+                              });
+                            }}
+                            className="text-purple-400 hover:text-purple-300 text-xs font-bold"
+                          >
+                            + Add Variant
+                          </button>
+                        </div>
+
+                        <div className="space-y-3 max-h-72 overflow-y-auto">
+                          {(editingProduct.colorVariants ?? []).map((variant, idx) => (
+                            <div key={idx} className="p-2.5 rounded-lg bg-purple-950/20 border border-purple-500/10 space-y-2">
+                              <div className="flex gap-2 items-start">
+                                <input
+                                  type="text"
+                                  placeholder="Variant name"
+                                  value={variant.name}
+                                  onChange={(e) => {
+                                    const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                    newVariants[idx] = { ...variant, name: e.target.value };
+                                    setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                  }}
+                                  className="input text-xs py-1.5 flex-1"
+                                />
+                                <div className="flex gap-1 items-center">
+                                  <input
+                                    type="color"
+                                    title="Pick color"
+                                    value={variant.hexCode || "#000000"}
+                                    onChange={(e) => {
+                                      const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                      newVariants[idx] = { ...variant, hexCode: e.target.value };
+                                      setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                    }}
+                                    className="w-10 h-9 rounded cursor-pointer"
+                                    style={{ padding: "2px" }}
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="#000000"
+                                    value={variant.hexCode || ""}
+                                    onChange={(e) => {
+                                      const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                      newVariants[idx] = { ...variant, hexCode: e.target.value };
+                                      setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                    }}
+                                    className="input text-xs py-1.5 w-24"
+                                    maxLength={7}
+                                  />
+                                </div>
+                                <input
+                                  type="number"
+                                  placeholder="Qty"
+                                  value={variant.stock}
+                                  onChange={(e) => {
+                                    const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                    newVariants[idx] = { ...variant, stock: Number(e.target.value) };
+                                    setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                  }}
+                                  className="input text-xs py-1.5 w-16"
+                                  min="0"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingProduct({
+                                      ...editingProduct,
+                                      colorVariants: editingProduct.colorVariants?.filter((_, i) => i !== idx),
+                                    });
+                                  }}
+                                  className="text-red-400 hover:text-red-300 p-1"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                              {/* Variant Images */}
+                              <div className="space-y-2">
+                                {(variant.images?.length ?? 0) > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {(variant.images ?? []).map((img, imgIdx) => (
+                                      <div key={imgIdx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-purple-500/20 group flex-shrink-0">
+                                        <Image src={img} alt="" width={56} height={56} className="object-cover w-full h-full" />
+                                        {imgIdx === 0 && (
+                                          <span className="absolute bottom-0 left-0 right-0 bg-amber-400/80 text-black text-[7px] font-bold text-center leading-tight">PRIMARY</span>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                            newVariants[idx] = { ...variant, images: (variant.images ?? []).filter((_, i) => i !== imgIdx) };
+                                            setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                          }}
+                                          className="absolute top-0.5 right-0.5 p-0.5 bg-black/60 hover:bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Image URL"
+                                    className="input text-xs py-1 flex-1"
+                                    id={`variant-url-${editingProduct?.id ?? "new"}-${idx}`}
+                                  />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    id={`variant-file-${editingProduct?.id ?? "new"}-${idx}`}
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const formData = new FormData();
+                                      formData.append("file", file);
+                                      try {
+                                        const res = await fetch("/api/upload", { method: "POST", body: formData });
+                                        const data = await res.json();
+                                        if (data.url) {
+                                          const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                          newVariants[idx] = { ...variant, images: [...(variant.images ?? []), data.url] };
+                                          setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                        }
+                                      } catch (err) {
+                                        console.error(err);
+                                        toast.error("Failed to upload image");
+                                      }
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => document.getElementById(`variant-file-${editingProduct?.id ?? "new"}-${idx}`)?.click()}
+                                    className="text-[10px] font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg border border-purple-500/20 hover:bg-purple-500/10"
+                                  >
+                                    Upload
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {/* Description */}
                   <div>
@@ -467,7 +745,7 @@ export default function AdminProductsPage() {
                     <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>Tags are internal — not visible to customers</p>
                   </div>
 
-                  {/* Product Images Drag & Drop / Upload */}
+                  {!hasVariants && (
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider mb-2">
                       Product Images
@@ -479,6 +757,7 @@ export default function AdminProductsPage() {
                       }
                     />
                   </div>
+                  )}
 
                   {/* Flag Toggles */}
                   <div className="p-4 rounded-2xl space-y-3.5 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
@@ -563,7 +842,7 @@ export default function AdminProductsPage() {
                     )}
                   </div>
 
-                  {/* Color Variants */}
+                  {!hasVariants && (
                   <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
                     <div className="flex items-center justify-between">
                       <h5 className="text-xs font-bold text-white">Color Variants</h5>
@@ -574,7 +853,7 @@ export default function AdminProductsPage() {
                             ...editingProduct,
                             colorVariants: [
                               ...(editingProduct.colorVariants ?? []),
-                              { name: "", hexCode: "#000000", stock: 0 },
+                              { name: "", hexCode: "#000000", stock: 0, images: [] },
                             ],
                           });
                         }}
@@ -601,7 +880,7 @@ export default function AdminProductsPage() {
                             />
                             <input
                               type="color"
-                              value={color.hexCode}
+                              value={color.hexCode ?? "#000000"}
                               onChange={(e) => {
                                 const newVariants = [...(editingProduct.colorVariants ?? [])];
                                 newVariants[idx] = { ...color, hexCode: e.target.value };
@@ -634,64 +913,91 @@ export default function AdminProductsPage() {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <div className="flex gap-2 items-center">
-                            {color.image && (
-                              <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0 border border-purple-500/20">
-                                <Image src={color.image} alt="" width={40} height={40} className="object-cover" />
+                          {/* Variant Images */}
+                          <div className="space-y-2">
+                            {(color.images?.length ?? 0) > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {(color.images ?? []).map((img, imgIdx) => (
+                                  <div key={imgIdx} className="relative w-14 h-14 rounded-lg overflow-hidden border border-purple-500/20 group flex-shrink-0">
+                                    <Image src={img} alt="" width={56} height={56} className="object-cover w-full h-full" />
+                                    {imgIdx === 0 && (
+                                      <span className="absolute bottom-0 left-0 right-0 bg-amber-400/80 text-black text-[7px] font-bold text-center leading-tight">PRIMARY</span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                        newVariants[idx] = { ...color, images: (color.images ?? []).filter((_, i) => i !== imgIdx) };
+                                        setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                      }}
+                                      className="absolute top-0.5 right-0.5 p-0.5 bg-black/60 hover:bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X size={10} />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
                             )}
-                            <input
-                              type="text"
-                              placeholder="Image URL (optional)"
-                              value={color.image ?? ""}
-                              onChange={(e) => {
-                                const newVariants = [...(editingProduct.colorVariants ?? [])];
-                                newVariants[idx] = { ...color, image: e.target.value || undefined };
-                                setEditingProduct({ ...editingProduct, colorVariants: newVariants });
-                              }}
-                              className="input text-xs py-1 flex-1"
-                            />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              ref={(el) => {
-                                variantFileRefs.current[idx] = el;
-                                if (el) {
-                                  el.onchange = async () => {
-                                    const file = el.files?.[0];
-                                    if (!file) return;
-                                    const formData = new FormData();
-                                    formData.append("file", file);
-                                    try {
-                                      const res = await fetch("/api/upload", { method: "POST", body: formData });
-                                      const data = await res.json();
-                                      if (data.url) {
-                                        const newVariants = [...(editingProduct.colorVariants ?? [])];
-                                        newVariants[idx] = { ...color, image: data.url };
-                                        setEditingProduct({ ...editingProduct, colorVariants: newVariants });
-                                      }
-                                    } catch (err) {
-                                      console.error(err);
-                                      toast.error("Failed to upload image");
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Image URL"
+                                className="input text-xs py-1 flex-1"
+                                id={`variant-url-${editingProduct?.id ?? "new"}-${idx}`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const input = document.getElementById(`variant-url-${editingProduct?.id ?? "new"}-${idx}`) as HTMLInputElement;
+                                  if (!input?.value?.trim()) return;
+                                  const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                  newVariants[idx] = { ...color, images: [...(color.images ?? []), input.value.trim()] };
+                                  setEditingProduct({ ...editingProduct, colorVariants: newVariants });
+                                  input.value = "";
+                                }}
+                                className="text-[10px] font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg border border-purple-500/20 hover:bg-purple-500/10"
+                              >
+                                Add
+                              </button>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id={`variant-file-${editingProduct?.id ?? "new"}-${idx}`}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const formData = new FormData();
+                                  formData.append("file", file);
+                                  try {
+                                    const res = await fetch("/api/upload", { method: "POST", body: formData });
+                                    const data = await res.json();
+                                    if (data.url) {
+                                      const newVariants = [...(editingProduct.colorVariants ?? [])];
+                                      newVariants[idx] = { ...color, images: [...(color.images ?? []), data.url] };
+                                      setEditingProduct({ ...editingProduct, colorVariants: newVariants });
                                     }
-                                    el.value = "";
-                                  };
-                                }
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => variantFileRefs.current[idx]?.click()}
-                              className="text-[10px] font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg border border-purple-500/20 hover:bg-purple-500/10"
-                            >
-                              Upload
-                            </button>
+                                  } catch (err) {
+                                    console.error(err);
+                                    toast.error("Failed to upload image");
+                                  }
+                                  e.target.value = "";
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => document.getElementById(`variant-file-${editingProduct?.id ?? "new"}-${idx}`)?.click()}
+                                className="text-[10px] font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg border border-purple-500/20 hover:bg-purple-500/10"
+                              >
+                                Upload
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                  )}
 
                   {/* Size Variants */}
                   <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
