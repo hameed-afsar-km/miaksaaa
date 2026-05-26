@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Shield, Truck, RefreshCw, Headphones, CreditCard, Star } from "lucide-react";
 
 const TRUST_ITEMS = [
-  { icon: Truck,       title: "Free Delivery",    desc: "On orders above ₹499",         accent: "#a855f7" },
-  { icon: Shield,      title: "Secure Payments",  desc: "100% safe & protected",         accent: "#22c55e" },
-  { icon: RefreshCw,   title: "Easy Returns",     desc: "7-day hassle-free return",      accent: "#ec4899" },
-  { icon: Headphones,  title: "24/7 Support",     desc: "Always here to help you",       accent: "#eab308" },
-  { icon: CreditCard,  title: "Cash On Delivery", desc: "Pay when you receive it",       accent: "#3b82f6" },
-  { icon: Star,        title: "Premium Quality",  desc: "Curated luxury products",       accent: "#f97316" },
+  { icon: Truck, title: "Free Delivery", desc: "On orders above ₹499", accent: "#a855f7" },
+  { icon: Shield, title: "Secure Payments", desc: "100% safe & protected", accent: "#22c55e" },
+  { icon: RefreshCw, title: "Easy Returns", desc: "7-day hassle-free return", accent: "#ec4899" },
+  { icon: Headphones, title: "24/7 Support", desc: "Always here to help you", accent: "#eab308" },
+  { icon: CreditCard, title: "Cash On Delivery", desc: "Pay when you receive it", accent: "#3b82f6", comingSoon: true },
+  { icon: Star, title: "Premium Quality", desc: "Curated luxury products", accent: "#f97316" },
 ];
 
 export function TrustSection() {
@@ -19,7 +19,7 @@ export function TrustSection() {
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-64 h-64 rounded-full bg-amber-900/5 blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Compact Centered Header */}
         <div className="text-center mb-10">
           <motion.p
@@ -47,7 +47,7 @@ export function TrustSection() {
 
         {/* Compact Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {TRUST_ITEMS.map(({ icon: Icon, title, desc, accent }, i) => (
+          {TRUST_ITEMS.map(({ icon: Icon, title, desc, accent, comingSoon }, i) => (
             <motion.div
               key={title}
               initial={{ opacity: 0, y: 15 }}
@@ -58,15 +58,15 @@ export function TrustSection() {
               className="group relative p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.12] transition-all duration-300 overflow-hidden"
             >
               {/* Radial glow on hover */}
-              <div 
+              <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                 style={{
                   background: `radial-gradient(circle 90px at 50% 50%, ${accent}0d, transparent 80%)`
                 }}
               />
-              
+
               {/* Top border glow edge */}
-              <div 
+              <div
                 className="absolute top-0 left-0 right-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{
                   background: `linear-gradient(90deg, transparent 15%, ${accent}60 50%, transparent 85%)`
@@ -91,8 +91,13 @@ export function TrustSection() {
 
                 {/* Text Section */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-sm tracking-wide transition-colors">
+                  <h3 className="font-bold text-white text-sm tracking-wide transition-colors flex items-center gap-1.5">
                     {title}
+                    {comingSoon && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full">
+                        Coming Soon
+                      </span>
+                    )}
                   </h3>
                   <p className="text-[11px] text-gray-400 mt-0.5 leading-normal">
                     {desc}
