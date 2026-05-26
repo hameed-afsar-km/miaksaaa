@@ -98,7 +98,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
 
           {/* Image */}
-          <div className="product-img-wrapper aspect-square">
+          <div className="product-img-wrapper aspect-square select-none pointer-events-none">
             {product.images[0] && !imgError ? (
               <Image
                 src={product.images[0]}
@@ -107,6 +107,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 className="object-cover transition-transform duration-500 group-hover:scale-106"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 onError={() => setImgError(true)}
+                draggable={false}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center aspect-square"

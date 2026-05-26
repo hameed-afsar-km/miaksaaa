@@ -55,8 +55,8 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
         {/* Mobile: draggable carousel with peek */}
         <div className="md:hidden">
           <div
-            className="flex gap-3 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none px-4"
-            style={{ scrollbarWidth: "none" }}
+            className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 pt-1 snap-x snap-proximity scrollbar-none px-4"
+            style={{ scrollbarWidth: "none", overscrollBehaviorX: "contain" }}
           >
             {products.map((product, i) => (
               <div
