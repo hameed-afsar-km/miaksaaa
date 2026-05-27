@@ -98,13 +98,13 @@ export function CouponTicker() {
       <div
         className="absolute left-0 top-0 bottom-0 w-24 pointer-events-none z-10"
         style={{
-          background: "linear-gradient(90deg, rgba(10, 6, 20, 0.95) 0%, transparent 100%)",
+          background: "linear-gradient(90deg, rgba(10, 6, 20, 1) 0%, transparent 100%)",
         }}
       />
       <div
         className="absolute right-0 top-0 bottom-0 w-24 pointer-events-none z-10"
         style={{
-          background: "linear-gradient(270deg, rgba(10, 6, 20, 0.95) 0%, transparent 100%)",
+          background: "linear-gradient(270deg, rgba(10, 6, 20, 1) 0%, transparent 100%)",
         }}
       />
 

@@ -47,6 +47,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "Online">("Online");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showOffersModal, setShowOffersModal] = useState(false);
+  const [showFreeDeliveryModal, setShowFreeDeliveryModal] = useState(false);
 
   const { applyCoupon, removeCoupon } = useCartStore();
 
@@ -176,7 +178,7 @@ export default function CheckoutPage() {
     return errors;
   }
 
-  async function handleCheckout(e: React.FormEvent) {
+  async function handleCheckout(e: React.FormEvent, bypassFreeDelivery = false) {
     e.preventDefault();
     if (!user) {
       toast.error("Please log in to complete your checkout.");
@@ -195,6 +197,12 @@ export default function CheckoutPage() {
       const firstField = document.querySelector<HTMLElement>(`[name="${errorKeys[0]}"]`);
       firstField?.scrollIntoView({ behavior: "smooth", block: "center" });
       firstField?.focus();
+      return;
+    }
+
+    // Free delivery alert — within ₹100 of threshold
+    if (!bypassFreeDelivery && deliveryCharge > 0 && subtotalAfterDiscount >= 399) {
+      setShowFreeDeliveryModal(true);
       return;
     }
 
@@ -523,53 +531,29 @@ export default function CheckoutPage() {
 
         {/* Sidebar Summary */}
         <div className="space-y-6">
-          {/* Available Offers */}
+          {/* Available Offers — Trigger Button */}
           {!couponsLoading && availableCoupons.length > 0 && (
-            <div className="p-6 rounded-3xl space-y-3" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-              <h3 className="font-bold text-sm flex items-center gap-1.5">
-                <Tag size={14} className="text-amber-400" /> Available Offers
-              </h3>
-              <div className="space-y-2">
-                {availableCoupons.map((c) => {
-                  const isApplied = couponCode === c.code;
-                  return (
-                    <div
-                      key={c.id}
-                      className="p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all"
-                      style={{
-                        background: isApplied ? "rgba(147,51,234,0.1)" : "rgba(255,255,255,0.02)",
-                        border: isApplied ? "1px solid rgba(147,51,234,0.4)" : "1px solid rgba(255,255,255,0.04)",
-                      }}
-                      onClick={() => isApplied ? handleRemoveCoupon() : handleApplyCoupon(c)}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isApplied ? "bg-purple-500/20" : "bg-amber-500/10"}`}>
-                        {isApplied ? <Check size={14} className="text-purple-400" /> : <Tag size={14} className="text-amber-400" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-black font-mono tracking-wider text-white">{c.code}</span>
-                          <span className="text-[10px] font-bold text-emerald-400">
-                            {c.type === "percent" ? `${c.discount}% OFF` : `₹${c.discount} OFF`}
-                          </span>
-                        </div>
-                        {c.minOrder > 0 && (
-                          <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                            Min. order ₹{c.minOrder}
-                          </p>
-                        )}
-                      </div>
-                      {isApplied && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleRemoveCoupon(); }}
-                          className="p-1 rounded-full hover:bg-white/5 transition-colors"
-                        >
-                          <X size={12} className="text-red-400" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="p-6 rounded-3xl" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <button
+                type="button"
+                onClick={() => setShowOffersModal(true)}
+                className="w-full flex items-center justify-between gap-2 text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Tag size={14} className="text-amber-400" />
+                  <span className="font-bold text-sm">Available Offers</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--purple-400)" }}>
+                  {couponCode ? (
+                    <span className="flex items-center gap-1">
+                      <Check size={12} className="text-emerald-400" /> {couponCode}
+                    </span>
+                  ) : (
+                    <>{availableCoupons.length} offers</>
+                  )}
+                  <ChevronLeft size={14} className="rotate-180" />
+                </div>
+              </button>
             </div>
           )}
 
@@ -633,6 +617,153 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Available Offers Modal ── */}
+      {showOffersModal && (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center" onClick={() => setShowOffersModal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-md max-h-[80vh] rounded-t-3xl md:rounded-3xl overflow-hidden"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--border)" }}>
+              <h3 className="font-bold flex items-center gap-2 text-sm">
+                <Tag size={16} className="text-amber-400" /> Available Offers
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowOffersModal(false)}
+                className="p-1.5 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X size={16} style={{ color: "var(--text-muted)" }} />
+              </button>
+            </div>
+
+            {/* Coupon List */}
+            <div className="overflow-y-auto max-h-[60vh] p-5 space-y-2.5">
+              {availableCoupons.map((c) => {
+                const isApplied = couponCode === c.code;
+                return (
+                  <div
+                    key={c.id}
+                    className="p-4 rounded-xl flex items-center gap-3 cursor-pointer transition-all"
+                    style={{
+                      background: isApplied ? "rgba(147,51,234,0.1)" : "rgba(255,255,255,0.02)",
+                      border: isApplied ? "1px solid rgba(147,51,234,0.4)" : "1px solid rgba(255,255,255,0.04)",
+                    }}
+                    onClick={() => {
+                      if (isApplied) {
+                        handleRemoveCoupon();
+                      } else {
+                        handleApplyCoupon(c);
+                      }
+                      setShowOffersModal(false);
+                    }}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isApplied ? "bg-purple-500/20" : "bg-amber-500/10"}`}>
+                      {isApplied ? <Check size={16} className="text-purple-400" /> : <Tag size={16} className="text-amber-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black font-mono tracking-wider text-white">{c.code}</span>
+                        <span className="text-xs font-bold text-emerald-400">
+                          {c.type === "percent" ? `${c.discount}% OFF` : `₹${c.discount} OFF`}
+                        </span>
+                      </div>
+                      {c.description && (
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                          {c.description}
+                        </p>
+                      )}
+                      {c.minOrder > 0 && (
+                        <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                          Min. order ₹{c.minOrder}
+                        </p>
+                      )}
+                    </div>
+                    {isApplied && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRemoveCoupon(); }}
+                        className="p-1 rounded-full hover:bg-white/5 transition-colors"
+                      >
+                        <X size={14} className="text-red-400" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── Free Delivery Alert Modal ── */}
+      {showFreeDeliveryModal && (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center" onClick={() => setShowFreeDeliveryModal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full md:max-w-sm rounded-t-3xl md:rounded-3xl overflow-hidden p-6 text-center"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+          >
+            {/* Icon */}
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)" }}>
+              <span className="text-3xl">🎉</span>
+            </div>
+
+            <h3 className="text-lg font-black mb-2">You're Almost There!</h3>
+            <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+              Add just <span className="font-black text-amber-400">
+                ₹{499 - subtotalAfterDiscount}
+              </span> more to your cart
+            </p>
+            <p className="text-xs mb-6" style={{ color: "var(--text-muted)" }}>
+              to unlock <span className="font-bold" style={{ color: "#86efac" }}>FREE delivery</span> and save ₹49!
+            </p>
+
+            {/* Progress bar */}
+            <div className="w-full h-2 rounded-full mb-6 overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, (subtotalAfterDiscount / 499) * 100)}%`,
+                  background: "linear-gradient(90deg, #9333ea, #fbbf24)",
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href="/products"
+                onClick={() => setShowFreeDeliveryModal(false)}
+                className="btn-primary w-full py-3 text-xs font-black tracking-wider uppercase cursor-pointer"
+              >
+                Add More Items
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFreeDeliveryModal(false);
+                  setTimeout(() => handleCheckout({ preventDefault: () => {} } as React.FormEvent, true), 100);
+                }}
+                className="btn-outline w-full py-3 text-xs font-bold tracking-wider cursor-pointer"
+              >
+                Continue & Pay ₹{formatPrice(orderTotal)}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

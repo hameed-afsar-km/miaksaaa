@@ -68,7 +68,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
 
       {/* Radial purple glow at top-center */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none hidden md:block"
         style={{
           background:
             "radial-gradient(ellipse at center top, rgba(147,51,234,0.12) 0%, transparent 70%)",

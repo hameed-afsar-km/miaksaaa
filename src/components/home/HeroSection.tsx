@@ -128,13 +128,13 @@ export function HeroSection({ banners }: HeroSectionProps) {
       {/* Floating high-end ambient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
         <div
-          className="absolute top-1/4 right-[15%] w-96 h-96 rounded-full opacity-20 animate-pulse blur-[100px]"
+          className="absolute top-1/4 right-[15%] w-64 lg:w-96 h-64 lg:h-96 rounded-full opacity-20 animate-pulse blur-[60px] lg:blur-[100px]"
           style={{
             background: `radial-gradient(circle, ${(banner.ctaColor || '#fbbf24')}80 0%, transparent 70%)`,
           }}
         />
         <div
-          className="absolute bottom-1/4 left-[15%] w-72 h-72 rounded-full opacity-15 blur-[80px]"
+          className="absolute bottom-1/4 left-[15%] w-48 lg:w-72 h-48 lg:h-72 rounded-full opacity-15 blur-[50px] lg:blur-[80px]"
           style={{
             background: `radial-gradient(circle, ${(banner.bgColor || '#9333ea')}60 0%, transparent 70%)`,
           }}
