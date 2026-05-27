@@ -181,7 +181,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 top-16 lg:top-12 w-52 glass rounded-xl overflow-hidden z-50"
-                      style={{ border: "1px solid var(--glass-border)" }}
+                      style={{ background: "rgba(18,10,36,0.95)", border: "1px solid var(--glass-border)" }}
                     >
                       <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
                         <p className="text-sm font-semibold truncate">{user.displayName}</p>
@@ -249,7 +249,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden glass border-t"
-              style={{ borderColor: "var(--glass-border)" }}
+              style={{ background: "rgba(18,10,36,0.95)", borderColor: "var(--glass-border)" }}
             >
               <div className="container-lg py-4 flex flex-col gap-1">
                 {NAV_LINKS.map(({ href, label }) => (

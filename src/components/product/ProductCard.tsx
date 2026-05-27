@@ -76,22 +76,25 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           {/* Badges */}
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
             {product.isNew && (
-              <span className="badge badge-purple flex items-center gap-1">
+              <span className="badge flex items-center gap-1"
+                style={{ background: "rgba(147,51,234,0.85)", color: "#fff", border: "1px solid rgba(147,51,234,0.6)" }}>
                 <Sparkles size={10} /> New
               </span>
             )}
             {product.isHot && (
-              <span className="badge badge-red flex items-center gap-1">
+              <span className="badge flex items-center gap-1"
+                style={{ background: "rgba(239,68,68,0.85)", color: "#fff", border: "1px solid rgba(239,68,68,0.6)" }}>
                 <Flame size={10} /> Hot
               </span>
             )}
             {product.isOnSale && discountPct > 0 && (
-              <span className="badge badge-gold flex items-center gap-1">
+              <span className="badge flex items-center gap-1"
+                style={{ background: "rgba(217,119,6,0.85)", color: "#fff", border: "1px solid rgba(217,119,6,0.6)" }}>
                 <Zap size={10} /> -{discountPct}%
               </span>
             )}
             {outOfStock && (
-              <span className="badge" style={{ background: "rgba(0,0,0,0.6)", color: "#9ca3af" }}>
+              <span className="badge" style={{ background: "rgba(0,0,0,0.75)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.1)" }}>
                 Out of Stock
               </span>
             )}

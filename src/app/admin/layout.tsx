@@ -73,7 +73,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen flex bg-[#0a0614] text-white">
       {/* Mobile Top Navbar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-4 glass border-b border-purple-500/20">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-4 glass border-b border-purple-500/20"
+        style={{ background: "rgba(18,10,36,0.95)" }}>
         <Link href="/" className="text-xl font-black tracking-widest gradient-text" style={{ fontFamily: "Playfair Display, serif" }}>
           MIAKSAAA
         </Link>
@@ -89,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         className={`fixed md:sticky top-0 left-0 h-screen w-64 z-50 glass border-r border-purple-500/20 p-5 flex flex-col justify-between transition-transform duration-300 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-      >
+        style={{ background: "rgba(18,10,36,0.95)" }}>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <Link href="/admin/dashboard">

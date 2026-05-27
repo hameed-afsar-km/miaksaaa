@@ -36,15 +36,26 @@ export default function AdminDashboardPage() {
     loadData();
   }, []);
 
-  const totalSales = orders
-    .filter((o) => o.status !== "cancelled by user" && o.status !== "cancelled by admin")
-    .reduce((sum, o) => sum + o.total, 0);
-
+  const activeOrders = orders.filter((o) => o.status !== "cancelled by user" && o.status !== "cancelled by admin");
+  const totalSales = activeOrders.reduce((sum, o) => sum + o.total, 0);
   const completedOrders = orders.filter((o) => o.status === "delivered").length;
   const pendingOrders = orders.filter((o) => o.status === "waiting").length;
   const stockShortage = products.filter((p) => p.stock <= 5).length;
-  const activeOrders = orders.filter((o) => o.status !== "cancelled by user" && o.status !== "cancelled by admin");
   const averageOrderValue = activeOrders.length > 0 ? totalSales / activeOrders.length : 0;
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const thisWeekRevenue = activeOrders
+    .filter((o) => o.createdAt?.toDate() >= weekAgo)
+    .reduce((sum, o) => sum + o.total, 0);
+  const lastWeekRevenue = activeOrders
+    .filter((o) => {
+      const d = o.createdAt?.toDate();
+      return d >= twoWeeksAgo && d < weekAgo;
+    })
+    .reduce((sum, o) => sum + o.total, 0);
+  const revenueChange = lastWeekRevenue > 0 ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100 : thisWeekRevenue > 0 ? 100 : 0;
 
   if (loading) {
     return (
@@ -97,7 +108,9 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <h2 className="text-xl font-bold gradient-text">{formatPrice(totalSales)}</h2>
-            <p className="text-[10px] mt-1" style={{ color: "#86efac" }}>+8.4% since last week</p>
+            <p className="text-[10px] mt-1" style={{ color: revenueChange >= 0 ? "#86efac" : "#fca5a5" }}>
+              {revenueChange >= 0 ? "+" : ""}{revenueChange.toFixed(1)}% since last week
+            </p>
           </div>
         </motion.div>
 
