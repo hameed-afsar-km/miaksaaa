@@ -64,7 +64,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       transition={{ duration: 0.4, delay: index * 0.07 }}
       className="h-full"
     >
-      <Link href={`/products/${product.id}`} className="group block h-full">
+      <Link href={`/products/${product.id}`} target="_blank" rel="noopener noreferrer" className="group block h-full">
         <div
           className="relative rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl h-full flex flex-col"
           style={{

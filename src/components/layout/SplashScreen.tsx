@@ -1,21 +1,23 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useUIStore } from "@/lib/store/uiStore";
+import { usePathname } from "next/navigation";
 import { BeamsBackground } from "@/components/ui/beams-background";
 
 export function SplashScreen() {
-  const { splashDone, setSplashDone } = useUIStore();
-  const [visible, setVisible] = useState(!splashDone);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [visible, setVisible] = useState(isHome);
 
   useEffect(() => {
-    if (splashDone) return;
-    const t = setTimeout(() => {
+    if (!isHome) {
       setVisible(false);
-      setSplashDone(true);
-    }, 2800);
+      return;
+    }
+    setVisible(true);
+    const t = setTimeout(() => setVisible(false), 2800);
     return () => clearTimeout(t);
-  }, [splashDone, setSplashDone]);
+  }, [isHome]);
 
   return (
     <AnimatePresence>

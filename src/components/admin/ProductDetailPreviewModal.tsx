@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -17,6 +17,11 @@ interface ProductDetailPreviewModalProps {
 
 export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductDetailPreviewModalProps) {
   const [tab, setTab] = useState<"desc" | "details">("desc");
+  const [selectedVariant, setSelectedVariant] = useState(0);
+
+  useEffect(() => {
+    setSelectedVariant(0);
+  }, [product?.id]);
 
   if (!product) return null;
 
@@ -27,8 +32,9 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
     ...cv,
     images: (cv as any).images ?? ((cv as any).image ? [(cv as any).image] : []),
   }));
-  const productImage = hasVariants && colorVariants[0]?.images?.[0]
-    ? colorVariants[0].images[0]
+  const validVariantIdx = Math.min(selectedVariant, colorVariants.length - 1);
+  const productImage = hasVariants && colorVariants[validVariantIdx]?.images?.[0]
+    ? colorVariants[validVariantIdx].images[0]
     : product.images?.[0] || "/placeholder.jpg";
   const displayPrice = product.discountedPrice ?? product.price ?? 0;
 
@@ -140,13 +146,20 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
 
                     {/* Stock */}
                     <div>
-                      {product.stock === 0 ? (
-                        <span className="badge badge-red text-[10px]">Out of Stock</span>
-                      ) : product.stock <= 5 ? (
-                        <span className="text-xs" style={{ color: "#fca5a5" }}>⚠️ Only {product.stock} left in stock!</span>
-                      ) : (
-                        <span className="text-xs" style={{ color: "#86efac" }}>✓ In Stock ({product.stock} available)</span>
-                      )}
+                      {(() => {
+                        let variantStock: number | null = null;
+                        if (hasVariants && colorVariants[validVariantIdx]) {
+                          variantStock = colorVariants[validVariantIdx].stock;
+                        }
+                        const stockDisplay = variantStock ?? product.stock;
+                        if (stockDisplay === 0) {
+                          return <span className="badge badge-red text-[10px]">Out of Stock</span>;
+                        } else if (stockDisplay <= 5) {
+                          return <span className="text-xs" style={{ color: "#fca5a5" }}>⚠️ Only {stockDisplay} left in stock{variantStock !== null ? ` (${colorVariants[validVariantIdx].name})` : ""}!</span>;
+                        } else {
+                          return <span className="text-xs" style={{ color: "#86efac" }}>✓ In Stock ({stockDisplay} available{variantStock !== null ? ` - ${colorVariants[validVariantIdx].name}` : ""})</span>;
+                        }
+                      })()}
                     </div>
 
                     {/* Color Variants */}
@@ -156,13 +169,17 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
                           Available Colors
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {colorVariants.map((color, idx) => (
-                            <div
+                          {colorVariants.map((color, idx) => {
+                            const isSelected = idx === validVariantIdx;
+                            return (
+                            <button
                               key={idx}
-                              className="flex flex-col items-center gap-1 p-1.5 rounded-lg border"
+                              type="button"
+                              onClick={() => setSelectedVariant(idx)}
+                              className="flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all cursor-pointer"
                               style={{
-                                background: "rgba(147,51,234,0.08)",
-                                borderColor: "rgba(147,51,234,0.3)",
+                                background: isSelected ? "rgba(147,51,234,0.3)" : "rgba(147,51,234,0.08)",
+                                borderColor: isSelected ? "rgba(147,51,234,0.7)" : "rgba(147,51,234,0.3)",
                                 opacity: color.stock > 0 ? 1 : 0.5,
                               }}
                             >
@@ -172,8 +189,9 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
                                 <div className="w-7 h-7 rounded-full border-2" style={{ background: "conic-gradient(#9333ea, #a855f7, #c084fc, #9333ea)", borderColor: "rgba(147,51,234,0.5)" }} />
                               )}
                               <span className="text-[10px] font-medium">{color.name}</span>
-                            </div>
-                          ))}
+                            </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

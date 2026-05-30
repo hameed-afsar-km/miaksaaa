@@ -131,6 +131,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="space-y-4 pt-4 border-t border-purple-500/10">
+          <Link href="/" className="flex items-center gap-2.5 text-xs text-amber-400/70 hover:text-amber-300 transition-colors">
+            <ArrowLeft size={14} /> Return to Main Shop
+          </Link>
           <Link href="/profile" className="flex items-center gap-2.5 text-xs text-purple-300/60 hover:text-white transition-colors">
             <ArrowLeft size={14} /> Back to User Profile
           </Link>
