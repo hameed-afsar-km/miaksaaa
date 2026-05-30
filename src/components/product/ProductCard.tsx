@@ -181,12 +181,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
         item={addedItem}
       />
-      <ImageZoom
-        images={product.images}
-        initialIndex={0}
-        isOpen={zoomOpen}
-        onClose={() => setZoomOpen(false)}
-      />
     </motion.div>
   );
 }
