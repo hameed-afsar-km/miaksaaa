@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Package,
-  Calendar,
   Clock,
   MapPin,
   ChevronDown,
@@ -16,14 +15,15 @@ import {
   XCircle,
   Truck,
   AlertCircle,
+  Tag,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { getUserOrders, updateOrderStatus } from "@/lib/firebase/firestore";
-import { Order, OrderStatus } from "@/lib/types";
+import { Order, OrderStatus, CartItem } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const STATUS_STEPS: OrderStatus[] = ["waiting", "shipped", "delivered", "completed"];
+const STATUS_STEPS: OrderStatus[] = ["waiting", "shipped", "delivered"];
 
 function getStatusStyle(status: OrderStatus) {
   switch (status) {
@@ -33,8 +33,6 @@ function getStatusStyle(status: OrderStatus) {
       return { bg: "rgba(99,102,241,0.15)", color: "#818cf8", label: "Shipped" };
     case "delivered":
       return { bg: "rgba(34,197,94,0.15)", color: "#4ade80", label: "Delivered" };
-    case "completed":
-      return { bg: "rgba(34,197,94,0.2)", color: "#22c55e", label: "Completed" };
     case "cancelled by user":
       return { bg: "rgba(239,68,68,0.15)", color: "#f87171", label: "Cancelled by you" };
     case "cancelled by admin":
@@ -49,11 +47,84 @@ function StatusIcon({ status }: { status: OrderStatus }) {
     case "waiting":     return <Clock size={13} />;
     case "shipped":     return <Truck size={13} />;
     case "delivered":   return <CheckCircle size={13} />;
-    case "completed":   return <CheckCircle size={13} />;
     case "cancelled by user":
     case "cancelled by admin": return <XCircle size={13} />;
     default:            return <AlertCircle size={13} />;
   }
+}
+
+function OrderItemRow({
+  item,
+  orderId,
+  dateStr,
+  orderStatus,
+  isExpanded,
+  onToggle,
+}: {
+  item: CartItem;
+  orderId: string;
+  dateStr: string;
+  orderStatus: OrderStatus;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const style = getStatusStyle(orderStatus);
+  const lineTotal = (item.discountedPrice ?? item.price) * item.quantity;
+
+  return (
+    <div
+      onClick={onToggle}
+      className="flex items-center gap-3 md:gap-4 p-3 md:p-4 cursor-pointer hover:bg-purple-950/8 transition-colors select-none border-b border-purple-500/5 last:border-b-0"
+    >
+      {/* Image */}
+      <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden bg-purple-950/20 relative flex-shrink-0 shadow-sm">
+        <Image src={item.image || "/placeholder.jpg"} alt={item.title} fill className="object-cover" sizes="64px" />
+      </div>
+
+      {/* Middle: Name, Date, Order ID */}
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm md:text-base font-black text-white leading-tight truncate">
+          {item.title}
+        </h3>
+        <p className="text-[10px] md:text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
+          {dateStr}
+        </p>
+        <p className="text-[9px] md:text-[10px] mt-0.5 font-mono tracking-wider" style={{ color: "var(--text-muted)" }}>
+          #{orderId.slice(-8).toUpperCase()}
+        </p>
+        {item.selectedColor || item.selectedSize ? (
+          <p className="text-[9px] mt-0.5" style={{ color: "var(--purple-400)" }}>
+            {[item.selectedColor, item.selectedSize].filter(Boolean).join(" · ")}
+            <span className="ml-1.5" style={{ color: "var(--text-muted)" }}>×{item.quantity}</span>
+          </p>
+        ) : (
+          <p className="text-[9px] mt-0.5" style={{ color: "var(--text-muted)" }}>×{item.quantity}</p>
+        )}
+      </div>
+
+      {/* Right: Total, Status, Chevron */}
+      <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+        <div className="text-right">
+          <p className="text-xs md:text-sm font-bold gradient-text">{formatPrice(lineTotal)}</p>
+        </div>
+        <span
+          className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+          style={{ background: style.bg, color: style.color }}
+        >
+          <StatusIcon status={orderStatus} />
+          {style.label}
+        </span>
+        <div className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300"
+          style={{
+            background: isExpanded ? "rgba(168,85,247,0.2)" : "rgba(168,85,247,0.08)",
+            color: "var(--purple-300)",
+          }}
+        >
+          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function OrdersPage() {
@@ -142,7 +213,7 @@ export default function OrdersPage() {
         {orders.length} order{orders.length !== 1 ? "s" : ""} found
       </p>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {orders.map((order, index) => {
           const isExpanded = expandedOrder === order.id;
           const cancelled = isCancelledStatus(order.status);
@@ -150,6 +221,10 @@ export default function OrdersPage() {
           const style = getStatusStyle(order.status);
           const isCancelling = cancellingRef.current === order.id;
           const canCancel = order.status === "waiting";
+          const dateStr = order.createdAt?.toDate
+            ? order.createdAt.toDate().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+            : "Recent";
+          const itemCount = order.items.length;
 
           return (
             <motion.div
@@ -160,34 +235,31 @@ export default function OrdersPage() {
               className="rounded-3xl overflow-hidden"
               style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
             >
-              {/* Collapsed Header */}
+              {/* Batch header */}
               <div
-                onClick={() => toggleExpand(order.id)}
-                className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:bg-purple-950/10 transition-colors select-none"
+                className="px-3 md:px-5 py-2.5 flex items-center justify-between gap-3 border-b"
+                style={{ background: "rgba(168,85,247,0.04)", borderColor: "var(--border)" }}
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400">
-                    Order #{order.id.slice(-8).toUpperCase()}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={13} style={{ color: "var(--text-muted)" }} />
-                    <span className="text-xs text-purple-200">
-                      {order.createdAt?.toDate().toLocaleDateString(undefined, { dateStyle: "long" }) ?? "Recent"}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(168,85,247,0.12)" }}>
+                    <Tag size={12} style={{ color: "var(--purple-400)" }} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 block truncate">
+                      Order #{order.id.slice(-8).toUpperCase()}
+                    </span>
+                    <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>
+                      {itemCount} item{itemCount !== 1 ? "s" : ""} · {formatPrice(order.total)}
                     </span>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                  <div className="text-right">
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Total</p>
-                    <p className="text-sm font-bold gradient-text">{formatPrice(order.total)}</p>
-                  </div>
-
+                <div className="flex items-center gap-2">
                   {canCancel && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleCancel(order.id); }}
                       disabled={isCancelling}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap"
                       style={{
                         background: "rgba(239,68,68,0.1)",
                         border: "1px solid rgba(239,68,68,0.25)",
@@ -195,39 +267,46 @@ export default function OrdersPage() {
                       }}
                     >
                       {isCancelling ? (
-                        <span className="w-3 h-3 border-2 border-t-red-400 border-red-900/30 rounded-full animate-spin inline-block" />
+                        <span className="w-2.5 h-2.5 border-2 border-t-red-400 border-red-900/30 rounded-full animate-spin inline-block" />
                       ) : (
-                        <XCircle size={12} />
+                        <XCircle size={10} />
                       )}
-                      {isCancelling ? "Cancelling…" : "Cancel"}
+                      {isCancelling ? "..." : "Cancel"}
                     </button>
                   )}
-
-                  <div className="flex items-center gap-2">
-                    {/* Status badge */}
-                    <span
-                      className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full"
-                      style={{ background: style.bg, color: style.color }}
-                    >
-                      <StatusIcon status={order.status} />
-                      {style.label}
-                    </span>
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </div>
+                  <span
+                    className="inline-flex sm:hidden items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: style.bg, color: style.color }}
+                  >
+                    <StatusIcon status={order.status} />
+                  </span>
                 </div>
               </div>
 
-              {/* Expanded Details */}
+              {/* Item rows */}
+              {order.items.map((item, itemIdx) => (
+                <OrderItemRow
+                  key={`${order.id}-${item.productId}-${item.selectedColor ?? ""}-${item.selectedSize ?? ""}-${itemIdx}`}
+                  item={item}
+                  orderId={order.id}
+                  dateStr={dateStr}
+                  orderStatus={order.status}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleExpand(order.id)}
+                />
+              ))}
+
+              {/* Expanded Details (per order) */}
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: "auto" }}
-                    exit={{ height: 0 }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden border-t"
                     style={{ borderColor: "var(--border)" }}
                   >
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 md:p-6 space-y-5">
                       {/* Cancelled notice */}
                       {cancelled && (
                         <div
@@ -248,8 +327,8 @@ export default function OrdersPage() {
 
                       {/* Progress tracker */}
                       {!cancelled && (
-                        <div className="py-4 border-b border-purple-500/10">
-                          <h4 className="text-xs uppercase font-bold tracking-widest mb-6" style={{ color: "var(--text-secondary)" }}>
+                        <div className="py-3 border-b" style={{ borderColor: "var(--border)" }}>
+                          <h4 className="text-xs uppercase font-bold tracking-widest mb-5" style={{ color: "var(--text-secondary)" }}>
                             Order Progress
                           </h4>
                           <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center relative">
@@ -284,42 +363,47 @@ export default function OrdersPage() {
                         </div>
                       )}
 
-                      {/* Ordered Items */}
-                      <div>
-                        <h4 className="text-xs uppercase font-bold tracking-widest mb-4" style={{ color: "var(--text-secondary)" }}>
-                          Items Ordered
+                      {/* Order summary */}
+                      <div className="py-2 border-b" style={{ borderColor: "var(--border)" }}>
+                        <h4 className="text-xs uppercase font-bold tracking-widest mb-3" style={{ color: "var(--text-secondary)" }}>
+                          Order Summary
                         </h4>
-                        <div className="space-y-3">
-                          {order.items.map((item) => (
-                            <div
-                              key={item.productId}
-                              className="flex items-center gap-4 p-3 rounded-2xl"
-                              style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
-                            >
-                              <div className="w-14 h-14 rounded-xl overflow-hidden bg-purple-950/20 relative flex-shrink-0">
-                                <Image src={item.image} alt={item.title} fill className="object-cover" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm truncate">{item.title}</h4>
-                                <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                                  Qty: {item.quantity}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-bold text-white">
-                                  {formatPrice((item.discountedPrice ?? item.price) * item.quantity)}
-                                </p>
-                                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                                  {formatPrice(item.discountedPrice ?? item.price)} / unit
-                                </p>
-                              </div>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span style={{ color: "var(--text-muted)" }}>Subtotal ({order.items.reduce((s, i) => s + i.quantity, 0)} items)</span>
+                            <span style={{ color: "var(--text-secondary)" }}>{formatPrice(order.subtotal)}</span>
+                          </div>
+                          {order.discount > 0 && (
+                            <div className="flex justify-between">
+                              <span style={{ color: "var(--text-muted)" }}>
+                                Discount{order.couponCode ? ` (${order.couponCode})` : ""}
+                              </span>
+                              <span className="text-green-400">-{formatPrice(order.discount)}</span>
                             </div>
-                          ))}
+                          )}
+                          <div className="flex justify-between pt-1.5 border-t border-purple-500/10 mt-1.5">
+                            <span className="font-bold text-white">Total</span>
+                            <span className="font-bold gradient-text">{formatPrice(order.total)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: "var(--text-muted)" }}>Payment</span>
+                            <span className="font-medium" style={{ color: "var(--purple-300)" }}>
+                              {order.paymentMethod === "Online" ? "Online Payment" : "Cash on Delivery"}
+                            </span>
+                          </div>
+                          {(order.items.some((i) => i.selectedColor) || order.items.some((i) => i.selectedSize)) && (
+                            <div className="flex justify-between">
+                              <span style={{ color: "var(--text-muted)" }}>Variants</span>
+                              <span style={{ color: "var(--text-secondary)" }}>
+                                {order.items.map((i) => [i.selectedColor, i.selectedSize].filter(Boolean).join(" ")).filter(Boolean).join(", ") || "—"}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Address & details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-purple-500/10 text-sm">
+                      {/* Address & notes */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
                         <div className="space-y-2">
                           <h4 className="text-xs uppercase font-bold tracking-widest" style={{ color: "var(--text-secondary)" }}>
                             Delivery Address
@@ -327,43 +411,38 @@ export default function OrdersPage() {
                           <div className="flex items-start gap-2 text-purple-200">
                             <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-400" />
                             <div>
-                              <p className="font-bold">{order.deliveryAddress.fullName}</p>
-                              <p>{order.deliveryAddress.addressLine1}</p>
-                              {order.deliveryAddress.addressLine2 && <p>{order.deliveryAddress.addressLine2}</p>}
-                              <p>
+                              <p className="font-bold text-white">{order.deliveryAddress.fullName}</p>
+                              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{order.deliveryAddress.addressLine1}</p>
+                              {order.deliveryAddress.addressLine2 && (
+                                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{order.deliveryAddress.addressLine2}</p>
+                              )}
+                              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
                                 {order.deliveryAddress.city}, {order.deliveryAddress.state} -{" "}
                                 {order.deliveryAddress.postalCode}
                               </p>
-                              <p>Phone: {order.deliveryAddress.phone}</p>
+                              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Phone: {order.deliveryAddress.phone}</p>
                             </div>
                           </div>
                         </div>
 
                         <div className="space-y-2">
                           <h4 className="text-xs uppercase font-bold tracking-widest" style={{ color: "var(--text-secondary)" }}>
-                            Payment & Notes
+                            Notes
                           </h4>
-                          <div className="space-y-1.5 text-xs text-purple-200">
-                            <p className="flex justify-between">
-                              <span>Payment:</span>
-                              <span className="font-bold">Cash on Delivery (COD)</span>
-                            </p>
-                            {order.couponCode && (
-                              <p className="flex justify-between">
-                                <span>Coupon:</span>
-                                <span className="font-bold text-amber-400">{order.couponCode}</span>
-                              </p>
-                            )}
-                            {order.notes && (
-                              <div
-                                className="mt-3 p-3 rounded-xl flex items-start gap-2"
-                                style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.2)" }}
-                              >
-                                <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-purple-400" />
-                                <p className="leading-relaxed text-purple-300">&quot;{order.notes}&quot;</p>
-                              </div>
-                            )}
-                          </div>
+                          {order.notes ? (
+                            <div
+                              className="p-3 rounded-xl flex items-start gap-2"
+                              style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.2)" }}
+                            >
+                              <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-purple-400" />
+                              <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>&quot;{order.notes}&quot;</p>
+                            </div>
+                          ) : (
+                            <p className="text-xs" style={{ color: "var(--text-muted)" }}>No notes</p>
+                          )}
+                          <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                            Order placed on {dateStr}
+                          </p>
                         </div>
                       </div>
                     </div>

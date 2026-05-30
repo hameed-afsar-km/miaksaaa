@@ -1,8 +1,7 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getAvailableCoupons } from "@/lib/firebase/firestore";
 import { Coupon } from "@/lib/types";
-import gsap from "gsap";
 import { Sparkles, Ticket, Copy, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatPrice } from "@/lib/utils";
@@ -10,8 +9,7 @@ import { formatPrice } from "@/lib/utils";
 export function CouponTicker() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const animRef = useRef<gsap.core.Tween | null>(null);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     getAvailableCoupons()
@@ -29,36 +27,6 @@ export function CouponTicker() {
     }
   }
   const scrollingItems = [...baseList, ...baseList];
-
-  useEffect(() => {
-    if (scrollingItems.length === 0 || !trackRef.current) return;
-
-    // Seamless loop animation translating leftwards by exactly 50%
-    animRef.current = gsap.to(trackRef.current, {
-      xPercent: -50,
-      duration: 50, // Silky smooth speed
-      ease: "none",
-      repeat: -1,
-    });
-
-    return () => {
-      animRef.current?.kill();
-    };
-  }, [scrollingItems.length]);
-
-  const handleMouseEnter = () => {
-    if (animRef.current) {
-      // Smooth deceleration when cursor enters
-      gsap.to(animRef.current, { timeScale: 0.05, duration: 0.6, ease: "power2.out" });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (animRef.current) {
-      // Smooth acceleration when cursor leaves
-      gsap.to(animRef.current, { timeScale: 1, duration: 0.6, ease: "power2.out" });
-    }
-  };
 
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -88,8 +56,8 @@ export function CouponTicker() {
         WebkitBackdropFilter: "blur(14px)",
         borderBottom: "1px solid rgba(147, 51, 234, 0.2)",
       }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
     >
       {/* Moving gradient highlighter border at the bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-purple-500 via-gold-400 to-purple-500 opacity-60 animate-rotate-gradient" />
@@ -108,8 +76,14 @@ export function CouponTicker() {
         }}
       />
 
-      {/* Scrolling Track */}
-      <div ref={trackRef} className="flex items-center whitespace-nowrap gap-6 pl-4">
+      {/* Scrolling Track - CSS marquee replaces GSAP */}
+      <div
+        className="flex items-center whitespace-nowrap gap-6 pl-4"
+        style={{
+          animation: paused ? "none" : "marquee 50s linear infinite",
+          willChange: "transform",
+        }}
+      >
         {scrollingItems.map((c, i) => (
           <div key={`${c.id}-${i}`} className="inline-flex items-center gap-6 shrink-0">
             {/* Elegant Divider Sparkle */}

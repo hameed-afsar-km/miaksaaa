@@ -152,7 +152,7 @@ export function CartDrawer() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1, item.selectedColor, item.selectedSize)}
                               className="w-6 h-6 rounded-md flex items-center justify-center transition-colors"
                               style={{ background: "rgba(147,51,234,0.15)", color: "var(--purple-300)" }}
                             >
@@ -160,7 +160,7 @@ export function CartDrawer() {
                             </button>
                             <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1, item.selectedColor, item.selectedSize)}
                               disabled={item.quantity >= item.stock}
                               className="w-6 h-6 rounded-md flex items-center justify-center transition-colors disabled:opacity-40"
                               style={{ background: "rgba(147,51,234,0.15)", color: "var(--purple-300)" }}
@@ -168,7 +168,7 @@ export function CartDrawer() {
                               <Plus size={12} />
                             </button>
                           </div>
-                          <button onClick={() => removeItem(item.productId)}
+                            <button onClick={() => removeItem(item.productId, item.selectedColor, item.selectedSize)}
                             className="p-1 rounded-md transition-colors hover:bg-red-500/15"
                             style={{ color: "#fca5a5" }}>
                             <Trash2 size={15} />

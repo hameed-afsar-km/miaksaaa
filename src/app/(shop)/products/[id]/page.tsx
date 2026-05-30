@@ -15,8 +15,13 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
+import dynamic from "next/dynamic";
 import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
-import { ImageZoom } from "@/components/ui/ImageZoom";
+
+const ImageZoom = dynamic(
+  () => import("@/components/ui/ImageZoom").then((m) => m.ImageZoom),
+  { ssr: false }
+);
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,12 +64,14 @@ export default function ProductDetailPage() {
   } | null>(null);
 
   useEffect(() => {
-    getProductById(id)
-      .then((p) => { setProduct(p); setLoading(false); })
-      .catch(() => setLoading(false));
-    getProductReviews(id)
-      .then((r) => { setReviews(r); setReviewsLoading(false); })
-      .catch(() => setReviewsLoading(false));
+    Promise.all([
+      getProductById(id),
+      getProductReviews(id),
+    ]).then(([p, r]) => {
+      setProduct(p);
+      setReviews(r);
+    }).catch(console.error)
+    .finally(() => { setLoading(false); setReviewsLoading(false); });
   }, [id]);
 
   async function handleSubmitReview(e: React.FormEvent) {
@@ -383,17 +390,84 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Stock status */}
-          <div>
-            {currentStock === -1 ? (
-              <span className="text-sm" style={{ color: "var(--text-muted)" }}>Select a variant to check availability</span>
-            ) : currentStock === 0 ? (
-              <span className="badge badge-red">Out of Stock</span>
-            ) : currentStock <= 5 ? (
-              <span className="text-sm" style={{ color: "#fca5a5" }}>⚠️ Only {currentStock} left in stock{variantLabel ? ` (${variantLabel})` : ""}!</span>
-            ) : (
-              <span className="text-sm" style={{ color: "#86efac" }}>✓ In Stock ({currentStock} available{variantLabel ? ` - ${variantLabel}` : ""})</span>
-            )}
-          </div>
+          {currentStock === -1 ? (
+            <div className="p-3 rounded-xl border border-dashed border-purple-500/30 bg-purple-950/10">
+              <span className="text-sm flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
+                <span className="w-2 h-2 rounded-full bg-purple-500/50 animate-pulse" />
+                Select a variant to check availability
+              </span>
+            </div>
+          ) : currentStock === 0 ? (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="p-5 rounded-2xl border-2 border-red-500/40 bg-gradient-to-br from-red-950/40 via-red-900/10 to-rose-950/30 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 opacity-[0.06]"
+                style={{
+                  backgroundImage: "repeating-linear-gradient(-45deg, #ef4444 0px, #ef4444 3px, transparent 3px, transparent 12px), repeating-linear-gradient(45deg, transparent 0px, transparent 6px, rgba(239,68,68,0.1) 6px, rgba(239,68,68,0.1) 7px)",
+                }}
+              />
+              <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-red-500/10 blur-2xl group-hover:bg-red-500/20 transition-all duration-700" />
+              <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-rose-500/10 blur-xl" />
+              <div className="relative flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500/25 to-rose-500/25 border border-red-500/40 flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/10">
+                  <span className="text-red-400 text-xl font-black">!</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <p className="text-sm font-black text-red-400 uppercase tracking-[0.15em]">
+                      Out of Stock
+                    </p>
+                  </div>
+                  <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+                    {variantLabel
+                      ? <>The <span className="font-semibold text-red-300">{variantLabel}</span> variant is currently unavailable</>
+                      : "This product is currently unavailable"
+                    }
+                  </p>
+                  <p className="text-[10px] mt-1.5 tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    Check back later or browse similar items
+                  </p>
+                </div>
+                <div className="flex-shrink-0 self-start mt-1">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    <svg className="w-4 h-4 text-red-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10m9.364-7.364A9 9 0 1112 3a9 9 0 017.364 4.636z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : currentStock <= 5 ? (
+            <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-amber-400 text-sm">⏳</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#fbbf24" }}>
+                  Only {currentStock} left in stock{variantLabel ? ` (${variantLabel})` : ""}!
+                </p>
+                <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>Order soon before it&apos;s gone</p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-emerald-400 text-sm">✓</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#86efac" }}>
+                  In Stock{variantLabel ? ` - ${variantLabel}` : ""}
+                </p>
+                <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  {currentStock} available{variantLabel ? "" : " — ready to ship"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Quantity */}
           {currentStock > 0 && (

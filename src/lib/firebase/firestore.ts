@@ -29,9 +29,16 @@ import {
   CartItem,
   DeliveryAddress,
   Review,
+  ColorVariant,
+  SizeVariant,
 } from "@/lib/types";
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
+
+// Cache visible products across server component requests in the same render
+function getVisibleProductsRawCache(): Promise<Product[]> {
+  return getVisibleProductsRaw();
+}
 
 async function getVisibleProductsRaw(): Promise<Product[]> {
   try {
@@ -43,8 +50,31 @@ async function getVisibleProductsRaw(): Promise<Product[]> {
   }
 }
 
-export async function getAllProducts(): Promise<Product[]> {
+// Single fetch that derives featured/new/hot to eliminate redundant reads
+export async function getHomepageProducts(): Promise<{
+  featured: Product[];
+  newArrivals: Product[];
+  hot: Product[];
+}> {
   const products = await getVisibleProductsRaw();
+  const sorted = [...products].sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
+    const bTime = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds || 0;
+    return bTime - aTime;
+  });
+  return {
+    featured: products.filter((p) => p.isFeatured).slice(0, 8),
+    newArrivals: sorted.filter((p) => p.isNew).slice(0, 8),
+    hot: products.filter((p) => p.isHot).slice(0, 8),
+  };
+}
+
+export async function getAllProducts(maxCount?: number): Promise<Product[]> {
+  const q = maxCount
+    ? query(collection(db, "products"), where("isVisible", "==", true), limit(maxCount))
+    : query(collection(db, "products"), where("isVisible", "==", true));
+  const snap = await getDocs(q);
+  const products = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
   return products.sort((a, b) => {
     const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
     const bTime = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds || 0;
@@ -325,9 +355,40 @@ export async function placeOrder(
   for (const item of items) {
     try {
       const productRef = doc(db, "products", item.productId);
-      await updateDoc(productRef, {
-        stock: increment(-item.quantity),
-      });
+
+      if (item.selectedColor || item.selectedSize) {
+        await runTransaction(db, async (transaction) => {
+          const snap = await transaction.get(productRef);
+          if (!snap.exists()) return;
+
+          const data = snap.data();
+          const updates: Record<string, any> = {
+            stock: increment(-item.quantity),
+          };
+
+          if (item.selectedColor && data.colorVariants) {
+            updates.colorVariants = data.colorVariants.map((v: ColorVariant) =>
+              v.name === item.selectedColor
+                ? { ...v, stock: Math.max(0, v.stock - item.quantity) }
+                : v
+            );
+          }
+
+          if (item.selectedSize && data.sizeVariants) {
+            updates.sizeVariants = data.sizeVariants.map((v: SizeVariant) =>
+              v.size === item.selectedSize
+                ? { ...v, stock: Math.max(0, v.stock - item.quantity) }
+                : v
+            );
+          }
+
+          transaction.update(productRef, updates);
+        });
+      } else {
+        await updateDoc(productRef, {
+          stock: increment(-item.quantity),
+        });
+      }
     } catch (err) {
       console.error(`Failed to reduce stock for product ${item.productId}:`, err);
     }
@@ -357,19 +418,17 @@ export async function placeOrder(
   return ref.id;
 }
 
-export async function getUserOrders(userId: string): Promise<Order[]> {
-  const q = query(
-    collection(db, "orders"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc")
-  );
-  const snap = await getDocs(q);
+export async function getUserOrders(userId: string, maxCount?: number): Promise<Order[]> {
+  const constraints: any[] = [where("userId", "==", userId), orderBy("createdAt", "desc")];
+  if (maxCount) constraints.push(limit(maxCount));
+  const snap = await getDocs(query(collection(db, "orders"), ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Order));
 }
 
-export async function getAllOrders(): Promise<Order[]> {
-  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
+export async function getAllOrders(maxCount?: number): Promise<Order[]> {
+  const constraints: any[] = [orderBy("createdAt", "desc")];
+  if (maxCount) constraints.push(limit(maxCount));
+  const snap = await getDocs(query(collection(db, "orders"), ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Order));
 }
 
@@ -393,9 +452,38 @@ export async function updateOrderStatus(
         const items = snap.data().items || [];
         for (const item of items) {
           const productRef = doc(db, "products", item.productId);
-          transaction.update(productRef, {
-            stock: increment(item.quantity),
-          });
+
+          if (item.selectedColor || item.selectedSize) {
+            const productSnap = await transaction.get(productRef);
+            if (!productSnap.exists()) continue;
+
+            const productData = productSnap.data();
+            const updates: Record<string, any> = {
+              stock: increment(item.quantity),
+            };
+
+            if (item.selectedColor && productData.colorVariants) {
+              updates.colorVariants = productData.colorVariants.map((v: ColorVariant) =>
+                v.name === item.selectedColor
+                  ? { ...v, stock: v.stock + item.quantity }
+                  : v
+              );
+            }
+
+            if (item.selectedSize && productData.sizeVariants) {
+              updates.sizeVariants = productData.sizeVariants.map((v: SizeVariant) =>
+                v.size === item.selectedSize
+                  ? { ...v, stock: v.stock + item.quantity }
+                  : v
+              );
+            }
+
+            transaction.update(productRef, updates);
+          } else {
+            transaction.update(productRef, {
+              stock: increment(item.quantity),
+            });
+          }
         }
       }
 

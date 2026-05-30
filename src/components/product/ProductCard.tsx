@@ -31,7 +31,15 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const addToCart = useCartStore((s) => s.addItem);
   const discountPct = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
-  const outOfStock = product.stock === 0;
+
+  // Check if truly out of stock (handles variants too)
+  const allColorVariantsOut = (product.colorVariants ?? []).length > 0
+    && (product.colorVariants ?? []).every((v) => v.stock === 0);
+  const allSizeVariantsOut = (product.sizeVariants ?? []).filter((s) => s.enabled).length > 0
+    && (product.sizeVariants ?? []).filter((s) => s.enabled).every((v) => v.stock === 0);
+  const outOfStock = product.hasVariants
+    ? (allColorVariantsOut || allSizeVariantsOut)
+    : product.stock === 0;
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -75,39 +83,34 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         >
           {/* Badges */}
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
-            {product.isNew && (
+            {product.isNew && !outOfStock && (
               <span className="badge flex items-center gap-1"
                 style={{ background: "rgba(147,51,234,0.85)", color: "#fff", border: "1px solid rgba(147,51,234,0.6)" }}>
                 <Sparkles size={10} /> New
               </span>
             )}
-            {product.isHot && (
+            {product.isHot && !outOfStock && (
               <span className="badge flex items-center gap-1"
                 style={{ background: "rgba(239,68,68,0.85)", color: "#fff", border: "1px solid rgba(239,68,68,0.6)" }}>
                 <Flame size={10} /> Hot
               </span>
             )}
-            {product.isOnSale && discountPct > 0 && (
+            {product.isOnSale && discountPct > 0 && !outOfStock && (
               <span className="badge flex items-center gap-1"
                 style={{ background: "rgba(217,119,6,0.85)", color: "#fff", border: "1px solid rgba(217,119,6,0.6)" }}>
                 <Zap size={10} /> -{discountPct}%
               </span>
             )}
-            {outOfStock && (
-              <span className="badge" style={{ background: "rgba(0,0,0,0.75)", color: "#9ca3af", border: "1px solid rgba(255,255,255,0.1)" }}>
-                Out of Stock
-              </span>
-            )}
           </div>
 
           {/* Image */}
-          <div className="product-img-wrapper aspect-square select-none pointer-events-none">
+          <div className="product-img-wrapper aspect-square select-none pointer-events-none relative">
             {product.images[0] && !imgError ? (
               <Image
                 src={product.images[0]}
                 alt={product.title}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-106"
+                className={`object-cover transition-transform duration-500 group-hover:scale-106 ${outOfStock ? "opacity-30" : ""}`}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 onError={() => setImgError(true)}
                 draggable={false}
@@ -116,6 +119,25 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               <div className="w-full h-full flex items-center justify-center aspect-square"
                 style={{ background: "var(--bg-surface)" }}>
                 <ShoppingBag size={40} style={{ color: "var(--text-muted)" }} />
+              </div>
+            )}
+            {outOfStock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black/40 via-transparent to-black/40">
+                {/* Diagonal stripe pattern */}
+                <div className="absolute inset-0 opacity-[0.07]"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(45deg, #ef4444 0px, #ef4444 2px, transparent 2px, transparent 8px)",
+                  }}
+                />
+                <div className="relative flex flex-col items-center gap-2">
+                  <div className="absolute inset-0 bg-black/50 blur-2xl rounded-full scale-150" />
+                  <div className="relative flex items-center gap-2 px-5 py-2.5 rounded-2xl border-2 border-red-500/60 bg-gradient-to-r from-black/90 to-red-950/80 backdrop-blur shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+                    <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center">
+                      <span className="text-red-400 text-xs font-black">!</span>
+                    </div>
+                    <span className="text-red-300 font-black text-sm tracking-[0.15em] uppercase">Out of Stock</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -166,10 +188,17 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               <button
                 onClick={handleAddToCart}
                 disabled={outOfStock}
-                className="btn-primary w-full text-xs py-1.5 sm:text-sm sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full text-xs py-1.5 sm:text-sm sm:py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  outOfStock
+                    ? "bg-gradient-to-r from-red-950/40 to-red-900/20 text-red-400/40 border border-red-900/30 cursor-not-allowed"
+                    : "btn-primary"
+                }`}
               >
-                <ShoppingBag className="w-4 h-4 sm:w-[13px] sm:h-[13px]" />
-                {outOfStock ? "Out of Stock" : "Add to Cart"}
+                {outOfStock ? (
+                  <><div className="w-4 h-4 rounded-full border border-red-500/40 flex items-center justify-center"><span className="text-red-500/50 text-[10px] font-black">!</span></div> Out of Stock</>
+                ) : (
+                  <><ShoppingBag className="w-4 h-4 sm:w-[13px] sm:h-[13px]" /> Add to Cart</>
+                )}
               </button>
             </div>
           </div>

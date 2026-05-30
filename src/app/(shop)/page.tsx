@@ -5,7 +5,7 @@ import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { FlashSaleSection } from "@/components/home/FlashSaleSection";
 import { TrustSection } from "@/components/home/TrustSection";
-import { getActiveBanners, getFeaturedProducts, getNewArrivals, getHotProducts, getCategories } from "@/lib/firebase/firestore";
+import { getActiveBanners, getHomepageProducts, getCategories } from "@/lib/firebase/firestore";
 
 export const metadata: Metadata = {
   title: "MIAKSAAA — Premium Luxury Store",
@@ -24,18 +24,16 @@ function serializeProduct(product: any) {
 }
 
 export default async function HomePage() {
-  const [banners, featuredRaw, newArrivalsRaw, hotRaw, categories, settings] = await Promise.all([
+  const [banners, homepageProducts, categories, settings] = await Promise.all([
     getActiveBanners().catch(() => []),
-    getFeaturedProducts().catch(() => []),
-    getNewArrivals().catch(() => []),
-    getHotProducts().catch(() => []),
+    getHomepageProducts().catch(() => ({ featured: [], newArrivals: [], hot: [] })),
     getCategories().catch(() => []),
     import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null),
   ]);
 
-  const featured = (featuredRaw || []).map(serializeProduct).filter(Boolean) as any[];
-  const newArrivals = (newArrivalsRaw || []).map(serializeProduct).filter(Boolean) as any[];
-  const hot = (hotRaw || []).map(serializeProduct).filter(Boolean) as any[];
+  const featured = (homepageProducts.featured || []).map(serializeProduct).filter(Boolean) as any[];
+  const newArrivals = (homepageProducts.newArrivals || []).map(serializeProduct).filter(Boolean) as any[];
+  const hot = (homepageProducts.hot || []).map(serializeProduct).filter(Boolean) as any[];
 
   return (
     <>

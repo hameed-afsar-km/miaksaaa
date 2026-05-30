@@ -220,15 +220,15 @@ export default function AdminDashboardPage() {
                           background:
                             order.status === "cancelled by user" || order.status === "cancelled by admin"
                               ? "rgba(239,68,68,0.15)"
-                              : order.status === "delivered" || order.status === "completed"
-                              ? "rgba(34,197,94,0.15)"
-                              : order.status === "waiting"
+                            : order.status === "delivered"
+                            ? "rgba(34,197,94,0.15)"
+                            : order.status === "waiting"
                               ? "rgba(234,179,8,0.15)"
                               : "rgba(168,85,247,0.15)",
                           color:
                             order.status === "cancelled by user" || order.status === "cancelled by admin"
                               ? "#f87171"
-                              : order.status === "delivered" || order.status === "completed"
+                              : order.status === "delivered"
                               ? "#4ade80"
                               : order.status === "waiting"
                               ? "#eab308"

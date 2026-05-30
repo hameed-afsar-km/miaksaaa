@@ -1,9 +1,11 @@
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
-import { SplashScreen } from "@/components/layout/SplashScreen";
 import { CouponTicker } from "@/components/layout/CouponTicker";
+
+const SplashScreen = dynamic(() => import("@/components/layout/SplashScreen").then((m) => m.SplashScreen));
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const settings = await import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null);

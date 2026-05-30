@@ -85,7 +85,7 @@ export default function CartPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-sm leading-snug">{item.title}</h3>
-                    <button onClick={() => removeItem(item.productId)} className="btn-ghost p-1.5 rounded-lg flex-shrink-0" style={{ color: "#fca5a5" }}>
+                    <button onClick={() => removeItem(item.productId, item.selectedColor, item.selectedSize)} className="btn-ghost p-1.5 rounded-lg flex-shrink-0" style={{ color: "#fca5a5" }}>
                       <X size={15} />
                     </button>
                   </div>
@@ -101,13 +101,13 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1, item.selectedColor, item.selectedSize)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center"
                         style={{ background: "rgba(147,51,234,0.15)" }}>
                         <Minus size={13} style={{ color: "var(--purple-300)" }} />
                       </button>
                       <span className="font-bold w-8 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.selectedColor, item.selectedSize)}
                         disabled={item.quantity >= item.stock}
                         className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-40"
                         style={{ background: "rgba(147,51,234,0.15)" }}>

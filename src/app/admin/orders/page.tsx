@@ -27,7 +27,6 @@ const ALL_STATUSES: OrderStatus[] = [
   "waiting",
   "shipped",
   "delivered",
-  "completed",
   "cancelled by user",
   "cancelled by admin",
 ];
@@ -43,8 +42,6 @@ function getStatusStyle(status: OrderStatus) {
       return { bg: "rgba(99,102,241,0.15)", color: "#818cf8", dot: "#818cf8" };
     case "delivered":
       return { bg: "rgba(34,197,94,0.15)", color: "#4ade80", dot: "#4ade80" };
-    case "completed":
-      return { bg: "rgba(34,197,94,0.2)", color: "#22c55e", dot: "#22c55e" };
     case "cancelled by user":
       return { bg: "rgba(239,68,68,0.15)", color: "#f87171", dot: "#f87171" };
     case "cancelled by admin":

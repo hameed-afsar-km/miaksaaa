@@ -6,8 +6,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, Edit2, Trash2, ExternalLink, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
-import { getUserReviews, deleteReview, updateReview, getProductById } from "@/lib/firebase/firestore";
+import { getUserReviews, deleteReview, updateReview } from "@/lib/firebase/firestore";
 import { Review, Product } from "@/lib/types";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
 import toast from "react-hot-toast";
 
 export default function MyReviewsPage() {
@@ -31,13 +33,19 @@ export default function MyReviewsPage() {
     getUserReviews(user.uid)
       .then(async (data) => {
         setReviews(data);
+        const uniqueIds = [...new Set(data.map((r) => r.productId))];
         const productMap: Record<string, Product> = {};
-        await Promise.all(
-          [...new Set(data.map((r) => r.productId))].map(async (pid) => {
-            const p = await getProductById(pid);
-            if (p) productMap[pid] = p;
-          })
-        );
+        // Batch product lookups with in query (max 30 per batch)
+        if (uniqueIds.length > 0) {
+          for (let i = 0; i < uniqueIds.length; i += 30) {
+            const batch = uniqueIds.slice(i, i + 30);
+            const q = query(collection(db, "products"), where("__name__", "in", batch));
+            const snap = await getDocs(q);
+            snap.forEach((d) => {
+              productMap[d.id] = { id: d.id, ...d.data() } as Product;
+            });
+          }
+        }
         setProducts(productMap);
       })
       .catch(console.error)

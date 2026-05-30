@@ -79,8 +79,8 @@ export interface CartState {
   couponType: "percent" | "fixed";
   couponCategories: string[];
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, selectedColor?: string, selectedSize?: string) => void;
+  updateQuantity: (productId: string, quantity: number, selectedColor?: string, selectedSize?: string) => void;
   clearCart: () => void;
   applyCoupon: (code: string, discount: number, type: "percent" | "fixed", categories?: string[]) => void;
   removeCoupon: () => void;
@@ -114,7 +114,6 @@ export type OrderStatus =
   | "waiting"
   | "shipped"
   | "delivered"
-  | "completed"
   | "cancelled by user"
   | "cancelled by admin";
 

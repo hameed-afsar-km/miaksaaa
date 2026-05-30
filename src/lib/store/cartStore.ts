@@ -14,17 +14,15 @@ export const useCartStore = create<CartState>()(
 
       addItem: (newItem: CartItem) => {
         set((state) => {
+          const key = `${newItem.productId}::${newItem.selectedColor || ""}::${newItem.selectedSize || ""}`;
           const existing = state.items.find(
-            (i) => i.productId === newItem.productId
+            (i) => `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}` === key
           );
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.productId === newItem.productId
-                  ? {
-                      ...i,
-                      quantity: Math.min(i.quantity + newItem.quantity, i.stock),
-                    }
+                `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}` === key
+                  ? { ...i, quantity: Math.min(i.quantity + newItem.quantity, i.stock) }
                   : i
               ),
             };
@@ -33,19 +31,34 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      removeItem: (productId: string) => {
+      removeItem: (productId: string, selectedColor?: string, selectedSize?: string) => {
         set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
+          items: state.items.filter((i) => {
+            if (selectedColor !== undefined || selectedSize !== undefined) {
+              return !(
+                i.productId === productId &&
+                (i.selectedColor || "") === (selectedColor || "") &&
+                (i.selectedSize || "") === (selectedSize || "")
+              );
+            }
+            return i.productId !== productId;
+          }),
         }));
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      updateQuantity: (productId: string, quantity: number, selectedColor?: string, selectedSize?: string) => {
         set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId
+          items: state.items.map((i) => {
+            const match =
+              selectedColor !== undefined || selectedSize !== undefined
+                ? i.productId === productId &&
+                  (i.selectedColor || "") === (selectedColor || "") &&
+                  (i.selectedSize || "") === (selectedSize || "")
+                : i.productId === productId;
+            return match
               ? { ...i, quantity: Math.max(1, Math.min(quantity, i.stock)) }
-              : i
-          ),
+              : i;
+          }),
         }));
       },
 

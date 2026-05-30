@@ -1,22 +1,25 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { BeamsBackground } from "@/components/ui/beams-background";
 
 export function SplashScreen() {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const [visible, setVisible] = useState(isHome);
+  const isInitialMount = useRef(true);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!isHome) {
-      setVisible(false);
-      return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (isHome) {
+        setVisible(true);
+        const t = setTimeout(() => setVisible(false), 2800);
+        return () => clearTimeout(t);
+      }
     }
-    setVisible(true);
-    const t = setTimeout(() => setVisible(false), 2800);
-    return () => clearTimeout(t);
   }, [isHome]);
 
   return (
@@ -45,9 +48,12 @@ export function SplashScreen() {
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="mb-0"
               >
-                <img
+                <Image
                   src="/logo2.png"
                   alt="MIAKSAAA Logo"
+                  width={256}
+                  height={256}
+                  priority
                   className="w-48 h-48 md:w-64 md:h-64 object-contain"
                   style={{ filter: "drop-shadow(0 0 56px rgba(147,51,234,0.95))" }}
                 />
