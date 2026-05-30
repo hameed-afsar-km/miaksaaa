@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X, ShoppingBag, Eye } from "lucide-react";
@@ -12,13 +13,17 @@ interface ProductPreviewModalProps {
 }
 
 export function ProductPreviewModal({ isOpen, onClose, product }: ProductPreviewModalProps) {
+  const [selectedVariant, setSelectedVariant] = useState(0);
+
   if (!product) return null;
 
   const discount = product.discountedPrice
     ? getDiscountPercent(product.price ?? 0, product.discountedPrice) : 0;
   const hasVariants = product.hasVariants ?? false;
-  const productImage = hasVariants && product.colorVariants?.[0]?.images?.[0]
-    ? product.colorVariants[0].images[0]
+  const colorVariants = product.colorVariants ?? [];
+  const validVariantIdx = Math.min(selectedVariant, colorVariants.length - 1);
+  const productImage = hasVariants && colorVariants[validVariantIdx]?.images?.[0]
+    ? colorVariants[validVariantIdx].images[0]
     : product.images?.[0] || "/placeholder.jpg";
   const displayPrice = product.discountedPrice ?? product.price ?? 0;
 
@@ -133,17 +138,19 @@ export function ProductPreviewModal({ isOpen, onClose, product }: ProductPreview
                     </div>
 
                     {/* Variants preview */}
-                    {hasVariants && product.colorVariants && product.colorVariants.length > 0 && (
+                    {hasVariants && colorVariants.length > 0 && (
                       <div>
                         <p className="text-xs font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>Available Colors</p>
                         <div className="flex flex-wrap gap-1.5">
-                          {product.colorVariants.map((v, i) => (
-                            <div
+                          {colorVariants.map((v, i) => (
+                            <button
                               key={i}
-                              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium"
+                              type="button"
+                              onClick={() => setSelectedVariant(i)}
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer"
                               style={{
-                                background: "rgba(147,51,234,0.1)",
-                                border: "1px solid rgba(147,51,234,0.2)",
+                                background: i === validVariantIdx ? "rgba(147,51,234,0.3)" : "rgba(147,51,234,0.1)",
+                                border: `1px solid ${i === validVariantIdx ? "rgba(147,51,234,0.6)" : "rgba(147,51,234,0.2)"}`,
                               }}
                             >
                               {v.hexCode && (
@@ -154,7 +161,7 @@ export function ProductPreviewModal({ isOpen, onClose, product }: ProductPreview
                               )}
                               {v.name}
                               <span style={{ color: "var(--text-muted)" }}>({v.stock})</span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>

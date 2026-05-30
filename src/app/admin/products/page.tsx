@@ -80,7 +80,7 @@ export default function AdminProductsPage() {
       images: [""],
       category: categoriesList[0]?.name || "",
       tags: [],
-      stock: 10,
+      stock: 1,
       isFeatured: false,
       isNew: true,
       isHot: false,
@@ -532,7 +532,7 @@ export default function AdminProductsPage() {
                                 ...editingProduct,
                                 colorVariants: [
                                   ...(editingProduct.colorVariants ?? []),
-                                  { name: "", stock: 0, images: [] },
+                                  { name: "", stock: 1, images: [] },
                                 ],
                               });
                             }}
