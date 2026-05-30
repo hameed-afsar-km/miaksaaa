@@ -26,6 +26,8 @@ import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { ImageUploadZone } from "@/components/admin/ImageUploadZone";
+import { ProductPreviewModal } from "@/components/admin/ProductPreviewModal";
+import { ProductDetailPreviewModal } from "@/components/admin/ProductDetailPreviewModal";
 
 const DEFAULT_SIZE_VARIANTS: SizeVariant[] = [
   { size: "S", enabled: false, stock: 0 },
@@ -48,6 +50,8 @@ export default function AdminProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasVariants, setHasVariants] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState<Partial<Product> | null>(null);
+  const [previewDetailProduct, setPreviewDetailProduct] = useState<Product | null>(null);
 
   const loadProducts = () => {
     setLoading(true);
@@ -71,7 +75,7 @@ export default function AdminProductsPage() {
     setEditingProduct({
       title: "",
       description: "",
-      price: 0,
+      price: undefined,
       discountedPrice: undefined,
       images: [""],
       category: categoriesList[0]?.name || "",
@@ -183,12 +187,15 @@ export default function AdminProductsPage() {
       if (editingProduct.id) {
         await updateProduct(editingProduct.id, submitData);
         toast.success("Luxury product polished successfully");
+        setFormOpen(false);
+        setEditingProduct(null);
       } else {
         await addProduct(submitData);
         toast.success("New luxury product created");
+        setPreviewProduct({ ...submitData, title: editingProduct.title, description: editingProduct.description });
+        setFormOpen(false);
+        setEditingProduct(null);
       }
-      setFormOpen(false);
-      setEditingProduct(null);
       loadProducts();
     } catch (err) {
       console.error(err);
@@ -297,6 +304,9 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
+                      <button onClick={() => setPreviewDetailProduct(product)} className="btn-ghost p-2 rounded-lg text-amber-400 hover:text-amber-300" title="Preview">
+                        <Eye size={13} />
+                      </button>
                       <button onClick={() => openEditForm(product)} className="btn-ghost p-2 rounded-lg text-purple-300">
                         <Edit2 size={13} />
                       </button>
@@ -690,8 +700,13 @@ export default function AdminProductsPage() {
                       <input
                         type="number"
                         required
-                        value={editingProduct.price ?? 0}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
+                        value={editingProduct.price ?? ""}
+                        onChange={(e) =>
+                          setEditingProduct({
+                            ...editingProduct,
+                            price: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
                         className="input text-xs py-2"
                         placeholder="12000"
                       />
@@ -912,6 +927,16 @@ export default function AdminProductsPage() {
           </div>
         )}
       </AnimatePresence>
+      <ProductPreviewModal
+        isOpen={previewProduct !== null}
+        onClose={() => setPreviewProduct(null)}
+        product={previewProduct}
+      />
+      <ProductDetailPreviewModal
+        isOpen={previewDetailProduct !== null}
+        onClose={() => setPreviewDetailProduct(null)}
+        product={previewDetailProduct}
+      />
     </div>
   );
 }

@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Star, Zap, Sparkles, Flame } from "lucide-react";
+import { ShoppingBag, Star, Zap, Sparkles, Flame, Expand } from "lucide-react";
 import { Product } from "@/lib/types";
 import { useCartStore } from "@/lib/store/cartStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
+import { ImageZoom } from "@/components/ui/ImageZoom";
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +19,7 @@ interface ProductCardProps {
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const [addedItem, setAddedItem] = useState<{
     productId: string;
     title: string;
@@ -101,17 +103,28 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
 
           {/* Image */}
-          <div className="product-img-wrapper aspect-square select-none pointer-events-none">
+          <div className="product-img-wrapper aspect-square select-none group/image cursor-zoom-in">
             {product.images[0] && !imgError ? (
-              <Image
-                src={product.images[0]}
-                alt={product.title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-106"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                onError={() => setImgError(true)}
-                draggable={false}
-              />
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setZoomOpen(true); }}
+                className="absolute inset-0 w-full h-full p-0 border-0 block cursor-zoom-in"
+                aria-label="Zoom image"
+              >
+                <Image
+                  src={product.images[0]}
+                  alt={product.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover/image:scale-125 pointer-events-none"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  onError={() => setImgError(true)}
+                  draggable={false}
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors duration-300 pointer-events-none" />
+                <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-300 translate-y-1 group-hover/image:translate-y-0 pointer-events-none"
+                  style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}>
+                  <Expand size={13} className="text-white" />
+                </div>
+              </button>
             ) : (
               <div className="w-full h-full flex items-center justify-center aspect-square"
                 style={{ background: "var(--bg-surface)" }}>
@@ -180,6 +193,12 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         onClose={() => setAddedItem(null)}
         onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
         item={addedItem}
+      />
+      <ImageZoom
+        images={product.images}
+        initialIndex={0}
+        isOpen={zoomOpen}
+        onClose={() => setZoomOpen(false)}
       />
     </motion.div>
   );

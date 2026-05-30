@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Heart, Star, ChevronLeft, ChevronRight,
-  Minus, Plus, Truck, Shield, RefreshCw, Share2, Flame, Sparkles, Zap
+  Minus, Plus, Truck, Shield, RefreshCw, Share2, Flame, Sparkles, Zap, Expand
 } from "lucide-react";
 import { Product, Review } from "@/lib/types";
 import { getProductById, getProductReviews, addReview, deleteReview, updateReview } from "@/lib/firebase/firestore";
@@ -16,6 +16,7 @@ import { useUIStore } from "@/lib/store/uiStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
+import { ImageZoom } from "@/components/ui/ImageZoom";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,9 @@ export default function ProductDetailPage() {
   const [editingReviewRating, setEditingReviewRating] = useState(5);
   const [editingReviewComment, setEditingReviewComment] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
 
   const [addedItem, setAddedItem] = useState<{
     productId: string;
@@ -133,7 +137,7 @@ export default function ProductDetailPage() {
   }
 
   function handleAddToCart() {
-    if (!product || product.stock === 0) return;
+    if (!product || currentStock <= 0) return;
     addToCart({
       productId: product.id,
       title: product.title,
@@ -141,7 +145,7 @@ export default function ProductDetailPage() {
       discountedPrice: product.discountedPrice,
       image: displayImages[0] ?? "",
       quantity: qty,
-      stock: product.stock,
+      stock: currentStock,
       selectedColor: selectedColor?.name,
       selectedSize: selectedSize ?? undefined,
       category: product.category,
@@ -212,6 +216,18 @@ export default function ProductDetailPage() {
     ? colorVariants[selectedColorIdx]
     : null;
   
+  // Current stock based on selected variant
+  let currentStock = product.stock;
+  let variantLabel: string | null = null;
+  if (product.hasVariants) {
+    if (selectedColorIdx !== null && selectedColor) {
+      currentStock = selectedColor.stock;
+      variantLabel = selectedColor.name;
+    } else if (colorVariants.length > 0) {
+      currentStock = -1; // signal: no variant selected
+    }
+  }
+
   // Determine display images based on selected variant
   let displayImages: string[] = [];
   if (selectedColorIdx !== null && selectedColor) {
@@ -242,40 +258,51 @@ export default function ProductDetailPage() {
         {/* Image Gallery */}
         <div>
           <div
-            className="relative aspect-square rounded-3xl overflow-hidden mb-3"
+            className="relative aspect-square rounded-3xl overflow-hidden mb-3 group cursor-zoom-in"
             style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={validActiveImg}
-                initial={{ opacity: 0, scale: 1.03 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0"
-              >
-                <Image
-                  src={displayImages[validActiveImg]}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </motion.div>
-            </AnimatePresence>
+            <button
+              onClick={() => { setZoomIndex(validActiveImg); setZoomOpen(true); }}
+              className="absolute inset-0 w-full h-full p-0 border-0 block cursor-zoom-in z-10"
+              aria-label="Zoom image"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={validActiveImg}
+                  initial={{ opacity: 0, scale: 1.03 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={displayImages[validActiveImg]}
+                    alt={product.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-125 pointer-events-none"
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 pointer-events-none" />
+              <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 pointer-events-none"
+                style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}>
+                <Expand size={14} className="text-white" />
+              </div>
+            </button>
 
             {/* Prev/Next */}
             {displayImages.length > 1 && (
               <>
                 <button
                   onClick={() => setActiveImg((i) => (i - 1 + displayImages.length) % displayImages.length)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center z-20"
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button
                   onClick={() => setActiveImg((i) => (i + 1) % displayImages.length)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center z-20"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -283,7 +310,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none z-20">
               {product.isNew && <span className="badge badge-purple flex items-center gap-1"><Sparkles size={10} /> New</span>}
               {product.isHot && <span className="badge badge-red flex items-center gap-1"><Flame size={10} /> Hot</span>}
               {product.isOnSale && discount > 0 && <span className="badge badge-gold flex items-center gap-1"><Zap size={10} /> -{discount}%</span>}
@@ -357,17 +384,19 @@ export default function ProductDetailPage() {
 
           {/* Stock status */}
           <div>
-            {product.stock === 0 ? (
+            {currentStock === -1 ? (
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>Select a variant to check availability</span>
+            ) : currentStock === 0 ? (
               <span className="badge badge-red">Out of Stock</span>
-            ) : product.stock <= 5 ? (
-              <span className="text-sm" style={{ color: "#fca5a5" }}>⚠️ Only {product.stock} left in stock!</span>
+            ) : currentStock <= 5 ? (
+              <span className="text-sm" style={{ color: "#fca5a5" }}>⚠️ Only {currentStock} left in stock{variantLabel ? ` (${variantLabel})` : ""}!</span>
             ) : (
-              <span className="text-sm" style={{ color: "#86efac" }}>✓ In Stock ({product.stock} available)</span>
+              <span className="text-sm" style={{ color: "#86efac" }}>✓ In Stock ({currentStock} available{variantLabel ? ` - ${variantLabel}` : ""})</span>
             )}
           </div>
 
           {/* Quantity */}
-          {product.stock > 0 && (
+          {currentStock > 0 && (
             <div className="flex items-center gap-4">
               <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Quantity</span>
               <div className="flex items-center gap-2">
@@ -380,7 +409,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="font-bold w-8 text-center">{qty}</span>
                 <button
-                  onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
+                  onClick={() => setQty((q) => Math.min(currentStock, q + 1))}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                   style={{ background: "rgba(147,51,234,0.15)", color: "var(--purple-300)" }}
                 >
@@ -410,9 +439,11 @@ export default function ProductDetailPage() {
                         if (isSelected) {
                           setSelectedColorIdx(null);
                           setActiveImg(0);
+                          setQty(1);
                         } else {
                           setSelectedColorIdx(idx);
                           setActiveImg(0);
+                          setQty((q) => Math.min(q, color.stock));
                         }
                       }}
                       className="group flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all"
@@ -432,7 +463,7 @@ export default function ProductDetailPage() {
                         borderWidth: isSelected ? "2px" : "1px",
                       }}
                       disabled={color.stock === 0}
-                      title={color.hexCode ? `${color.name} - ${color.hexCode}` : color.name}
+                      title={color.stock > 0 ? `${color.name} - ${color.stock} in stock` : `${color.name} - Out of stock`}
                     >
                       {color.hexCode ? (
                         <div
@@ -486,6 +517,11 @@ export default function ProductDetailPage() {
                         onClick={() => {
                           if (size.stock === 0) return;
                           setSelectedSize(isSelected ? null : size.size);
+                          if (isSelected) {
+                            setQty(1);
+                          } else {
+                            setQty((q) => Math.min(q, size.stock));
+                          }
                         }}
                         className="w-10 h-10 rounded-lg border font-semibold transition-all flex items-center justify-center text-xs"
                         style={{
@@ -518,11 +554,11 @@ export default function ProductDetailPage() {
           <div className="flex gap-3">
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={currentStock <= 0}
               className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingBag size={18} />
-              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              {currentStock === -1 ? "Select a Variant" : currentStock === 0 ? "Out of Stock" : "Add to Cart"}
             </button>
             <button
               onClick={toggleWishlist}
@@ -594,7 +630,7 @@ export default function ProductDetailPage() {
                     <div className="space-y-2">
                       {[
                         ["Category", product.category],
-                        ["Stock", `${product.stock} units`],
+                        ["Stock", product.hasVariants ? "Variant-based" : `${product.stock} units`],
                         ["Rating", `${product.rating}/5`],
                       ].map(([k, v]) => (
                         <div key={k} className="flex gap-3">
@@ -729,6 +765,12 @@ export default function ProductDetailPage() {
         onClose={() => setAddedItem(null)}
         onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
         item={addedItem}
+      />
+      <ImageZoom
+        images={displayImages}
+        initialIndex={zoomIndex}
+        isOpen={zoomOpen}
+        onClose={() => setZoomOpen(false)}
       />
     </div>
   );
