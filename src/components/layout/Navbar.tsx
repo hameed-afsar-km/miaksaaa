@@ -112,8 +112,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             {/* Hamburger menu button — mobile only */}
             <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            style={{ display: "none" }}
-            className="lg:hidden btn-ghost p-2.5 rounded-xl"
+            className="hidden lg:hidden btn-ghost p-2.5 rounded-xl"
             aria-label="Open menu"
             >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -121,7 +120,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
          </div>
 
           {/* CENTER: Brand name and tagline */}
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center text-center min-w-0 overflow-hidden">
             <Link href="/" className="flex flex-col items-center group">
               <span
                 className="text-2xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
