@@ -61,7 +61,7 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
             {products.map((product, i) => (
               <div
                 key={product.id}
-                className="flex-shrink-0 w-[calc(90vw-1rem)] snap-start"
+                className="flex-shrink-0 w-[calc(100vw-3.5rem)] snap-start"
               >
                 <ProductCard product={product} index={i} />
               </div>

@@ -81,7 +81,6 @@ export function CouponTicker() {
         className="flex items-center whitespace-nowrap gap-6 pl-4"
         style={{
           animation: paused ? "none" : "marquee 50s linear infinite",
-          willChange: "transform",
         }}
       >
         {scrollingItems.map((c, i) => (
