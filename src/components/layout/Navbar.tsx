@@ -65,7 +65,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   }}
 >
         {/* 3-column grid: left=nav, center=brand, right=actions */}
-        <div className="container-lg grid grid-cols-3 items-center h-[88px] lg:h-[80px]">
+        <div className="container-lg grid grid-cols-[auto_1fr_auto] lg:grid-cols-3 items-center h-[88px] lg:h-[80px]">
 
           {/* LEFT: Desktop nav links */}
           <div className="flex items-center gap-1 min-w-0">
