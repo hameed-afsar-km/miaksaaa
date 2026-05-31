@@ -65,7 +65,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   }}
 >
         {/* 3-column grid: left=nav, center=brand, right=actions */}
-        <div className="container-lg grid grid-cols-[auto_1fr_auto] lg:grid-cols-3 items-center h-[88px] lg:h-[80px]">
+        <div className="container-lg grid grid-cols-3 items-center h-[88px] lg:h-[80px]">
 
           {/* LEFT: Desktop nav links */}
           <div className="flex items-center gap-1 min-w-0">
@@ -120,10 +120,10 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
          </div>
 
           {/* CENTER: Brand name and tagline */}
-          <div className="flex flex-col items-center justify-center text-center min-w-0 overflow-hidden">
+          <div className="flex flex-col items-center justify-center text-center min-w-0">
             <Link href="/" className="flex flex-col items-center group">
               <span
-                className="text-2xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
+                className="text-xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 MIAKSAAA
