@@ -56,6 +56,97 @@ export interface Product {
   limitedTimeOffer?: LimitedTimeOffer;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+
+  // Collectible / Hot Wheels fields
+  type?: "standard" | "collectible";
+  isFramable?: boolean;
+  scale?: string;            // "1:64", "1:43", "1:24", "1:18"
+  series?: string;           // "Car Culture", "Red Line Club", "HW J-Imports"
+  modelYear?: number;
+  condition?: "loose" | "carded" | "graded";
+  rarity?: "common" | "uncommon" | "rare" | "treasure-hunt" | "super-treasure-hunt" | "chase";
+  grading?: number;          // 0–10
+  isAuthenticated?: boolean;
+  packagingType?: "blister-card" | "clamshell" | "box" | "display" | "loose";
+}
+
+// ─── FRAME POSITION ───────────────────────────────────────────────────────────
+export interface FramePosition {
+  id: string;
+  label: string;            // "Center Display", "Left Drift", etc.
+  x: number;                // 0-100 percent from left
+  y: number;                // 0-100 percent from top
+  rotation: number;         // degrees
+  carScale: number;         // 0-1 size multiplier
+  thumbnailUrl?: string;    // preview image
+  isActive: boolean;
+  createdAt: Timestamp;
+}
+
+// ─── FRAME BACKGROUND ────────────────────────────────────────────────────────
+export interface FrameBackground {
+  id: string;
+  label: string;
+  imageUrl: string;
+  priceAdjustment: number;
+  isActive: boolean;
+  createdAt: Timestamp;
+}
+
+// ─── FRAME SIZE ──────────────────────────────────────────────────────────────
+export interface FrameSize {
+  id: string;
+  label: string;            // "6x8", "8x10", "11x14"
+  width: number;            // inches
+  height: number;           // inches
+  priceAdjustment: number;
+  isActive: boolean;
+  createdAt: Timestamp;
+}
+
+// ─── FRAME PRODUCT ───────────────────────────────────────────────────────────
+export interface FrameProduct {
+  id: string;
+  title: string;
+  description: string;
+  images: string[];           // frame design mockups (with transparent center)
+  basePrice: number;
+  discountedPrice?: number;
+  stock: number;
+  isVisible: boolean;
+  isFeatured: boolean;
+
+  // Linked config (IDs from global presets)
+  enabledPositionIds: string[];
+  enabledBackgroundIds: string[];
+  enabledSizeIds: string[];
+
+  // Optional price overrides per option
+  positionPriceOverrides?: Record<string, number>;
+  backgroundPriceOverrides?: Record<string, number>;
+  sizePriceOverrides?: Record<string, number>;
+
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ─── CUSTOM FRAME CONFIGURATION ─────────────────────────────────────────────
+export interface FrameCustomization {
+  frameProductId: string;
+  frameTitle: string;
+  frameImage: string;
+  selectedCarId: string;
+  selectedCarTitle: string;
+  selectedCarImage: string;
+  selectedPositionId: string;
+  selectedPositionLabel: string;
+  selectedBackgroundId: string;
+  selectedBackgroundLabel: string;
+  selectedBackgroundImage: string;
+  selectedSizeId: string;
+  selectedSizeLabel: string;
+  selectedSizeWidth: number;
+  selectedSizeHeight: number;
 }
 
 // ─── CART ─────────────────────────────────────────────────────────────────────
@@ -70,6 +161,10 @@ export interface CartItem {
   selectedColor?: string;
   selectedSize?: string;
   category?: string;
+  // Item type for adaptive theming
+  itemType?: "standard" | "collectible" | "custom-frame";
+  // Custom frame data
+  frameCustomization?: FrameCustomization;
 }
 
 export interface CartState {
@@ -80,6 +175,7 @@ export interface CartState {
   couponCategories: string[];
   addItem: (item: CartItem) => void;
   removeItem: (productId: string, selectedColor?: string, selectedSize?: string) => void;
+  removeCustomItem: (productId: string, frameCustomization?: any) => void;
   updateQuantity: (productId: string, quantity: number, selectedColor?: string, selectedSize?: string) => void;
   clearCart: () => void;
   applyCoupon: (code: string, discount: number, type: "percent" | "fixed", categories?: string[]) => void;

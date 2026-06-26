@@ -90,7 +90,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               ))}
             </nav>
             {/* Logo — replaces burger icon */}
-            <Link href="/" className="block shrink-0">
+            <Link href="/hotwheels" className="block shrink-0">
               <motion.div
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
@@ -126,32 +126,42 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             </Link>
           </div>
 
-          {/* RIGHT: Heart, Cart, Profile */}
+          {/* RIGHT: Heart, Cart, Burger, Profile */}
           <div className="flex items-center justify-end gap-0.5">
 
-            {/* Heart — desktop only */}
-            <Link href="/wishlist"
-              className="hidden lg:flex relative btn-ghost rounded-xl"
-              style={{ padding: "10px" }}
-            >
-              <Heart size={22} />
-              {mounted && wishCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                  {wishCount}
-                </span>
-              )}
-            </Link>
+            {/* Heart + Cart — desktop only wrapper */}
+            <div className="hidden lg:flex items-center gap-0.5">
+              <Link href="/wishlist"
+                className="relative btn-ghost rounded-xl"
+                style={{ padding: "10px" }}
+              >
+                <Heart size={22} />
+                {mounted && wishCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                    {wishCount}
+                  </span>
+                )}
+              </Link>
 
-            {/* Cart */}
-            <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "10px" }}>
-              <ShoppingBag size={22} className="lg:scale-[0.9]" />
-              {mounted && totalItems > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
-                  {totalItems}
-                </span>
-              )}
+              <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "10px" }}>
+                <ShoppingBag size={22} className="lg:scale-[0.9]" />
+                {mounted && totalItems > 0 && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Burger — mobile only */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden btn-ghost p-2.5 rounded-xl"
+              aria-label="Open menu"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
             {/* Profile */}
@@ -264,6 +274,25 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                   </Link>
                 ))}
 
+                <button
+                  onClick={() => { setCartOpen(true); setMobileOpen(false); }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                  style={{
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShoppingBag size={18} style={{ color: "var(--purple-400)" }} />
+                    <span>Cart</span>
+                  </div>
+                  {totalItems > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
+
                 <Link
                   href="/wishlist"
                   onClick={() => setMobileOpen(false)}
@@ -274,6 +303,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                   }}
                 >
                   <div className="flex items-center gap-2.5">
+                    <Heart size={18} style={{ color: "var(--purple-400)" }} />
                     <span>Wishlist</span>
                   </div>
                   {wishCount > 0 && (

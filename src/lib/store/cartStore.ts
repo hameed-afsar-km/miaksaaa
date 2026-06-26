@@ -14,14 +14,14 @@ export const useCartStore = create<CartState>()(
 
       addItem: (newItem: CartItem) => {
         set((state) => {
-          const key = `${newItem.productId}::${newItem.selectedColor || ""}::${newItem.selectedSize || ""}`;
+          const key = `${newItem.productId}::${newItem.selectedColor || ""}::${newItem.selectedSize || ""}::${newItem.frameCustomization ? JSON.stringify(newItem.frameCustomization) : ""}`;
           const existing = state.items.find(
-            (i) => `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}` === key
+            (i) => `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}::${i.frameCustomization ? JSON.stringify(i.frameCustomization) : ""}` === key
           );
           if (existing) {
             return {
               items: state.items.map((i) =>
-                `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}` === key
+                `${i.productId}::${i.selectedColor || ""}::${i.selectedSize || ""}::${i.frameCustomization ? JSON.stringify(i.frameCustomization) : ""}` === key
                   ? { ...i, quantity: Math.min(i.quantity + newItem.quantity, i.stock) }
                   : i
               ),
@@ -40,6 +40,17 @@ export const useCartStore = create<CartState>()(
                 (i.selectedColor || "") === (selectedColor || "") &&
                 (i.selectedSize || "") === (selectedSize || "")
               );
+            }
+            return i.productId !== productId;
+          }),
+        }));
+      },
+
+      removeCustomItem: (productId: string, frameCustomization?: any) => {
+        set((state) => ({
+          items: state.items.filter((i) => {
+            if (frameCustomization) {
+              return !(i.productId === productId && JSON.stringify(i.frameCustomization) === JSON.stringify(frameCustomization));
             }
             return i.productId !== productId;
           }),

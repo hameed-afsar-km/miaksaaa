@@ -31,6 +31,10 @@ import {
   Review,
   ColorVariant,
   SizeVariant,
+  FramePosition,
+  FrameBackground,
+  FrameSize,
+  FrameProduct,
 } from "@/lib/types";
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
@@ -166,6 +170,156 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<void> {
   await deleteDoc(doc(db, "products", id));
+}
+
+// ─── HOT WHEELS / COLLECTIBLE PRODUCTS ──────────────────────────────────────
+
+export async function getCollectibleProducts(): Promise<Product[]> {
+  const q = query(
+    collection(db, "products"),
+    where("type", "==", "collectible"),
+    where("isVisible", "==", true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+}
+
+export async function getFramableProducts(): Promise<Product[]> {
+  const q = query(
+    collection(db, "products"),
+    where("isFramable", "==", true),
+    where("isVisible", "==", true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+}
+
+// ─── FRAME POSITIONS ─────────────────────────────────────────────────────────
+
+export async function getFramePositions(): Promise<FramePosition[]> {
+  const q = query(collection(db, "framePositions"), where("isActive", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FramePosition));
+}
+
+export async function getAllFramePositions(): Promise<FramePosition[]> {
+  const snap = await getDocs(collection(db, "framePositions"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FramePosition));
+}
+
+export async function saveFramePosition(
+  id: string | null,
+  data: Omit<FramePosition, "id">
+): Promise<void> {
+  if (id) {
+    await updateDoc(doc(db, "framePositions", id), data);
+  } else {
+    await addDoc(collection(db, "framePositions"), { ...data, createdAt: serverTimestamp() });
+  }
+}
+
+export async function deleteFramePosition(id: string): Promise<void> {
+  await deleteDoc(doc(db, "framePositions", id));
+}
+
+// ─── FRAME BACKGROUNDS ───────────────────────────────────────────────────────
+
+export async function getFrameBackgrounds(): Promise<FrameBackground[]> {
+  const q = query(collection(db, "frameBackgrounds"), where("isActive", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameBackground));
+}
+
+export async function getAllFrameBackgrounds(): Promise<FrameBackground[]> {
+  const snap = await getDocs(collection(db, "frameBackgrounds"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameBackground));
+}
+
+export async function saveFrameBackground(
+  id: string | null,
+  data: Omit<FrameBackground, "id">
+): Promise<void> {
+  if (id) {
+    await updateDoc(doc(db, "frameBackgrounds", id), data);
+  } else {
+    await addDoc(collection(db, "frameBackgrounds"), { ...data, createdAt: serverTimestamp() });
+  }
+}
+
+export async function deleteFrameBackground(id: string): Promise<void> {
+  await deleteDoc(doc(db, "frameBackgrounds", id));
+}
+
+// ─── FRAME SIZES ─────────────────────────────────────────────────────────────
+
+export async function getFrameSizes(): Promise<FrameSize[]> {
+  const q = query(collection(db, "frameSizes"), where("isActive", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameSize));
+}
+
+export async function getAllFrameSizes(): Promise<FrameSize[]> {
+  const snap = await getDocs(collection(db, "frameSizes"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameSize));
+}
+
+export async function saveFrameSize(
+  id: string | null,
+  data: Omit<FrameSize, "id">
+): Promise<void> {
+  if (id) {
+    await updateDoc(doc(db, "frameSizes", id), data);
+  } else {
+    await addDoc(collection(db, "frameSizes"), { ...data, createdAt: serverTimestamp() });
+  }
+}
+
+export async function deleteFrameSize(id: string): Promise<void> {
+  await deleteDoc(doc(db, "frameSizes", id));
+}
+
+// ─── FRAME PRODUCTS ──────────────────────────────────────────────────────────
+
+export async function getVisibleFrameProducts(): Promise<FrameProduct[]> {
+  const q = query(collection(db, "frameProducts"), where("isVisible", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameProduct));
+}
+
+export async function getAllFrameProducts(): Promise<FrameProduct[]> {
+  const snap = await getDocs(collection(db, "frameProducts"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FrameProduct));
+}
+
+export async function getFrameProductById(id: string): Promise<FrameProduct | null> {
+  const snap = await getDoc(doc(db, "frameProducts", id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as FrameProduct;
+}
+
+export async function addFrameProduct(
+  data: Omit<FrameProduct, "id" | "createdAt" | "updatedAt">
+): Promise<string> {
+  const ref = await addDoc(collection(db, "frameProducts"), {
+    ...data,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateFrameProduct(
+  id: string,
+  data: Partial<FrameProduct>
+): Promise<void> {
+  await updateDoc(doc(db, "frameProducts", id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteFrameProduct(id: string): Promise<void> {
+  await deleteDoc(doc(db, "frameProducts", id));
 }
 
 // ─── BANNERS ─────────────────────────────────────────────────────────────────

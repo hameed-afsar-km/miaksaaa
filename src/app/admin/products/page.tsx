@@ -153,6 +153,8 @@ export default function AdminProductsPage() {
         sizeVariants: editingProduct.sizeVariants ?? [],
         limitedTimeOffer: editingProduct.limitedTimeOffer ?? { enabled: false },
         hasVariants,
+        isFramable: !!editingProduct.isFramable,
+        type: "standard",
       };
 
       let submitData: any;
@@ -773,6 +775,25 @@ export default function AdminProductsPage() {
                     />
                   </div>
                   )}
+
+                  {/* Collectible Type */}
+                  <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(255,68,0,0.05)", borderColor: "rgba(255,68,0,0.2)" }}>
+                    <h5 className="text-xs font-bold text-white">Hot Wheels / Collectible</h5>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Mark as collectible (shows in Hot Wheels section)</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={editingProduct.isFramable ?? false}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, isFramable: e.target.checked })}
+                          className="w-4 h-4 cursor-pointer accent-amber-500"
+                        />
+                        <span className="text-[10px] font-bold text-amber-400">Framable</span>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Flag Toggles */}
                   <div className="p-4 rounded-2xl space-y-3.5 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>

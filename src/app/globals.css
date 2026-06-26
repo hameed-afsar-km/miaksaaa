@@ -394,3 +394,18 @@ body {
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
 }
+
+/* ─── Responsive Helper Overrides ────────────────────────────── */
+.hidden {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .lg\:hidden {
+    display: none !important;
+  }
+  .lg\:flex {
+    display: flex !important;
+  }
+}
+

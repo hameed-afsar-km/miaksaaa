@@ -16,6 +16,8 @@ import {
   X,
   ArrowLeft,
   Users,
+  Frame,
+  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -127,6 +129,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Link>
               );
             })}
+
+            <div className="pt-5 pb-2">
+              <div className="text-[10px] uppercase font-black tracking-widest px-3 mb-2 text-purple-300/40">Custom Frames</div>
+              {[
+                { label: "Frame Products", path: "/admin/frames", icon: Frame },
+                { label: "Positions",       path: "/admin/frames/positions", icon: Frame },
+                { label: "Backgrounds",     path: "/admin/frames/backgrounds", icon: Frame },
+                { label: "Sizes",           path: "/admin/frames/sizes", icon: Frame },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
+                      isActive
+                        ? "bg-gradient-to-r from-amber-600/30 to-amber-800/10 border border-amber-500/40 text-amber-300 glow-gold"
+                        : "text-purple-300/60 hover:text-white hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon size={14} className={isActive ? "text-amber-400" : "text-purple-300/50 group-hover:text-purple-300"} />
+                      <span>{item.label}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
         </div>
 
