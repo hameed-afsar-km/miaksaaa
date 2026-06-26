@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ShoppingBag, User, Menu, X, LogOut,
-  ChevronDown, Shield, Package, Star
+  ChevronDown, Shield, Package, Star, Heart
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useCartStore } from "@/lib/store/cartStore";
@@ -89,34 +89,23 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </Link>
               ))}
             </nav>
-            {/* Wishlist — desktop only */}
-            <Link href="/wishlist"
-              className="hidden lg:flex relative px-3 py-2 text-sm font-medium transition-colors rounded-lg whitespace-nowrap items-center gap-1.5"
-              style={{ color: pathname === "/wishlist" ? "var(--purple-300)" : "var(--text-secondary)" }}
-            >
-              {pathname === "/wishlist" && (
-                <motion.div
-                  layoutId="nav-pill"
-                  className="absolute inset-0 rounded-lg"
-                  style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
+            {/* Logo — replaces burger icon */}
+            <Link href="/" className="block shrink-0">
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Image
+                  src="/hw_logo.png"
+                  alt="MIAKSAAA"
+                  width={200}
+                  height={80}
+                  className="h-14 lg:h-20 w-auto object-contain"
+                  style={{ clipPath: "inset(10% 0 10% 0)" }}
+                  priority
                 />
-              )}
-              <span className="relative z-10">Wishlist</span>
-              {mounted && wishCount > 0 && (
-                <span className="relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                  {wishCount}
-                </span>
-              )}
+              </motion.div>
             </Link>
-            {/* Hamburger menu button — mobile only */}
-            <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="hidden lg:hidden btn-ghost p-2.5 rounded-xl"
-            aria-label="Open menu"
-            >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
          </div>
 
           {/* CENTER: Brand name and tagline */}
@@ -137,9 +126,22 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             </Link>
           </div>
 
-          {/* RIGHT: Cart, Wishlist, Profile */}
+          {/* RIGHT: Heart, Cart, Profile */}
           <div className="flex items-center justify-end gap-0.5">
 
+            {/* Heart — desktop only */}
+            <Link href="/wishlist"
+              className="hidden lg:flex relative btn-ghost rounded-xl"
+              style={{ padding: "10px" }}
+            >
+              <Heart size={22} />
+              {mounted && wishCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                  {wishCount}
+                </span>
+              )}
+            </Link>
 
             {/* Cart */}
             <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "10px" }}>
