@@ -15,11 +15,12 @@ import {
   Star,
 } from "lucide-react";
 import {
-  getAllProducts,
+  getAllProductsAdmin,
   addProduct,
   updateProduct,
   deleteProduct,
   getAllCategoriesAdmin,
+  saveCategory,
 } from "@/lib/firebase/firestore";
 import { Product, Category, ColorVariant, SizeVariant, LimitedTimeOffer } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -50,13 +51,20 @@ export default function AdminProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasVariants, setHasVariants] = useState(false);
+  const [storeType, setStoreType] = useState<"miaksaaa" | "hotwheels">("miaksaaa");
   const [previewProduct, setPreviewProduct] = useState<Partial<Product> | null>(null);
   const [previewDetailProduct, setPreviewDetailProduct] = useState<Product | null>(null);
+
+  const storeCategories = categoriesList.filter((c) => {
+    if (c.store === "all") return true;
+    if (storeType === "hotwheels") return c.store === "hotwheels";
+    return c.store === "miaksaaa" || !c.store;
+  });
 
   const loadProducts = () => {
     setLoading(true);
     Promise.all([
-      getAllProducts().catch(() => []),
+      getAllProductsAdmin().catch(() => []),
       getAllCategoriesAdmin().catch(() => []),
     ])
       .then(([productsData, categoriesData]) => {
@@ -72,13 +80,14 @@ export default function AdminProductsPage() {
   }, []);
 
   const openCreateForm = () => {
+    setStoreType("miaksaaa");
     setEditingProduct({
       title: "",
       description: "",
       price: undefined,
       discountedPrice: undefined,
       images: [""],
-      category: categoriesList[0]?.name || "",
+      category: categoriesList.find((c) => !c.store || c.store === "miaksaaa" || c.store === "all")?.name || "",
       tags: [],
       stock: 1,
       isFeatured: false,
@@ -97,6 +106,7 @@ export default function AdminProductsPage() {
 
   const openEditForm = (p: Product) => {
     setHasVariants(p.hasVariants ?? false);
+    setStoreType(p.type === "collectible" ? "hotwheels" : "miaksaaa");
     setEditingProduct({
       ...p,
       colorVariants: (p.colorVariants ?? []).map((cv) => ({
@@ -154,7 +164,15 @@ export default function AdminProductsPage() {
         limitedTimeOffer: editingProduct.limitedTimeOffer ?? { enabled: false },
         hasVariants,
         isFramable: !!editingProduct.isFramable,
-        type: "standard",
+        scale: editingProduct.scale || null,
+        series: editingProduct.series || null,
+        modelYear: editingProduct.modelYear || null,
+        condition: editingProduct.condition || null,
+        rarity: editingProduct.rarity || null,
+        grading: editingProduct.grading || null,
+        isAuthenticated: !!editingProduct.isAuthenticated,
+        packagingType: editingProduct.packagingType || null,
+        type: storeType === "hotwheels" ? "collectible" : "standard",
       };
 
       let submitData: any;
@@ -184,6 +202,20 @@ export default function AdminProductsPage() {
           stock: Number(editingProduct.stock),
           colorVariants: (editingProduct.colorVariants ?? []).filter((c) => c.name.trim() !== ""),
         };
+      }
+
+      // Auto-create category in Firestore if it doesn't exist yet
+      const catExists = storeCategories.some((c) => c.name === editingProduct.category);
+      if (!catExists && editingProduct.category) {
+        try {
+          await saveCategory(null, {
+            name: editingProduct.category,
+            slug: editingProduct.category.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+            icon: "default",
+            isActive: true,
+            store: storeType,
+          });
+        } catch (_) {}
       }
 
       if (editingProduct.id) {
@@ -257,6 +289,7 @@ export default function AdminProductsPage() {
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--border)" }}>
                 <th className="p-4 text-purple-300/60 font-bold uppercase">Product info</th>
+                <th className="p-4 text-purple-300/60 font-bold uppercase">Store</th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase">Category</th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase text-right">Price</th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase text-center">Stock</th>
@@ -279,6 +312,17 @@ export default function AdminProductsPage() {
                         <span className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>ID: #{product.id.slice(-6).toUpperCase()}</span>
                       </div>
                     </div>
+                  </td>
+                  <td className="p-4">
+                    {product.type === "collectible" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: "rgba(255,68,0,0.15)", color: "#FF6600" }}>
+                        Hotwheels
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: "rgba(147,51,234,0.15)", color: "#a78bfa" }}>
+                        MIAKSAAA
+                      </span>
+                    )}
                   </td>
                   <td className="p-4 text-purple-200 font-semibold">{product.category}</td>
                   <td className="p-4 text-right">
@@ -321,7 +365,7 @@ export default function AdminProductsPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-purple-300/40">No matching products found in catalog</td>
+                  <td colSpan={7} className="p-10 text-center text-purple-300/40">No matching products found in catalog</td>
                 </tr>
               )}
             </tbody>
@@ -361,7 +405,63 @@ export default function AdminProductsPage() {
                 </div>
 
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
-                  {/* Has Variants Toggle */}
+                  {/* Store Type Selector */}
+                  <div className="p-4 rounded-2xl border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
+                    <h5 className="text-xs font-bold text-white mb-3">Store</h5>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStoreType("miaksaaa");
+                          setEditingProduct({
+                            ...editingProduct,
+                            type: "standard",
+                            scale: undefined,
+                            series: undefined,
+                            modelYear: undefined,
+                            condition: undefined,
+                            rarity: undefined,
+                            grading: undefined,
+                            isAuthenticated: undefined,
+                            packagingType: undefined,
+                          });
+                        }}
+                        className={`flex-1 p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                          storeType === "miaksaaa"
+                            ? "border-purple-500 bg-purple-500/10"
+                            : "border-transparent bg-purple-950/20 opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <p className="text-sm font-black gradient-text">MIAKSAAA</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>Luxury fashion store</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStoreType("hotwheels");
+                          setEditingProduct({
+                            ...editingProduct,
+                            type: "collectible",
+                            images: [""],
+                            colorVariants: [],
+                            sizeVariants: DEFAULT_SIZE_VARIANTS.map((s) => ({ ...s })),
+                            isFramable: false,
+                          });
+                        }}
+                        className={`flex-1 p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                          storeType === "hotwheels"
+                            ? "border-amber-500 bg-amber-500/10"
+                            : "border-transparent bg-purple-950/20 opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <p className="text-sm font-black" style={{ color: "#FF6600" }}>HOT WHEELS</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>Die-cast collectibles</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Has Variants Toggle (miaksaaa only) */}
+                  {storeType === "miaksaaa" && (
                   <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "rgba(147,51,234,0.05)", borderColor: "var(--border)" }}>
                     <div>
                       <h5 className="text-xs font-bold text-white">Has Variants</h5>
@@ -374,6 +474,7 @@ export default function AdminProductsPage() {
                       className="w-4 h-4 cursor-pointer accent-purple-500"
                     />
                   </div>
+                  )}
 
                   {/* Title & Category */}
                   {hasVariants ? (
@@ -403,7 +504,18 @@ export default function AdminProductsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Category</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">
+                        Category
+                        <span
+                          className="ml-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase"
+                          style={{
+                            background: storeType === "hotwheels" ? "rgba(255,68,0,0.15)" : "rgba(147,51,234,0.15)",
+                            color: storeType === "hotwheels" ? "#FF6600" : "#a78bfa",
+                          }}
+                        >
+                          {storeType === "hotwheels" ? "Hotwheels" : "MIAKSAAA"}
+                        </span>
+                      </label>
                       {!customCategoryActive ? (
                         <select
                           value={editingProduct.category || ""}
@@ -419,7 +531,7 @@ export default function AdminProductsPage() {
                           style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                         >
                           <option value="" disabled style={{ backgroundColor: "#120a24" }}>Select Category...</option>
-                          {categoriesList.map((cat) => (
+                          {storeCategories.map((cat) => (
                             <option key={cat.id} value={cat.name} style={{ backgroundColor: "#120a24" }}>
                               {cat.name}
                             </option>
@@ -438,12 +550,12 @@ export default function AdminProductsPage() {
                             className="input text-xs py-2 flex-1"
                             placeholder="Type custom category..."
                           />
-                          {categoriesList.length > 0 && (
+                          {storeCategories.length > 0 && (
                             <button
                               type="button"
                               onClick={() => {
                                 setCustomCategoryActive(false);
-                                setEditingProduct({ ...editingProduct, category: categoriesList[0]?.name || "" });
+                                setEditingProduct({ ...editingProduct, category: storeCategories[0]?.name || "" });
                               }}
                               className="px-3 border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 text-[10px] font-bold rounded-xl"
                             >
@@ -472,7 +584,18 @@ export default function AdminProductsPage() {
                   <>
                     {/* Category for variants mode */}
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Category</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">
+                        Category
+                        <span
+                          className="ml-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase"
+                          style={{
+                            background: storeType === "hotwheels" ? "rgba(255,68,0,0.15)" : "rgba(147,51,234,0.15)",
+                            color: storeType === "hotwheels" ? "#FF6600" : "#a78bfa",
+                          }}
+                        >
+                          {storeType === "hotwheels" ? "Hotwheels" : "MIAKSAAA"}
+                        </span>
+                      </label>
                       {!customCategoryActive ? (
                         <select
                           value={editingProduct.category || ""}
@@ -488,7 +611,7 @@ export default function AdminProductsPage() {
                           style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                         >
                           <option value="" disabled style={{ backgroundColor: "#120a24" }}>Select Category...</option>
-                          {categoriesList.map((cat) => (
+                          {storeCategories.map((cat) => (
                             <option key={cat.id} value={cat.name} style={{ backgroundColor: "#120a24" }}>
                               {cat.name}
                             </option>
@@ -507,12 +630,12 @@ export default function AdminProductsPage() {
                             className="input text-xs py-2 flex-1"
                             placeholder="Type custom category..."
                           />
-                          {categoriesList.length > 0 && (
+                          {storeCategories.length > 0 && (
                             <button
                               type="button"
                               onClick={() => {
                                 setCustomCategoryActive(false);
-                                setEditingProduct({ ...editingProduct, category: categoriesList[0]?.name || "" });
+                                setEditingProduct({ ...editingProduct, category: storeCategories[0]?.name || "" });
                               }}
                               className="px-3 border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 text-[10px] font-bold rounded-xl"
                             >
@@ -776,24 +899,150 @@ export default function AdminProductsPage() {
                   </div>
                   )}
 
-                  {/* Collectible Type */}
+                  {/* Framable (both stores) */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: "rgba(255,68,0,0.05)", borderColor: "rgba(255,68,0,0.2)" }}>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">Framable</h5>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Can be placed in a custom frame</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editingProduct.isFramable ?? false}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, isFramable: e.target.checked })}
+                        className="w-4 h-4 cursor-pointer accent-amber-500"
+                      />
+                      <span className="text-[10px] font-bold text-amber-400">Framable</span>
+                    </div>
+                  </div>
+
+                  {/* Hot Wheels Collectible Fields */}
+                  {storeType === "hotwheels" && (
                   <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(255,68,0,0.05)", borderColor: "rgba(255,68,0,0.2)" }}>
-                    <h5 className="text-xs font-bold text-white">Hot Wheels / Collectible</h5>
-                    <div className="flex items-center justify-between">
+                    <h5 className="text-xs font-bold text-white" style={{ color: "#FF6600" }}>Collectible Details</h5>
+
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Mark as collectible (shows in Hot Wheels section)</p>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Scale</label>
+                        <select
+                          value={editingProduct.scale || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, scale: e.target.value || undefined })}
+                          className="input text-xs py-2 appearance-none cursor-pointer"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" style={{ backgroundColor: "#120a24" }}>Select scale (optional)...</option>
+                          <option value="1:64" style={{ backgroundColor: "#120a24" }}>1:64</option>
+                          <option value="1:43" style={{ backgroundColor: "#120a24" }}>1:43</option>
+                          <option value="1:32" style={{ backgroundColor: "#120a24" }}>1:32</option>
+                          <option value="1:28" style={{ backgroundColor: "#120a24" }}>1:28</option>
+                          <option value="1:24" style={{ backgroundColor: "#120a24" }}>1:24</option>
+                          <option value="1:16" style={{ backgroundColor: "#120a24" }}>1:16</option>
+                        </select>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Series</label>
                         <input
-                          type="checkbox"
-                          checked={editingProduct.isFramable ?? false}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, isFramable: e.target.checked })}
-                          className="w-4 h-4 cursor-pointer accent-amber-500"
+                          type="text"
+                          value={editingProduct.series || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, series: e.target.value })}
+                          className="input text-xs py-2"
+                          placeholder="e.g. Car Culture"
                         />
-                        <span className="text-[10px] font-bold text-amber-400">Framable</span>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Model Year</label>
+                        <input
+                          type="number"
+                          value={editingProduct.modelYear || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, modelYear: Number(e.target.value) })}
+                          className="input text-xs py-2"
+                          placeholder="e.g. 2024"
+                          min="1900"
+                          max="2100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Condition</label>
+                        <select
+                          value={editingProduct.condition || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, condition: (e.target.value || undefined) as any })}
+                          className="input text-xs py-2 appearance-none cursor-pointer"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" style={{ backgroundColor: "#120a24" }}>Select condition...</option>
+                          <option value="loose" style={{ backgroundColor: "#120a24" }}>Loose</option>
+                          <option value="carded" style={{ backgroundColor: "#120a24" }}>Carded</option>
+                          <option value="graded" style={{ backgroundColor: "#120a24" }}>Graded</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Rarity</label>
+                        <select
+                          value={editingProduct.rarity || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, rarity: (e.target.value || undefined) as any })}
+                          className="input text-xs py-2 appearance-none cursor-pointer"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" style={{ backgroundColor: "#120a24" }}>Select rarity...</option>
+                          <option value="common" style={{ backgroundColor: "#120a24" }}>Common</option>
+                          <option value="uncommon" style={{ backgroundColor: "#120a24" }}>Uncommon</option>
+                          <option value="rare" style={{ backgroundColor: "#120a24" }}>Rare</option>
+                          <option value="treasure-hunt" style={{ backgroundColor: "#120a24" }}>Treasure Hunt</option>
+                          <option value="super-treasure-hunt" style={{ backgroundColor: "#120a24" }}>Super Treasure Hunt</option>
+                          <option value="chase" style={{ backgroundColor: "#120a24" }}>Chase</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Grading (0-10)</label>
+                        <input
+                          type="number"
+                          value={editingProduct.grading ?? ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, grading: e.target.value ? Number(e.target.value) : undefined })}
+                          className="input text-xs py-2"
+                          placeholder="e.g. 9.5"
+                          min="0"
+                          max="10"
+                          step="0.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Packaging Type</label>
+                        <select
+                          value={editingProduct.packagingType || ""}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, packagingType: (e.target.value || undefined) as any })}
+                          className="input text-xs py-2 appearance-none cursor-pointer"
+                          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <option value="" style={{ backgroundColor: "#120a24" }}>Select packaging...</option>
+                          <option value="blister-card" style={{ backgroundColor: "#120a24" }}>Blister Card</option>
+                          <option value="clamshell" style={{ backgroundColor: "#120a24" }}>Clamshell</option>
+                          <option value="box" style={{ backgroundColor: "#120a24" }}>Box</option>
+                          <option value="display" style={{ backgroundColor: "#120a24" }}>Display</option>
+                          <option value="loose" style={{ backgroundColor: "#120a24" }}>Loose</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Authenticated</label>
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <input
+                            type="checkbox"
+                            checked={editingProduct.isAuthenticated ?? false}
+                            onChange={(e) => setEditingProduct({ ...editingProduct, isAuthenticated: e.target.checked })}
+                            className="w-4 h-4 cursor-pointer accent-amber-500"
+                          />
+                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>Certified authentic</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  )}
 
                   {/* Flag Toggles */}
                   <div className="p-4 rounded-2xl space-y-3.5 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
@@ -879,7 +1128,8 @@ export default function AdminProductsPage() {
                   </div>
 
 
-                  {/* Size Variants */}
+                  {/* Size Variants (miaksaaa only) */}
+                  {storeType === "miaksaaa" && (
                   <div className="p-4 rounded-2xl space-y-3 border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>
                     <h5 className="text-xs font-bold text-white">Available Sizes</h5>
                     <div className="grid grid-cols-2 gap-3">
@@ -923,6 +1173,7 @@ export default function AdminProductsPage() {
                       ))}
                     </div>
                   </div>
+                  )}
                 </form>
               </div>
 

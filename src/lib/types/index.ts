@@ -285,6 +285,7 @@ export interface Category {
   icon: string;
   imageUrl?: string;
   isActive: boolean;
+  store?: "miaksaaa" | "hotwheels" | "all";
 }
 
 // ─── REVIEW ────────────────────────────────────────────────────────────────────

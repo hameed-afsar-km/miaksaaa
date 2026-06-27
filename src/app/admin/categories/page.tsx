@@ -40,6 +40,7 @@ export default function AdminCategoriesPage() {
       slug: "",
       icon: "default",
       isActive: true,
+      store: "miaksaaa",
     });
     setFormOpen(true);
   };
@@ -76,6 +77,7 @@ export default function AdminCategoriesPage() {
         slug: editingCategory.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
         icon: "default",
         isActive: !!editingCategory.isActive,
+        store: editingCategory.store || "miaksaaa",
       };
 
       await saveCategory(editingCategory.id ?? null, submitData);
@@ -138,11 +140,25 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs border-t border-purple-500/5 pt-3">
-                <span className={`badge text-[9px] py-0.5 px-2 ${category.isActive ? "badge-green" : "badge-red"}`}>
-                  {category.isActive ? "Live" : "Inactive"}
-                </span>
-              </div>
+                  <div className="flex items-center gap-2 text-xs border-t border-purple-500/5 pt-3">
+                    <span className={`badge text-[9px] py-0.5 px-2 ${category.isActive ? "badge-green" : "badge-red"}`}>
+                      {category.isActive ? "Live" : "Inactive"}
+                    </span>
+                    {(category.store || "miaksaaa") !== "all" && (
+                      <span
+                        className="badge text-[9px] py-0.5 px-2 font-bold"
+                        style={{
+                          background: (category.store || "miaksaaa") === "hotwheels" ? "rgba(255,68,0,0.15)" : "rgba(147,51,234,0.15)",
+                          color: (category.store || "miaksaaa") === "hotwheels" ? "#FF6600" : "#a78bfa",
+                        }}
+                      >
+                        {(category.store || "miaksaaa") === "hotwheels" ? "Hotwheels" : "MIAKSAAA"}
+                      </span>
+                    )}
+                    {(category.store || "miaksaaa") === "all" && (
+                      <span className="badge text-[9px] py-0.5 px-2 font-bold" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa" }}>Both</span>
+                    )}
+                  </div>
             </div>
 
             <div className="flex justify-end gap-2 border-t border-purple-500/5 pt-3 mt-4">
@@ -222,6 +238,29 @@ export default function AdminCategoriesPage() {
                     />
                   </div>
 
+
+                  {/* Store Assignment */}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider mb-1">Store</label>
+                    <div className="flex gap-2">
+                      {(["miaksaaa", "hotwheels", "all"] as const).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setEditingCategory({ ...editingCategory, store: s })}
+                          className={`flex-1 p-2.5 rounded-xl border-2 text-center text-xs font-bold transition-all cursor-pointer ${
+                            (editingCategory.store || "miaksaaa") === s
+                              ? s === "hotwheels"
+                                ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                                : "border-purple-500 bg-purple-500/10 text-purple-300"
+                              : "border-transparent bg-purple-950/20 opacity-60 hover:opacity-100 text-purple-400"
+                          }`}
+                        >
+                          {s === "all" ? "Both" : s === "miaksaaa" ? "MIAKSAAA" : "Hotwheels"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Status Toggle */}
                   <div className="p-4 rounded-2xl flex items-center justify-between border" style={{ background: "rgba(147,51,234,0.03)", borderColor: "var(--border)" }}>

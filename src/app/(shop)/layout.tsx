@@ -16,7 +16,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <CouponTicker />
       <Navbar logoUrl={settings?.logoUrl} />
       <CartDrawer />
-      <main className="min-h-screen pb-20 md:pb-0">
+      <main className="min-h-screen pt-2.5 pb-20 md:pb-0">
         {children}
       </main>
       <Footer logoUrl={settings?.logoUrl} />

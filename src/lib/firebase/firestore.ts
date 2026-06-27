@@ -47,7 +47,9 @@ function getVisibleProductsRawCache(): Promise<Product[]> {
 async function getVisibleProductsRaw(): Promise<Product[]> {
   try {
     const snap = await getDocs(query(collection(db, "products"), where("isVisible", "==", true)));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...d.data() } as Product))
+      .filter((p) => p.type !== "collectible");
   } catch (err) {
     console.error("Failed to fetch products:", err);
     return [];
@@ -78,6 +80,19 @@ export async function getAllProducts(maxCount?: number): Promise<Product[]> {
     ? query(collection(db, "products"), where("isVisible", "==", true), limit(maxCount))
     : query(collection(db, "products"), where("isVisible", "==", true));
   const snap = await getDocs(q);
+  const products = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  return products
+    .filter((p) => p.type !== "collectible")
+    .sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
+    const bTime = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds || 0;
+    return bTime - aTime;
+  });
+}
+
+/** Admin-only: returns ALL products regardless of visibility or type */
+export async function getAllProductsAdmin(): Promise<Product[]> {
+  const snap = await getDocs(collection(db, "products"));
   const products = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
   return products.sort((a, b) => {
     const aTime = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds || 0;
@@ -121,7 +136,9 @@ export async function getProductsByCategory(category: string): Promise<Product[]
     where("isVisible", "==", true)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Product))
+    .filter((p) => p.type !== "collectible");
 }
 
 export async function getSimilarProducts(
@@ -139,7 +156,7 @@ export async function getSimilarProducts(
     const snap = await getDocs(q);
     return snap.docs
       .map((d) => ({ id: d.id, ...d.data() } as Product))
-      .filter((p) => p.id !== excludeId)
+      .filter((p) => p.id !== excludeId && p.type !== "collectible")
       .slice(0, maxCount);
   } catch (err) {
     console.error("Failed to fetch similar products:", err);
@@ -371,6 +388,13 @@ export async function getCategories(): Promise<Category[]> {
 export async function getAllCategoriesAdmin(): Promise<Category[]> {
   const snap = await getDocs(collection(db, "categories"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
+}
+
+export async function getCategoriesByStore(store: "miaksaaa" | "hotwheels"): Promise<Category[]> {
+  const snap = await getDocs(collection(db, "categories"));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Category))
+    .filter((c) => c.isActive && (!c.store || c.store === store || c.store === "all"));
 }
 
 export async function saveCategory(
