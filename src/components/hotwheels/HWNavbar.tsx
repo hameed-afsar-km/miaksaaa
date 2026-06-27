@@ -100,9 +100,9 @@ export function HWNavbar() {
               <Image
                 src="/hw_logo.png"
                 alt="Hot Wheels"
-                width={200}
-                height={80}
-                className="h-12 lg:h-16 w-auto object-contain"
+                width={240}
+                height={96}
+                className="h-14 lg:h-20 w-auto object-contain"
                 preload
               />
             </Link>
