@@ -1084,6 +1084,19 @@ export default function AdminProductsPage() {
                         className="w-4 h-4 cursor-pointer accent-purple-500"
                       />
                     </div>
+
+                    <div className="flex items-center justify-between border-t border-purple-500/5 pt-3">
+                      <div>
+                        <h5 className="text-xs font-bold text-white">Hot / Trending</h5>
+                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Show in Hot Wheels trending carousel</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={editingProduct.isHot ?? false}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, isHot: e.target.checked })}
+                        className="w-4 h-4 cursor-pointer accent-amber-500"
+                      />
+                    </div>
                   </div>
 
                   {/* Limited Time Offer */}

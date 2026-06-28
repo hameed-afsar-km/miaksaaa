@@ -7,6 +7,7 @@ import { Flame, ArrowRight, Sparkles, Ruler, ShoppingBag, Frame } from "lucide-r
 import { getCollectibleProducts, getVisibleFrameProducts } from "@/lib/firebase/firestore";
 import { Product, FrameProduct } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
+import { HWTrendingCarousel } from "@/components/hotwheels/HWTrendingCarousel";
 
 const SCALES = [
   { label: "1:64", desc: "Classic size", image: "/hw_scale_64.png" },
@@ -153,6 +154,11 @@ export default function HotWheelsLanding() {
       </section>
 
       {/* ════════════════════════════════════════════════════════ */}
+      {/* TRENDING COLLECTIBLES — Image Carousel */}
+      {/* ════════════════════════════════════════════════════════ */}
+      {trending.length > 0 && <HWTrendingCarousel products={trending} />}
+
+      {/* ════════════════════════════════════════════════════════ */}
       {/* SHOP BY SCALE */}
       {/* ════════════════════════════════════════════════════════ */}
       <section className="section-padding">
@@ -183,35 +189,6 @@ export default function HotWheelsLanding() {
           </div>
         </div>
       </section>
-
-      {/* ════════════════════════════════════════════════════════ */}
-      {/* TRENDING COLLECTIBLES */}
-      {/* ════════════════════════════════════════════════════════ */}
-      {trending.length > 0 && (
-        <section className="section-padding" style={{ background: "#0D0200" }}>
-          <div className="container-lg">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-black" style={{ fontFamily: "Impact, sans-serif", color: "#FFE0CC" }}>
-                  TRENDING <span style={{ color: "#FF4400" }}>NOW</span>
-                </h2>
-                <p className="text-sm mt-1" style={{ color: "#cc9980" }}>Most wanted collectibles</p>
-              </div>
-              <Link href="/hotwheels/products"
-                className="hidden sm:flex items-center gap-1 text-sm font-bold hover:gap-2 transition-all"
-                style={{ color: "#FF6600" }}>
-                View All <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {trending.map((product) => (
-                <CollectibleCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ════════════════════════════════════════════════════════ */}
       {/* NEW ARRIVALS */}
