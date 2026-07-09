@@ -64,18 +64,21 @@ function DriftRow({
         className="absolute top-0 left-0 flex will-change-transform"
         style={{ gap, transform: `translate3d(${-offsetRef.current}px,0,0)` }}
       >
-        {items.map((p, i) => (
-          <div key={`${p.id}-${i}`} style={{ width: cardW, height: cardH, flexShrink: 0 }}>
+        {items.map((p, i) => {
+          const uid = `${p.id}--${i}`;
+          return (
+          <div key={uid} style={{ width: cardW, height: cardH, flexShrink: 0 }}>
             <HeroProductCard
               product={p}
-              isHovered={hoveredId === p.id}
+              isHovered={hoveredId === uid}
               isAnyHovered={hoveredId !== null}
               onClick={() => onSelect(p)}
-              onMouseEnter={() => onHover(p.id)}
+              onMouseEnter={() => onHover(uid)}
               onMouseLeave={onLeave}
             />
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
