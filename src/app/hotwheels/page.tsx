@@ -8,6 +8,7 @@ import { getCollectibleProducts, getVisibleFrameProducts } from "@/lib/firebase/
 import { Product, FrameProduct } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { HWTrendingCarousel } from "@/components/hotwheels/HWTrendingCarousel";
+import { HeroSection } from "@/components/hotwheels/hero/HeroSection";
 
 const SCALES = [
   { label: "1:64", desc: "Classic size", image: "/hw_scale_64.png" },
@@ -45,113 +46,9 @@ export default function HotWheelsLanding() {
     <div className="overflow-hidden" style={{ background: "#0D0200" }}>
 
       {/* ════════════════════════════════════════════════════════ */}
-      {/* HERO SECTION — Video Background */}
+      {/* HERO SECTION — Infinite Grid Wall */}
       {/* ════════════════════════════════════════════════════════ */}
-      <section className="relative h-[85vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-        {/* Video Background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/hw_hero_poster.jpg"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "brightness(0.4) contrast(1.2)" }}
-        >
-          <source src={FALLBACK_VIDEO} type="video/mp4" />
-        </video>
-
-        {/* Flame gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D0200]" />
-        <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse at center, rgba(255,68,0,0.15) 0%, transparent 60%)",
-        }} />
-
-        {/* Animated flame particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute bottom-0 w-2 h-16 rounded-full"
-              style={{
-                left: `${15 + i * 15}%`,
-                background: `linear-gradient(to top, transparent, ${i % 2 === 0 ? "#FF4400" : "#FFD600"}, transparent)`,
-                filter: "blur(4px)",
-              }}
-              animate={{
-                height: [16, 40, 16],
-                opacity: [0.3, 0.8, 0.3],
-              }}
-              transition={{
-                duration: 2 + i * 0.3,
-                repeat: Infinity,
-                delay: i * 0.5,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Flame size={28} style={{ color: "#FF4400" }} />
-              <span className="text-sm font-bold uppercase tracking-[0.3em]" style={{ color: "#FF6600" }}>
-                Hot Wheels Division
-              </span>
-              <Flame size={28} style={{ color: "#FFD600" }} />
-            </div>
-
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-4"
-              style={{
-                fontFamily: "Impact, sans-serif",
-                color: "#FFE0CC",
-                textShadow: "0 4px 30px rgba(255,68,0,0.5), 0 0 60px rgba(255,68,0,0.2)",
-                letterSpacing: "0.02em",
-              }}
-            >
-              FUEL YOUR
-              <br />
-              <span style={{ color: "#FF4400" }}>COLLECTION</span>
-            </h1>
-
-            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto" style={{ color: "#cc9980" }}>
-              Premium die-cast collectibles and custom framed displays.
-              From treasure hunts to custom frames — every car tells a story.
-            </p>
-
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/hotwheels/products"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all hover:scale-105 active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, #FF4400, #D32F2F)",
-                  color: "#fff",
-                  boxShadow: "0 0 30px rgba(255,68,0,0.4)",
-                }}
-              >
-                Explore Collectibles <ArrowRight size={18} />
-              </Link>
-              <Link href="/hotwheels/frames"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all hover:scale-105 active:scale-95"
-                style={{
-                  background: "transparent",
-                  color: "#FFD600",
-                  border: "2px solid rgba(255,214,0,0.4)",
-                }}
-              >
-                Custom Frames <Frame size={18} />
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0D0200] to-transparent" />
-      </section>
+      <HeroSection collectibles={collectibles} />
 
       {/* ════════════════════════════════════════════════════════ */}
       {/* TRENDING COLLECTIBLES — Image Carousel */}

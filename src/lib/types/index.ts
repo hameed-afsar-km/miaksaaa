@@ -68,6 +68,7 @@ export interface Product {
   grading?: number;          // 0–10
   isAuthenticated?: boolean;
   packagingType?: "blister-card" | "clamshell" | "box" | "display" | "loose";
+  showInHero?: boolean;
 }
 
 // ─── FRAME POSITION ───────────────────────────────────────────────────────────
