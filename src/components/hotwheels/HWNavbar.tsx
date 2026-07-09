@@ -67,7 +67,7 @@ export function HWNavbar() {
         <div className="container-lg flex items-center h-16 lg:h-[72px]">
 
           {/* LEFT: Desktop nav */}
-          <div className="flex-1 flex justify-start">
+          <div className="flex-1 flex justify-start items-center">
           <nav className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label }) => {
               const isActive = pathname === href || (href !== "/hotwheels" && pathname.startsWith(href));
@@ -103,13 +103,27 @@ export function HWNavbar() {
                 width={240}
                 height={96}
                 className="h-14 lg:h-20 w-auto object-contain"
-                preload
+                priority
               />
             </Link>
           </div>
 
           {/* RIGHT: Actions */}
-          <div className="flex items-center justify-end gap-0.5">
+          <div className="flex-1 flex items-center justify-end gap-0.5">
+            {/* Return to Main Shop */}
+            <Link href="/"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold tracking-wide rounded-full transition-all duration-200 hover:opacity-90 active:scale-95"
+              style={{
+                background: "linear-gradient(135deg, #7C3AED, #5B21B6)",
+                color: "#fff",
+                boxShadow: "0 0 12px rgba(124,58,237,0.3)",
+                letterSpacing: "0.03em",
+              }}
+            >
+              <Flame size={13} />
+              Main Store
+            </Link>
+
             {/* Wishlist */}
             <Link href="/wishlist"
               className="hidden lg:flex relative btn-ghost rounded-xl"

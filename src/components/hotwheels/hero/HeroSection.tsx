@@ -53,7 +53,7 @@ function DriftRow({
   const items = [...products, ...products, ...products];
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: cardH }}>
+    <div className="relative w-full overflow-visible" style={{ height: cardH }}>
       {/* Edge fade masks */}
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24"
         style={{ background: "linear-gradient(to right, #080808, transparent)" }} />
@@ -110,7 +110,7 @@ export function HeroSection({ collectibles }: HeroSectionProps) {
   return (
     <>
       <section
-        className="relative w-full overflow-hidden"
+        className="relative w-full overflow-visible"
         style={{ background: "#080808" }}
       >
         {/* ── Ambient lighting ── */}
@@ -127,7 +127,7 @@ export function HeroSection({ collectibles }: HeroSectionProps) {
         </div>
 
         {/* ── Two drifting rows ── */}
-        <div className="relative z-10 flex flex-col gap-4 pt-8 pb-4">
+        <div className="relative z-10 flex flex-col gap-4 pt-8 pb-4 overflow-visible">
           <DriftRow
             products={row0} direction="left" speed={0.5}
             cardW={CW} cardH={CH} gap={G}

@@ -149,7 +149,7 @@ function ProductsContent() {
             ? filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)
             : (
               <div className="col-span-full py-20 text-center">
-                <p className="text-4xl mb-4">🔍</p>
+                <p className="text-4xl mb-4">Search</p>
                 <p className="font-semibold text-lg">No products found</p>
                 <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Try a different search or filter</p>
                 <button onClick={() => { setSearch(""); setCategory(""); }} className="btn-outline text-sm mt-4">Clear filters</button>
