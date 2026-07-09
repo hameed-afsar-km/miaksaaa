@@ -44,8 +44,9 @@ export default function AdminLoginPage() {
         toast.error("Access Denied: Non-admin account.");
       }
     } catch (err: any) {
-      console.error(err);
-      setError("Invalid credential set or access expired.");
+      const code = err?.code ? ` (${err.code})` : "";
+      console.error("Admin login error:", err);
+      setError(`Invalid credential set or access expired${code}`);
       toast.error("Authentication failed.");
     } finally {
       setAuthLoading(false);

@@ -55,8 +55,9 @@ function LoginContent() {
       toast.success("Logged in successfully!");
       router.push(redirectUrl);
     } catch (err: any) {
-      console.error(err);
-      setError("Invalid email or password. Please try again.");
+      const code = err?.code ? ` (${err.code})` : "";
+      console.error("Login error:", err);
+      setError(`Invalid email or password${code}`);
       toast.error("Authentication failed.");
     } finally {
       setAuthLoading(false);

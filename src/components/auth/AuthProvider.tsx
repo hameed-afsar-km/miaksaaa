@@ -10,13 +10,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
       setUser(user);
-      if (user) {
-        const admin = await checkIsAdmin(user.uid, user.email);
-        setIsAdmin(admin);
-      } else {
+      try {
+        if (user) {
+          const admin = await checkIsAdmin(user.uid, user.email);
+          setIsAdmin(admin);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.error("AuthProvider error:", err);
         setIsAdmin(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsub();
   }, [setUser, setIsAdmin, setLoading]);
