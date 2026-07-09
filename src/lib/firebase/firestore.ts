@@ -394,7 +394,14 @@ export async function getCategoriesByStore(store: "miaksaaa" | "hotwheels"): Pro
   const snap = await getDocs(collection(db, "categories"));
   return snap.docs
     .map((d) => ({ id: d.id, ...d.data() } as Category))
-    .filter((c) => c.isActive && (!c.store || c.store === store || c.store === "all"));
+    .filter((c) => {
+      if (!c.isActive) return false;
+      if (c.store === "all") return true;
+      if (c.store === store) return true;
+      // Legacy categories without store field default to miaksaaa
+      if (!c.store) return store === "miaksaaa";
+      return false;
+    });
 }
 
 export async function saveCategory(

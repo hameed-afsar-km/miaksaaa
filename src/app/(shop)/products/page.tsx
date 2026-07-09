@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/ProductCard";
 import { Product, Category } from "@/lib/types";
-import { getAllProducts, getCategories } from "@/lib/firebase/firestore";
+import { getAllProducts, getCategoriesByStore } from "@/lib/firebase/firestore";
 import { useSearchParams } from "next/navigation";
 
 const SORT_OPTIONS = [
@@ -30,7 +30,7 @@ function ProductsContent() {
   useEffect(() => {
     Promise.all([
       getAllProducts(),
-      getCategories(),
+      getCategoriesByStore("miaksaaa"),
     ]).then(([productsData, categoriesData]) => {
       setProducts(productsData);
       setCategoryList(categoriesData);

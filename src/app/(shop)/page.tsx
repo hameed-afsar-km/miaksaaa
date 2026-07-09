@@ -5,7 +5,7 @@ import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { FlashSaleSection } from "@/components/home/FlashSaleSection";
 import { TrustSection } from "@/components/home/TrustSection";
-import { getActiveBanners, getHomepageProducts, getCategories } from "@/lib/firebase/firestore";
+import { getActiveBanners, getHomepageProducts, getCategoriesByStore } from "@/lib/firebase/firestore";
 
 export const metadata: Metadata = {
   title: "MIAKSAAA — Premium Luxury Store",
@@ -27,7 +27,7 @@ export default async function HomePage() {
   const [banners, homepageProducts, categories, settings] = await Promise.all([
     getActiveBanners().catch(() => []),
     getHomepageProducts().catch(() => ({ featured: [], newArrivals: [], hot: [] })),
-    getCategories().catch(() => []),
+    getCategoriesByStore("miaksaaa").catch(() => []),
     import("@/lib/firebase/firestore").then((m) => m.getStoreSettings()).catch(() => null),
   ]);
 
