@@ -106,9 +106,9 @@ export function HeroSection({ collectibles }: HeroSectionProps) {
   const row1 = pad(pool.filter((_, i) => i % 2 !== 0).length ? pool.filter((_, i) => i % 2 !== 0) : pool, 6, "b");
 
   // Card dimensions
-  const CW = 200; // width  px
-  const CH = 280; // height px
-  const G  = 16;  // gap    px
+  const CW = 170; // width  px
+  const CH = 238; // height px
+  const G  = 20;  // gap    px
 
   return (
     <>
@@ -130,7 +130,7 @@ export function HeroSection({ collectibles }: HeroSectionProps) {
         </div>
 
         {/* ── Two drifting rows ── */}
-        <div className="relative z-10 flex flex-col gap-4 pt-8 pb-4 overflow-visible">
+        <div className="relative z-10 flex flex-col gap-6 pt-8 pb-4 overflow-visible">
           <DriftRow
             products={row0} direction="left" speed={0.5}
             cardW={CW} cardH={CH} gap={G}
