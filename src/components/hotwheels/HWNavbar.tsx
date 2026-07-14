@@ -22,7 +22,7 @@ export function HWNavbar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { setCartOpen } = useUIStore();
-  const totalItems = useCartStore((s) => s.getTotalItems());
+  const totalItems = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishCount = useWishlistStore((s) => s.items.length);
 
   const [mobileOpen, setMobileOpen] = useState(false);

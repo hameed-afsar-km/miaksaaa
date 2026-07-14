@@ -3,12 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const N = 8;
-const R = 22;
-const dots = Array.from({ length: N }, (_, i) => {
-  const a = (i / N) * Math.PI * 2 - Math.PI / 2;
-  return { x: Math.cos(a) * R, y: Math.sin(a) * R, delay: i * (1 / N) };
-});
+const GRID = 16;
+const CELL = 12;
+const SPACING = 2;
+const SIZE = CELL - SPACING;
+const TOTAL = GRID * GRID;
 
 export function SplashScreen() {
   const pathname = usePathname();
@@ -33,24 +32,51 @@ export function SplashScreen() {
         <motion.div
           key="splash"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.35, ease: "easeInOut" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
           style={{ background: "#0a0614" }}
         >
-          <div className="relative" style={{ width: 0, height: 0 }}>
-            {dots.map((d, i) => (
-              <span
-                key={i}
-                className="px-dot"
-                style={{
-                  position: "absolute",
-                  left: d.x - 6,
-                  top: d.y - 6,
-                  animationDelay: `${d.delay}s`,
-                }}
-              />
-            ))}
+          <div
+            className="relative flex flex-wrap"
+            style={{
+              width: GRID * CELL,
+              height: GRID * CELL,
+            }}
+          >
+            {Array.from({ length: TOTAL }, (_, i) => {
+              const row = Math.floor(i / GRID);
+              const col = i % GRID;
+              const cx = GRID / 2;
+              const cy = GRID / 2;
+              const dist = Math.sqrt((col - cx) ** 2 + (row - cy) ** 2);
+              const maxDist = Math.sqrt(cx * cx + cy * cy);
+
+              return (
+                <motion.div
+                  key={i}
+                  className="shrink-0 rounded-sm"
+                  style={{
+                    width: SIZE,
+                    height: SIZE,
+                    margin: SPACING / 2,
+                    background: "#a855f7",
+                    boxShadow: "0 0 4px rgba(168,85,247,0.3)",
+                  }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{
+                    opacity: [0, 0, 1, 1, 0],
+                    scale: [0, 0, 1, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    delay: (dist / maxDist) * 0.8,
+                    ease: [0.16, 1, 0.3, 1],
+                    times: [0, 0.15, 0.35, 0.7, 1],
+                  }}
+                />
+              );
+            })}
           </div>
         </motion.div>
       )}

@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Menu, X, User, Heart, LogOut, Flame } from "lucide-react";
+import { ShoppingBag, Menu, X, User, Heart, LogOut } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useUIStore } from "@/lib/store/uiStore";
@@ -22,7 +22,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { setCartOpen } = useUIStore();
-  const totalItems = useCartStore((s) => s.getTotalItems());
+  const totalItems = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishCount = useWishlistStore((s) => s.items.length);
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -84,9 +84,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               className="relative px-3 py-2 text-sm font-bold transition-colors rounded-lg whitespace-nowrap"
               style={{ color: "#fbbf24" }}
             >
-              <span className="flex items-center gap-1.5">
-                <Flame size={14} /> HotWheels
-              </span>
+              HotWheels
             </Link>
           </nav>
 
@@ -308,7 +306,6 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                     border: "1px solid rgba(255,68,0,0.2)",
                     color: "#fbbf24",
                   }}>
-                  <Flame size={16} />
                   Go To HotWheels Store
                 </Link>
 

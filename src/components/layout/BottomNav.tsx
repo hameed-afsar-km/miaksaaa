@@ -15,7 +15,7 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const totalItems = useCartStore((s) => s.getTotalItems());
+  const totalItems = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
