@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { LenisProvider } from "@/components/layout/LenisProvider";
 
 export const metadata: Metadata = {
   title: { default: "MIAKSAAA — Premium Luxury Store", template: "%s | MIAKSAAA" },
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
       </head>
       <body>
+        <LenisProvider>
         <AuthProvider>
           {children}
           <Toaster
@@ -65,6 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             }}
           />
         </AuthProvider>
+        </LenisProvider>
       </body>
     </html>
   );
