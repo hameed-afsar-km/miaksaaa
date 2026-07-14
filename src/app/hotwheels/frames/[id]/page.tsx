@@ -193,6 +193,7 @@ export default function FrameConfiguratorPage() {
                   alt={selectedBg.label}
                   fill
                   className="object-cover"
+                  priority
                 />
               )}
 

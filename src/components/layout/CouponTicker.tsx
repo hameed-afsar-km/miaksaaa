@@ -49,7 +49,7 @@ export function CouponTicker() {
 
   return (
     <div
-      className="sticky top-0 z-[60] overflow-hidden h-12 flex items-center select-none"
+      className="fixed top-0 left-0 right-0 z-[60] overflow-hidden h-12 flex items-center select-none"
       style={{
         background: "rgba(10, 6, 20, 0.85)",
         backdropFilter: "blur(14px)",

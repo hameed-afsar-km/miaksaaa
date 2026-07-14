@@ -128,6 +128,7 @@ export function HWTrendingCarousel({ products }: { products: Product[] }) {
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 140px, 240px"
+                          priority={offset === 0}
                         />
                       ) : (
                         <div

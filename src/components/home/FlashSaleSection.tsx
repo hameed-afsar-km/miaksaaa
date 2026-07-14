@@ -77,7 +77,7 @@ export function FlashSaleSection({ products, targetDate }: { products: Product[]
         {/* Product grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {products.slice(0, 8).map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
+            <ProductCard key={p.id} product={p} index={i} priority={i < 4} />
           ))}
         </div>
       </div>

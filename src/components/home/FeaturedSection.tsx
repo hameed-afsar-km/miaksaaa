@@ -54,7 +54,7 @@ export function FeaturedSection({ title, products, badge, loading }: FeaturedSec
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {loading
             ? [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
-            : products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)
+            : products.map((p, i) => <ProductCard key={p.id} product={p} index={i} priority={i < 4} />)
           }
         </div>
       </div>

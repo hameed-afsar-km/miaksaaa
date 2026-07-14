@@ -4,18 +4,20 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Star, Zap, Sparkles, Flame } from "lucide-react";
+import { ShoppingBag, Star, Zap, Sparkles, Flame, Heart } from "lucide-react";
 import { Product } from "@/lib/types";
 import { useCartStore } from "@/lib/store/cartStore";
+import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
 
 interface ProductCardProps {
   product: Product;
   index?: number;
+  priority?: boolean;
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
+export function ProductCard({ product, index = 0, priority = false }: ProductCardProps) {
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
   const [addedItem, setAddedItem] = useState<{
@@ -29,6 +31,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   } | null>(null);
 
   const addToCart = useCartStore((s) => s.addItem);
+  const { addItem: addWishlist, removeItem: removeWishlist, isInWishlist } = useWishlistStore();
+  const inWishlist = isInWishlist(product.id);
   const discountPct = product.discountedPrice
     ? getDiscountPercent(product.price, product.discountedPrice) : 0;
 
@@ -40,6 +44,23 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const outOfStock = product.hasVariants
     ? (allColorVariantsOut || allSizeVariantsOut)
     : product.stock === 0;
+
+  function handleToggleWishlist(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inWishlist) {
+      removeWishlist(product.id);
+    } else {
+      addWishlist({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        discountedPrice: product.discountedPrice,
+        image: product.images[0] ?? "",
+        addedAt: new Date(),
+      });
+    }
+  }
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -81,6 +102,26 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           }}
         >
+          {/* Wishlist toggle — visible on hover, desktop only */}
+          <button
+            onClick={handleToggleWishlist}
+            className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-110 hidden md:flex"
+            style={{
+              background: inWishlist ? "rgba(239,68,68,0.2)" : "rgba(0,0,0,0.4)",
+              backdropFilter: "blur(8px)",
+            }}
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart
+              size={16}
+              className="transition-colors duration-200"
+              style={{
+                color: inWishlist ? "#ef4444" : "#fff",
+                fill: inWishlist ? "#ef4444" : "none",
+              }}
+            />
+          </button>
+
           {/* Badges */}
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
             {product.isNew && !outOfStock && (
@@ -114,6 +155,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 onError={() => setImgError(true)}
                 draggable={false}
+                priority={priority}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center aspect-square"

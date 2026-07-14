@@ -7,7 +7,7 @@ export default function HotWheelsLayout({ children }: { children: React.ReactNod
     <>
       <HWNavbar />
       <CartDrawer />
-      <main className="min-h-screen pb-20 md:pb-0">
+      <main className="min-h-screen pt-[71px] lg:pt-16 pb-20 md:pb-0">
         {children}
       </main>
       <HWFooter />

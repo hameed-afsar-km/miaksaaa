@@ -1,16 +1,13 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ShoppingBag, User, Menu, X, LogOut,
-  ChevronDown, Shield, Package, Star, Heart
-} from "lucide-react";
+import { ShoppingBag, Menu, X, User, Heart, LogOut, Flame } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
-import { logOut, signInWithGoogle } from "@/lib/firebase/auth";
+import { logOut as firebaseLogOut, signInWithGoogle } from "@/lib/firebase/auth";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -23,13 +20,13 @@ const NAV_LINKS = [
 
 export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const pathname = usePathname();
-  const { user, isAdmin } = useAuthStore();
+  const { user } = useAuthStore();
   const { setCartOpen } = useUIStore();
   const totalItems = useCartStore((s) => s.getTotalItems());
   const wishCount = useWishlistStore((s) => s.items.length);
 
-  const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -47,8 +44,9 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   }
 
   async function handleLogout() {
-    await logOut();
     setProfileOpen(false);
+    setMobileOpen(false);
+    await firebaseLogOut();
     toast.success("Signed out");
   }
 
@@ -56,132 +54,111 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   return (
     <>
       <header
-  className="sticky top-12 z-50"
-  style={{
-    background: "rgba(6,4,13,0.92)",
-    backdropFilter: "blur(18px)",
-    WebkitBackdropFilter: "blur(18px)",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-  }}
->
-        {/* 3-column grid: left=nav, center=brand, right=actions */}
-        <div className="container-lg grid grid-cols-3 items-center h-[88px] lg:h-[80px]">
+        className="fixed top-12 left-0 right-0 z-50"
+        style={{
+          background: "rgba(6,4,13,0.92)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="container-lg flex items-center justify-between h-[88px] lg:h-[80px]">
 
           {/* LEFT: Desktop nav links */}
-          <div className="flex items-center gap-1 min-w-0">
-            {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="relative px-3 py-2 text-sm font-medium transition-colors rounded-lg whitespace-nowrap"
-                  style={{ color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)" }}
-                >
-                  {pathname === href && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      className="absolute inset-0 rounded-lg"
-                      style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
-                    />
-                  )}
-                  <span className="relative z-10">{label}</span>
-                </Link>
-              ))}
-            </nav>
-            {/* Logo — replaces burger icon */}
-            <Link href="/hotwheels" className="block shrink-0">
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link key={href} href={href}
+                className="relative px-3 py-2 text-sm font-medium transition-colors rounded-lg whitespace-nowrap"
+                style={{ color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)" }}
               >
-                <Image
-                  src="/hw_logo.png"
-                  alt="MIAKSAAA"
-                  width={200}
-                  height={80}
-                  className="h-14 lg:h-20 w-auto object-contain"
-                  style={{ clipPath: "inset(10% 0 10% 0)" }}
-                  priority
-                />
-              </motion.div>
-            </Link>
-         </div>
-
-          {/* CENTER: Brand name and tagline */}
-          <div className="flex flex-col items-center justify-center text-center min-w-0">
-            <Link href="/" className="flex flex-col items-center group">
-              <span
-                className="text-xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
-                style={{ fontFamily: "Playfair Display, serif" }}
-              >
-                MIAKSAAA
-              </span>
-              <span
-                className="text-[10px] lg:text-xs tracking-[0.15em] uppercase leading-none mt-0.5 whitespace-nowrap"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Fashion and Fun World
-              </span>
-            </Link>
-          </div>
-
-          {/* RIGHT: Heart, Cart, Burger, Profile */}
-          <div className="flex items-center justify-end gap-0.5">
-
-            {/* Heart + Cart — desktop only wrapper */}
-            <div className="hidden lg:flex items-center gap-0.5">
-              <Link href="/wishlist"
-                className="relative btn-ghost rounded-xl"
-                style={{ padding: "10px" }}
-              >
-                <Heart size={22} />
-                {mounted && wishCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                    {wishCount}
-                  </span>
+                {pathname === href && (
+                  <motion.div layoutId="nav-pill"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: "rgba(147,51,234,0.12)", border: "1px solid rgba(147,51,234,0.25)" }}
+                  />
                 )}
+                <span className="relative z-10">{label}</span>
               </Link>
-
-              <button onClick={() => setCartOpen(true)} className="relative btn-ghost rounded-xl" style={{ padding: "10px" }}>
-                <ShoppingBag size={22} className="lg:scale-[0.9]" />
-                {mounted && totalItems > 0 && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
-                    {totalItems}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Burger — mobile only */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden btn-ghost p-2.5 rounded-xl"
-              aria-label="Open menu"
+            ))}
+            <Link href="/hotwheels"
+              className="relative px-3 py-2 text-sm font-bold transition-colors rounded-lg whitespace-nowrap"
+              style={{ color: "#fbbf24" }}
             >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              <span className="flex items-center gap-1.5">
+                <Flame size={14} /> HotWheels
+              </span>
+            </Link>
+          </nav>
+
+          {/* LEFT (mobile): Burger */}
+          <button onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden p-2.5 rounded-xl transition-colors hover:bg-white/5"
+            style={{ color: "var(--text-secondary)" }}
+            aria-label="Open menu"
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+
+          {/* CENTER: Brand */}
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center group">
+            <span
+              className="text-xl lg:text-3xl font-black tracking-wider gradient-text leading-tight"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
+              MIAKSAAA
+            </span>
+            <span
+              className="text-[10px] lg:text-xs tracking-[0.15em] uppercase leading-none mt-0.5 whitespace-nowrap"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Fashion and Fun World
+            </span>
+          </Link>
+
+          {/* RIGHT: Desktop */}
+          <div className="hidden lg:flex items-center gap-0.5">
+            <Link href="/wishlist"
+              className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <Heart size={22} />
+              {wishCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                  {wishCount}
+                </span>
+              )}
+            </Link>
+
+            <button onClick={() => setCartOpen(true)}
+              className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <ShoppingBag size={22} />
+              {totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
+                  {totalItems}
+                </span>
+              )}
             </button>
 
-            {/* Profile */}
+            {/* Profile icon */}
             {user ? (
               <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-1 btn-ghost rounded-xl"
-                  style={{ padding: "6px 8px" }}
+                <button onClick={() => setProfileOpen(!profileOpen)}
+                  className="p-1.5 rounded-xl transition-colors hover:bg-white/5"
+                  style={{ color: "var(--text-secondary)" }}
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 shrink-0" style={{ borderColor: "var(--purple-500)" }}>
+                  <div className="w-7 h-7 rounded-full overflow-hidden border-2 shrink-0" style={{ borderColor: "var(--purple-500)" }}>
                     {user.photoURL ? (
-                      <Image src={user.photoURL} alt={user.displayName ?? "User"} width={32} height={32} className="w-full h-full object-cover" />
+                      <Image src={user.photoURL} alt="" width={28} height={28} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--gradient-purple)" }}>
-                        <User size={16} />
+                        <User size={13} />
                       </div>
                     )}
                   </div>
-                  <ChevronDown size={14} className={`hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 <AnimatePresence>
@@ -191,33 +168,14 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-16 lg:top-12 w-52 glass rounded-xl overflow-hidden z-50"
+                      className="absolute right-0 top-12 w-48 rounded-xl overflow-hidden z-50"
                       style={{ background: "rgba(18,10,36,0.95)", border: "1px solid var(--glass-border)" }}
                     >
-                      <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
-                        <p className="text-sm font-semibold truncate">{user.displayName}</p>
-                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{user.email}</p>
-                      </div>
                       <div className="p-1.5 flex flex-col gap-0.5">
                         <Link href="/profile" onClick={() => setProfileOpen(false)}
-                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
                           <User size={15} style={{ color: "var(--purple-400)" }} /> Profile
                         </Link>
-                        <Link href="/orders" onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
-                          <Package size={15} style={{ color: "var(--purple-400)" }} /> My Orders
-                        </Link>
-                        <Link href="/reviews" onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
-                          <Star size={15} style={{ color: "var(--purple-400)" }} /> My Reviews
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin/dashboard" onClick={() => setProfileOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors"
-                            style={{ color: "var(--gold-400)" }}>
-                            <Shield size={15} /> Admin Panel
-                          </Link>
-                        )}
                         <div className="my-1 h-px" style={{ background: "var(--border)" }} />
                         <button onClick={handleLogout}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-red-500/10 transition-colors w-full text-left"
@@ -230,28 +188,49 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                 </AnimatePresence>
               </div>
             ) : (
-              <button
-                onClick={handleLogin}
-                className="flex items-center gap-1.5 font-bold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-95"
+              <button onClick={handleLogin}
+                className="ml-1 px-4 py-1.5 text-xs font-bold rounded-full transition-all hover:opacity-90 active:scale-95"
                 style={{
                   background: "linear-gradient(135deg, #9333ea, #7e22ce)",
                   color: "#fff",
-                  fontSize: "0.75rem",
-                  padding: "8px 14px",
-                  borderRadius: "999px",
-                  boxShadow: "0 0 16px rgba(147,51,234,0.4)",
-                  letterSpacing: "0.05em",
+                  boxShadow: "0 0 12px rgba(147,51,234,0.3)",
                 }}
               >
-                <User size={14} />
-                <span className="hidden xs:inline">Sign In</span>
-                <span className="xs:hidden">In</span>
+                Sign In
               </button>
             )}
           </div>
+
+          {/* RIGHT: Mobile icons */}
+          <div className="flex lg:hidden items-center gap-0.5">
+            <Link href="/wishlist"
+              className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <Heart size={22} />
+              {wishCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                  {wishCount}
+                </span>
+              )}
+            </Link>
+            <button onClick={() => setCartOpen(true)}
+              className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <ShoppingBag size={22} />
+              {totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Dropdown */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -260,67 +239,84 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
               className="overflow-hidden border-t"
-              style={{ background: "rgba(10,6,20,0.97)", borderColor: "rgba(147,51,234,0.15)" }}
+              style={{ background: "rgba(10,6,20,0.98)", borderColor: "rgba(147,51,234,0.12)" }}
             >
-              <div className="container-lg py-5 flex flex-col gap-2">
-                {NAV_LINKS.map(({ href, label }) => (
-                  <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
-                    style={{
-                      color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)",
-                      background: pathname === href ? "rgba(147,51,234,0.12)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${pathname === href ? "rgba(147,51,234,0.25)" : "transparent"}`,
-                    }}>
-                    {label}
-                  </Link>
-                ))}
+              <div className="container-lg pt-4 pb-5 px-5 flex flex-col gap-1">
 
-                {/* Cart + Wishlist — side by side */}
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  <button
-                    onClick={() => { setCartOpen(true); setMobileOpen(false); }}
-                    className="relative flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
-                    style={{
-                      color: "var(--text-primary)",
-                      background: "rgba(147,51,234,0.1)",
-                      border: "1px solid rgba(147,51,234,0.2)",
-                    }}
+                {user ? (
+                  <Link href="/profile" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98]"
+                    style={{ color: "var(--text-primary)", background: "rgba(147,51,234,0.08)" }}
                   >
-                    <ShoppingBag size={18} style={{ color: "var(--purple-400)" }} />
-                    <span>Cart</span>
-                    {totalItems > 0 && (
-                      <span className="absolute top-2 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none"
-                        style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
-                        {totalItems}
-                      </span>
-                    )}
-                  </button>
-
-                  <Link
-                    href="/wishlist"
-                    onClick={() => setMobileOpen(false)}
-                    className="relative flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
-                    style={{
-                      color: "var(--text-primary)",
-                      background: "rgba(251,191,36,0.08)",
-                      border: "1px solid rgba(251,191,36,0.18)",
-                    }}
-                  >
-                    <Heart size={18} style={{ color: "var(--gold-400)" }} />
-                    <span>Wishlist</span>
-                    {wishCount > 0 && (
-                      <span className="absolute top-2 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none"
-                        style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                        {wishCount}
-                      </span>
-                    )}
+                    <div className="w-7 h-7 rounded-full overflow-hidden border shrink-0" style={{ borderColor: "var(--purple-500)" }}>
+                      {user.photoURL ? (
+                        <Image src={user.photoURL} alt="" width={28} height={28} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--gradient-purple)" }}>
+                          <User size={13} />
+                        </div>
+                      )}
+                    </div>
+                    <span>{user.displayName || "Profile"}</span>
                   </Link>
-                </div>
-
-                {!user && (
+                ) : (
                   <button onClick={() => { handleLogin(); setMobileOpen(false); }}
-                    className="btn-primary mt-1 py-3.5 rounded-2xl text-sm">
-                    Sign In with Google
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98] text-left"
+                    style={{ color: "var(--text-primary)", background: "rgba(147,51,234,0.08)" }}
+                  >
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: "var(--gradient-purple)" }}>
+                      <User size={13} />
+                    </div>
+                    <span>Sign In</span>
+                  </button>
+                )}
+
+                <div className="h-px my-1.5" style={{ background: "rgba(147,51,234,0.1)" }} />
+
+                <Link href="/" onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98]"
+                  style={{
+                    color: pathname === "/" ? "var(--purple-300)" : "rgba(196,181,253,0.7)",
+                    background: pathname === "/" ? "rgba(147,51,234,0.1)" : "transparent",
+                  }}>
+                  Home
+                </Link>
+                <Link href="/products" onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98]"
+                  style={{
+                    color: pathname.startsWith("/products") ? "var(--purple-300)" : "rgba(196,181,253,0.7)",
+                    background: pathname.startsWith("/products") ? "rgba(147,51,234,0.1)" : "transparent",
+                  }}>
+                  Shop
+                </Link>
+                <Link href="/orders" onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98]"
+                  style={{
+                    color: pathname === "/orders" ? "var(--purple-300)" : "rgba(196,181,253,0.7)",
+                    background: pathname === "/orders" ? "rgba(147,51,234,0.1)" : "transparent",
+                  }}>
+                  Orders
+                </Link>
+
+                <div className="h-px my-1.5" style={{ background: "rgba(147,51,234,0.1)" }} />
+
+                <Link href="/hotwheels" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-[15px] font-bold transition-colors active:scale-[0.98]"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,68,0,0.12), rgba(251,191,36,0.08))",
+                    border: "1px solid rgba(255,68,0,0.2)",
+                    color: "#fbbf24",
+                  }}>
+                  <Flame size={16} />
+                  Go To HotWheels Store
+                </Link>
+
+                {user && (
+                  <button onClick={handleLogout}
+                    className="px-4 py-3 rounded-xl text-[15px] font-medium transition-colors active:scale-[0.98] text-left mt-1"
+                    style={{ color: "#fca5a5", background: "rgba(239,68,68,0.06)" }}>
+                    Sign Out
                   </button>
                 )}
               </div>
@@ -329,9 +325,8 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
         </AnimatePresence>
       </header>
 
-      {/* Backdrop for profile dropdown */}
-      {profileOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+      {(mobileOpen || profileOpen) && (
+        <div className="fixed inset-0 z-40" onClick={() => { setMobileOpen(false); setProfileOpen(false); }} />
       )}
     </>
   );
