@@ -99,6 +99,12 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
+@media (max-width: 768px) {
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
 
 @media (max-width: 1023px) {
   .lg\:hidden {
@@ -111,6 +117,12 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-gold);
+}
+@media (max-width: 768px) {
+  .glass-gold {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 /* ─── Gradients ──────────────────────────────────────────────── */
@@ -230,6 +242,83 @@ body {
 }
 .btn-ghost:hover { background: rgba(147,51,234,0.12); color: var(--text-primary); }
 
+/* ─── Hero Section ────────────────────────────────────────────── */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes spin-reverse-slow {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 35s linear infinite;
+}
+.animate-spin-reverse-slow {
+  animation: spin-reverse-slow 45s linear infinite;
+}
+.hero-mobile {
+  height: calc(100svh - 8rem);
+  margin-top: 0rem;
+}
+@supports not (height: 100svh) {
+  .hero-mobile {
+    height: calc(100vh - 8rem);
+    margin-top: 0rem;
+  }
+}
+
+/* ─── HotWheels Section ───────────────────────────────────────── */
+.hw-racing {
+  background: #0a0a0a;
+  height: 85vh;
+  height: 85dvh;
+  position: relative;
+}
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes logoGlow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
+}
+@keyframes speedLine {
+  0% { transform: translateX(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(200vw); opacity: 0; }
+}
+@keyframes stripeScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 200px; }
+}
+@keyframes checkScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+.hw-btn-fire {
+  background: linear-gradient(135deg, #FF4400, #D32F2F);
+  box-shadow: 0 4px 24px rgba(255,68,0,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hw-btn-fire:hover {
+  box-shadow: 0 8px 40px rgba(255,68,0,0.55);
+  transform: translateY(-2px);
+}
+.hw-btn-outline {
+  border: 1.5px solid rgba(255,68,0,0.25);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.hw-btn-outline:hover {
+  transform: translateY(-2px);
+  background: rgba(255,68,0,0.06);
+}
+
 /* ─── Cards ──────────────────────────────────────────────────── */
 .card {
   background: var(--bg-card);
@@ -241,18 +330,6 @@ body {
   border-color: rgba(147,51,234,0.45);
   box-shadow: 0 8px 32px rgba(147,51,234,0.2);
   transform: translateY(-2px);
-}
-
-.hero-mobile {
-  height: 100svh;
-  padding-top: 88px;
-}
-
-@supports not (height: 100svh) {
-  .hero-mobile {
-    height: 100vh;
-    padding-top: 88px;
-  }
 }
 
 /* ─── Badge ──────────────────────────────────────────────────── */

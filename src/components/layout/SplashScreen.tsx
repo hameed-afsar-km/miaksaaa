@@ -3,11 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const GRID = 16;
-const CELL = 12;
-const SPACING = 2;
+const GRID = 12;
+const CELL = 20;
+const SPACING = 3;
 const SIZE = CELL - SPACING;
-const TOTAL = GRID * GRID;
 
 export function SplashScreen() {
   const pathname = usePathname();
@@ -26,6 +25,21 @@ export function SplashScreen() {
     }
   }, [isHome]);
 
+  // Spiral order from outer edge to center
+  const path = (() => {
+    const order: number[] = [];
+    let top = 0, bottom = GRID - 1, left = 0, right = GRID - 1;
+    while (top <= bottom && left <= right) {
+      for (let c = left; c <= right; c++) order.push(top * GRID + c);
+      top++;
+      for (let r = top; r <= bottom; r++) order.push(r * GRID + right);
+      right--;
+      if (top <= bottom) { for (let c = right; c >= left; c--) order.push(bottom * GRID + c); bottom--; }
+      if (left <= right) { for (let r = bottom; r >= top; r--) order.push(r * GRID + left); left++; }
+    }
+    return order;
+  })();
+
   return (
     <AnimatePresence>
       {visible && (
@@ -38,28 +52,22 @@ export function SplashScreen() {
           style={{ background: "#0a0614" }}
         >
           <div
-            className="relative flex flex-wrap"
-            style={{
-              width: GRID * CELL,
-              height: GRID * CELL,
-            }}
+            className="relative"
+            style={{ width: GRID * CELL, height: GRID * CELL }}
           >
-            {Array.from({ length: TOTAL }, (_, i) => {
-              const row = Math.floor(i / GRID);
-              const col = i % GRID;
-              const cx = GRID / 2;
-              const cy = GRID / 2;
-              const dist = Math.sqrt((col - cx) ** 2 + (row - cy) ** 2);
-              const maxDist = Math.sqrt(cx * cx + cy * cy);
+            {path.map((idx, step) => {
+              const row = Math.floor(idx / GRID);
+              const col = idx % GRID;
 
               return (
                 <motion.div
-                  key={i}
-                  className="shrink-0 rounded-sm"
+                  key={idx}
+                  className="absolute rounded-sm"
                   style={{
+                    left: col * CELL + SPACING / 2,
+                    top: row * CELL + SPACING / 2,
                     width: SIZE,
                     height: SIZE,
-                    margin: SPACING / 2,
                     background: "#a855f7",
                     boxShadow: "0 0 4px rgba(168,85,247,0.3)",
                   }}
@@ -69,10 +77,10 @@ export function SplashScreen() {
                     scale: [0, 0, 1, 1, 0],
                   }}
                   transition={{
-                    duration: 1.2,
-                    delay: (dist / maxDist) * 0.8,
+                    duration: 1.8,
+                    delay: (step / path.length) * 1.2,
                     ease: [0.16, 1, 0.3, 1],
-                    times: [0, 0.15, 0.35, 0.7, 1],
+                    times: [0, 0.1, 0.3, 0.7, 1],
                   }}
                 />
               );

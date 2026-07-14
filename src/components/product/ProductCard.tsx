@@ -3,13 +3,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ShoppingBag, Star, Zap, Sparkles, Flame, Heart } from "lucide-react";
 import { Product } from "@/lib/types";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
+import { useAddedToCartModal } from "@/lib/store/addedToCartModalStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
-import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
 
 interface ProductCardProps {
   product: Product;
@@ -18,17 +17,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0, priority = false }: ProductCardProps) {
-  const router = useRouter();
   const [imgError, setImgError] = useState(false);
-  const [addedItem, setAddedItem] = useState<{
-    productId: string;
-    title: string;
-    price: number;
-    discountedPrice?: number;
-    image: string;
-    quantity: number;
-    category?: string;
-  } | null>(null);
+  const openModal = useAddedToCartModal((s) => s.openModal);
 
   const addToCart = useCartStore((s) => s.addItem);
   const { addItem: addWishlist, removeItem: removeWishlist, isInWishlist } = useWishlistStore();
@@ -74,7 +64,7 @@ export function ProductCard({ product, index = 0, priority = false }: ProductCar
       quantity: 1,
       stock: product.stock,
     });
-    setAddedItem({
+    openModal({
       productId: product.id,
       title: product.title,
       price: product.price,
@@ -246,12 +236,6 @@ export function ProductCard({ product, index = 0, priority = false }: ProductCar
           </div>
         </div>
       </Link>
-      <AddedToCartModal
-        isOpen={addedItem !== null}
-        onClose={() => setAddedItem(null)}
-        onGoToCart={() => { setAddedItem(null); router.push("/cart"); }}
-        item={addedItem}
-      />
     </motion.div>
   );
 }

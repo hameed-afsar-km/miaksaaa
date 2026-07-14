@@ -16,7 +16,7 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
   const displayCats = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
 
   return (
-    <section className="section-padding">
+    <section className="section-padding" data-snap>
       <div className="container-lg">
         <motion.h2
           initial={{ opacity: 0, y: 16 }}

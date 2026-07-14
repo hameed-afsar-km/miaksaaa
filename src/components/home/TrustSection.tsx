@@ -13,7 +13,7 @@ const TRUST_ITEMS = [
 
 export function TrustSection() {
   return (
-    <section className="py-14 md:py-16 relative overflow-hidden bg-[#0a0614]">
+    <section className="py-14 md:py-16 relative overflow-hidden bg-[#0a0614]" data-snap>
       {/* Dynamic ambient lights */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-64 h-64 rounded-full bg-purple-900/10 blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-64 h-64 rounded-full bg-amber-900/5 blur-[100px] pointer-events-none" />

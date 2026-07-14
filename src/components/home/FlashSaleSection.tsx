@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import React from "react";
 import { Flame, Timer } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Product } from "@/lib/types";
@@ -41,12 +41,32 @@ function TimeBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function FlashSaleSection({ products, targetDate }: { products: Product[], targetDate?: Date }) {
+function CountdownTimer({ targetDate }: { targetDate?: Date }) {
   const { h, m, s } = useCountdown(targetDate);
+  return (
+    <div className="flex items-center gap-3">
+      <Timer size={16} style={{ color: "var(--text-muted)" }} />
+      <span className="text-sm" style={{ color: "var(--text-muted)" }}>Ends in:</span>
+      <div className="flex gap-2">
+        <TimeBox value={h} label="Hrs" />
+        <span className="text-2xl font-black self-start mt-2" style={{ color: "var(--purple-400)" }}>:</span>
+        <TimeBox value={m} label="Min" />
+        <span className="text-2xl font-black self-start mt-2" style={{ color: "var(--purple-400)" }}>:</span>
+        <TimeBox value={s} label="Sec" />
+      </div>
+    </div>
+  );
+}
+
+const MemoizedProductCard = React.memo(ProductCard, (prev, next) =>
+  prev.product.id === next.product.id && prev.priority === next.priority
+);
+
+export function FlashSaleSection({ products, targetDate }: { products: Product[], targetDate?: Date }) {
   if (products.length === 0) return null;
 
   return (
-    <section className="section-padding" style={{ background: "var(--bg-card)" }}>
+    <section className="section-padding" style={{ background: "var(--bg-card)" }} data-snap>
       <div className="container-lg">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -60,24 +80,14 @@ export function FlashSaleSection({ products, targetDate }: { products: Product[]
             </h2>
           </div>
 
-          {/* Countdown */}
-          <div className="flex items-center gap-3">
-            <Timer size={16} style={{ color: "var(--text-muted)" }} />
-            <span className="text-sm" style={{ color: "var(--text-muted)" }}>Ends in:</span>
-            <div className="flex gap-2">
-              <TimeBox value={h} label="Hrs" />
-              <span className="text-2xl font-black self-start mt-2" style={{ color: "var(--purple-400)" }}>:</span>
-              <TimeBox value={m} label="Min" />
-              <span className="text-2xl font-black self-start mt-2" style={{ color: "var(--purple-400)" }}>:</span>
-              <TimeBox value={s} label="Sec" />
-            </div>
-          </div>
+          {/* Countdown — isolated from product grid re-renders */}
+          <CountdownTimer targetDate={targetDate} />
         </div>
 
         {/* Product grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {products.slice(0, 8).map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} priority={i < 4} />
+            <MemoizedProductCard key={p.id} product={p} index={i} priority={i < 4} />
           ))}
         </div>
       </div>

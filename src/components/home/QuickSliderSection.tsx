@@ -18,8 +18,16 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
       }
     }
     updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    let timeout: ReturnType<typeof setTimeout>;
+    function handleResize() {
+      clearTimeout(timeout);
+      timeout = setTimeout(updateWidth, 200);
+    }
+    window.addEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const pages: Product[][] = [];
@@ -35,7 +43,8 @@ export function QuickSliderSection({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12 border-b border-purple-500/5 relative" style={{ background: "rgba(14,8,30,0.4)" }}>
+    <section className="py-12 border-b border-purple-500/5 relative" style={{ background: "rgba(14,8,30,0.4)" }}
+      data-snap>
       {/* Background ambient light */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 rounded-full bg-purple-600/5 blur-[80px] pointer-events-none overflow-hidden" />
 

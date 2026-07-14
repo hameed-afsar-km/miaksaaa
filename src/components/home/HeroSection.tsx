@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -57,21 +57,38 @@ export function HeroSection({ banners }: HeroSectionProps) {
     banners && banners.length > 0 ? banners : STATIC_BANNERS;
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
+  const progressRef = useRef(0);
+  const lastTimeRef = useRef(0);
 
-  // High-fidelity ticking timer for numerical progress line indicators
+  const advanceSlide = useCallback(() => {
+    setCurrent((c) => (c + 1) % displayBanners.length);
+  }, [displayBanners.length]);
+
+  // RAF-based progress timer — only updates state on slide change
   useEffect(() => {
+    progressRef.current = 0;
+    lastTimeRef.current = 0;
     setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          setCurrent((c) => (c + 1) % displayBanners.length);
-          return 0;
-        }
-        return prev + 2; // 2% every 100ms = 100% in 5000ms
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [current, displayBanners.length]);
+
+    let id: number;
+    function tick(time: number) {
+      if (lastTimeRef.current === 0) lastTimeRef.current = time;
+      const delta = time - lastTimeRef.current;
+      lastTimeRef.current = time;
+      progressRef.current += (delta / 5000) * 100; // 5s per slide
+
+      if (progressRef.current >= 100) {
+        advanceSlide();
+        progressRef.current = 0;
+        lastTimeRef.current = 0;
+      }
+
+      setProgress(progressRef.current);
+      id = requestAnimationFrame(tick);
+    }
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [current, advanceSlide]);
 
   const banner = displayBanners[current];
 
@@ -79,37 +96,8 @@ export function HeroSection({ banners }: HeroSectionProps) {
     <div
       className="relative w-full overflow-hidden"
       style={{ background: "#06040d" }}
+      data-snap
     >
-      {/* Keyframes for rotating geometric animations */}
-      <style>{`
-        @keyframes spin-slow {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes spin-reverse-slow {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 35s linear infinite;
-        }
-        .animate-spin-reverse-slow {
-          animation: spin-reverse-slow 45s linear infinite;
-        }
-        /* Mobile: start below top navbar and fit remaining height perfectly between top and bottom navbars */
-        .hero-mobile {
-          height: calc(100svh - 8rem);
-          margin-top: 0rem;
-        }
-        /* Fallback for browsers without svh support */
-        @supports not (height: 100svh) {
-          .hero-mobile {
-            height: calc(100vh - 8rem);
-            margin-top: 0rem;
-          }
-        }
-      `}</style>
-
       {/* Animated colour tint overlay per slide */}
       <AnimatePresence mode="wait">
         <motion.div

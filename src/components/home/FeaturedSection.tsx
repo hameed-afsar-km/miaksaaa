@@ -8,13 +8,14 @@ interface FeaturedSectionProps {
   products: Product[];
   badge?: string;
   loading?: boolean;
+  snap?: boolean;
 }
 
-export function FeaturedSection({ title, products, badge, loading }: FeaturedSectionProps) {
+export function FeaturedSection({ title, products, badge, loading, snap = true }: FeaturedSectionProps) {
   if (!loading && products.length === 0) return null;
 
   return (
-    <section className="section-padding">
+    <section className="section-padding" {...(snap && { "data-snap": "" })}>
       <div className="container-lg">
         {/* Header */}
         <div className="flex items-end justify-between mb-8">
