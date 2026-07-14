@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { QuickSliderSection } from "@/components/home/QuickSliderSection";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { CategoriesSection } from "@/components/home/CategoriesSection";
+import { HotWheelsPromoSection } from "@/components/home/HotWheelsPromoSection";
 import { FlashSaleSection } from "@/components/home/FlashSaleSection";
 import { TrustSection } from "@/components/home/TrustSection";
 import { getActiveBanners, getHomepageProducts, getCategoriesByStore } from "@/lib/firebase/firestore";
@@ -39,6 +40,7 @@ export default async function HomePage() {
     <>
       <HeroSection banners={banners} />
       <QuickSliderSection products={featured} />
+      <HotWheelsPromoSection />
       <CategoriesSection categories={categories} />
       <FeaturedSection title="Featured Products" products={featured} />
       {settings?.flashSaleActive && (

@@ -297,6 +297,19 @@ body {
 }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
+/* ─── Pixel Spinner ──────────────────────────────────────────── */
+.px-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #a855f7;
+  animation: px-chase 0.8s linear infinite;
+}
+@keyframes px-chase {
+  0%, 100% { opacity: 0.12; }
+  12.5%    { opacity: 1; }
+}
+
 /* ─── Animations ─────────────────────────────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(24px); }

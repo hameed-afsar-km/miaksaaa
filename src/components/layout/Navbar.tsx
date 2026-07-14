@@ -258,65 +258,70 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden glass border-t"
-              style={{ background: "rgba(18,10,36,0.95)", borderColor: "var(--glass-border)" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="overflow-hidden border-t"
+              style={{ background: "rgba(10,6,20,0.97)", borderColor: "rgba(147,51,234,0.15)" }}
             >
-              <div className="container-lg py-4 flex flex-col gap-1">
+              <div className="container-lg py-5 flex flex-col gap-2">
                 {NAV_LINKS.map(({ href, label }) => (
                   <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                    className="px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
                     style={{
                       color: pathname === href ? "var(--purple-300)" : "var(--text-secondary)",
-                      background: pathname === href ? "rgba(147,51,234,0.1)" : "transparent",
+                      background: pathname === href ? "rgba(147,51,234,0.12)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${pathname === href ? "rgba(147,51,234,0.25)" : "transparent"}`,
                     }}>
                     {label}
                   </Link>
                 ))}
 
-                <button
-                  onClick={() => { setCartOpen(true); setMobileOpen(false); }}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                  style={{
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  <div className="flex items-center gap-2.5">
+                {/* Cart + Wishlist — side by side */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    onClick={() => { setCartOpen(true); setMobileOpen(false); }}
+                    className="relative flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
+                    style={{
+                      color: "var(--text-primary)",
+                      background: "rgba(147,51,234,0.1)",
+                      border: "1px solid rgba(147,51,234,0.2)",
+                    }}
+                  >
                     <ShoppingBag size={18} style={{ color: "var(--purple-400)" }} />
                     <span>Cart</span>
-                  </div>
-                  {totalItems > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
-                      {totalItems}
-                    </span>
-                  )}
-                </button>
+                    {totalItems > 0 && (
+                      <span className="absolute top-2 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none"
+                        style={{ background: "linear-gradient(135deg,#9333ea,#7e22ce)", color: "#fff" }}>
+                        {totalItems}
+                      </span>
+                    )}
+                  </button>
 
-                <Link
-                  href="/wishlist"
-                  onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-between"
-                  style={{
-                    color: pathname === "/wishlist" ? "var(--purple-300)" : "var(--text-secondary)",
-                    background: pathname === "/wishlist" ? "rgba(147,51,234,0.1)" : "transparent",
-                  }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Heart size={18} style={{ color: "var(--purple-400)" }} />
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setMobileOpen(false)}
+                    className="relative flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all"
+                    style={{
+                      color: "var(--text-primary)",
+                      background: "rgba(251,191,36,0.08)",
+                      border: "1px solid rgba(251,191,36,0.18)",
+                    }}
+                  >
+                    <Heart size={18} style={{ color: "var(--gold-400)" }} />
                     <span>Wishlist</span>
-                  </div>
-                  {wishCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
-                      {wishCount}
-                    </span>
-                  )}
-                </Link>
+                    {wishCount > 0 && (
+                      <span className="absolute top-2 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none"
+                        style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)", color: "#0a0614" }}>
+                        {wishCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
 
                 {!user && (
                   <button onClick={() => { handleLogin(); setMobileOpen(false); }}
-                    className="btn-primary mt-2">Sign In with Google</button>
+                    className="btn-primary mt-1 py-3.5 rounded-2xl text-sm">
+                    Sign In with Google
+                  </button>
                 )}
               </div>
             </motion.div>

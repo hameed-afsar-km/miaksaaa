@@ -1,9 +1,14 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
-import { BeamsBackground } from "@/components/ui/beams-background";
+
+const N = 8;
+const R = 22;
+const dots = Array.from({ length: N }, (_, i) => {
+  const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+  return { x: Math.cos(a) * R, y: Math.sin(a) * R, delay: i * (1 / N) };
+});
 
 export function SplashScreen() {
   const pathname = usePathname();
@@ -16,7 +21,7 @@ export function SplashScreen() {
       isInitialMount.current = false;
       if (isHome) {
         setVisible(true);
-        const t = setTimeout(() => setVisible(false), 2800);
+        const t = setTimeout(() => setVisible(false), 2200);
         return () => clearTimeout(t);
       }
     }
@@ -28,79 +33,25 @@ export function SplashScreen() {
         <motion.div
           key="splash"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.7, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] overflow-hidden"
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: "#0a0614" }}
         >
-          <BeamsBackground
-            intensity="strong"
-            className="w-full h-full"
-            style={{ minHeight: "100dvh" }}
-          >
-            {/* Full-height centered content wrapper */}
-            <div
-              className="flex flex-col items-center justify-center text-center px-6"
-              style={{ minHeight: "100dvh" }}
-            >
-              <motion.div
-                initial={{ scale: 0.55, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-0"
-              >
-                <Image
-                  src="/logo2.png"
-                  alt="MIAKSAAA Logo"
-                  width={256}
-                  height={256}
-                  priority
-                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
-                  style={{ filter: "drop-shadow(0 0 56px rgba(147,51,234,0.95))" }}
-                />
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-black tracking-widest gradient-text mb-0 leading-none -mt-12"
-                style={{ fontFamily: "Playfair Display, serif" }}
-              >
-                MIAKSAAA
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="text-sm md:text-base tracking-[0.3em] uppercase leading-tight"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Fashion and Fun World
-              </motion.p>
-
-              {/* Progress bar */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.78 }}
-                className="mt-10 w-40"
-              >
-                <div
-                  className="h-0.5 rounded-full overflow-hidden"
-                  style={{ background: "rgba(147,51,234,0.2)" }}
-                >
-                  <motion.div
-                    className="h-full rounded-full"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ delay: 0.9, duration: 1.5, ease: "easeInOut" }}
-                    style={{ background: "linear-gradient(90deg, #9333ea, #fbbf24)" }}
-                  />
-                </div>
-              </motion.div>
-            </div>
-          </BeamsBackground>
+          <div className="relative" style={{ width: 0, height: 0 }}>
+            {dots.map((d, i) => (
+              <span
+                key={i}
+                className="px-dot"
+                style={{
+                  position: "absolute",
+                  left: d.x - 6,
+                  top: d.y - 6,
+                  animationDelay: `${d.delay}s`,
+                }}
+              />
+            ))}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
