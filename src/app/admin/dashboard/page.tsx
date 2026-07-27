@@ -258,10 +258,9 @@ export default function AdminDashboardPage() {
             <ShoppingBag size={16} className="text-purple-400" /> Catalog Shortage Alerts
           </h3>
 
-          <div className="space-y-3.5 overflow-y-auto max-h-72">
+          <div data-lenis-prevent className="space-y-3.5 overflow-y-auto overscroll-contain max-h-80">
             {products
               .filter((p) => p.stock <= 8)
-              .slice(0, 6)
               .map((p) => (
                 <div key={p.id} className="flex justify-between items-center gap-2 p-2.5 rounded-xl bg-purple-950/15 border border-purple-500/5">
                   <div className="min-w-0">

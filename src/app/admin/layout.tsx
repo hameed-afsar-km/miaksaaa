@@ -93,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ background: "rgba(18,10,36,0.95)" }}>
-        <div className="space-y-8">
+        <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-8 pr-1">
           <div className="flex items-center justify-between">
             <Link href="/admin/dashboard">
               <span className="text-2xl font-black tracking-widest gradient-text" style={{ fontFamily: "Playfair Display, serif" }}>
