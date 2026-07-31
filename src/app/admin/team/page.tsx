@@ -149,7 +149,7 @@ export default function AdminTeamPage() {
 
       {/* Admins Table */}
       <div className="rounded-3xl border overflow-hidden" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-        <div className="overflow-x-auto min-w-full">
+        <div data-lenis-prevent className="overflow-x-auto min-w-full">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--border)" }}>

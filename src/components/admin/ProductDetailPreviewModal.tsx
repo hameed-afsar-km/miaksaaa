@@ -59,6 +59,7 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
             onClick={onClose}
           >
             <div
+              data-lenis-prevent
               className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl"
               style={{
                 background: "var(--bg-card)",

@@ -327,7 +327,7 @@ export default function AdminOrdersPage() {
                     <h4 className="font-bold text-[10px] uppercase tracking-wider text-purple-300/40 mb-2">
                       Ordered Items
                     </h4>
-                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                    <div data-lenis-prevent className="space-y-2 max-h-36 overflow-y-auto pr-1">
                       {order.items.map((item) => (
                         <div
                           key={item.productId}

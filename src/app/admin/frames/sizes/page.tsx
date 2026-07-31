@@ -113,7 +113,7 @@ export default function AdminFrameSizesPage() {
               onClick={() => setFormOpen(false)} className="absolute inset-0 bg-black" />
             <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.35 }}
-              className="relative w-full max-w-lg h-full bg-[#120a24] border-l border-purple-500/25 p-6 overflow-y-auto">
+              className="relative w-full max-w-lg h-full bg-[#120a24] border-l border-purple-500/25 p-6 overflow-y-auto" data-lenis-prevent>
               <div className="flex justify-between items-center border-b pb-3 mb-6" style={{ borderColor: "var(--border)" }}>
                 <h3 className="text-lg font-black gradient-text">{editing.id ? "Edit Size" : "New Size"}</h3>
                 <button onClick={() => setFormOpen(false)} className="p-1.5 rounded-lg text-purple-300/60"><X size={18} /></button>

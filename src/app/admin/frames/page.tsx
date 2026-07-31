@@ -133,7 +133,7 @@ export default function AdminFrameProductsPage() {
       </div>
 
       <div className="rounded-3xl border overflow-hidden" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-        <div className="overflow-x-auto min-w-full">
+        <div data-lenis-prevent className="overflow-x-auto min-w-full">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--border)" }}>
@@ -198,7 +198,7 @@ export default function AdminFrameProductsPage() {
               onClick={() => setFormOpen(false)} className="absolute inset-0 bg-black" />
             <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.35 }}
-              className="relative w-full max-w-xl h-full bg-[#120a24] border-l border-purple-500/25 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+              className="relative w-full max-w-xl h-full bg-[#120a24] border-l border-purple-500/25 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between" data-lenis-prevent>
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b pb-3" style={{ borderColor: "var(--border)" }}>
                   <h3 className="text-lg font-black gradient-text" style={{ fontFamily: "Playfair Display, serif" }}>

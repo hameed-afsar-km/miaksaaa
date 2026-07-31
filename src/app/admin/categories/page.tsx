@@ -198,6 +198,7 @@ export default function AdminCategoriesPage() {
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.35 }}
               className="relative w-full max-w-md h-full bg-[#120a24] border-l border-purple-500/25 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between"
+              data-lenis-prevent
             >
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b pb-3" style={{ borderColor: "var(--border)" }}>

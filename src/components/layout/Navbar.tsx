@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Menu, X, User, Heart, LogOut } from "lucide-react";
+import { ShoppingBag, Menu, X, User, Heart, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useUIStore } from "@/lib/store/uiStore";
@@ -20,7 +20,7 @@ const NAV_LINKS = [
 
 export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, isAdmin } = useAuthStore();
   const { setCartOpen } = useUIStore();
   const totalItems = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishCount = useWishlistStore((s) => s.items.length);
@@ -174,6 +174,15 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
                           <User size={15} style={{ color: "var(--purple-400)" }} /> Profile
                         </Link>
+                        {isAdmin && (
+                          <>
+                            <div className="my-1 h-px" style={{ background: "var(--border)" }} />
+                            <Link href="/admin/dashboard" onClick={() => setProfileOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-purple-600/10 transition-colors">
+                              <LayoutDashboard size={15} style={{ color: "var(--purple-400)" }} /> Admin Dashboard
+                            </Link>
+                          </>
+                        )}
                         <div className="my-1 h-px" style={{ background: "var(--border)" }} />
                         <button onClick={handleLogout}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm hover:bg-red-500/10 transition-colors w-full text-left"

@@ -190,7 +190,7 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto min-w-full">
+          <div data-lenis-prevent className="overflow-x-auto min-w-full">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
