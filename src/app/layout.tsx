@@ -3,24 +3,90 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LenisProvider } from "@/components/layout/LenisProvider";
+import { JsonLd } from "@/components/seo/JsonLd";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.com";
 
 export const metadata: Metadata = {
-  title: { default: "MIAKSAAA — Premium Luxury Store", template: "%s | MIAKSAAA" },
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    template: "%s | MIAKSAAA",
+  },
   description:
-    "Discover premium products at MIAKSAAA — your luxury shopping destination with exclusive collections and unmatched quality.",
-  keywords: ["MIAKSAAA", "luxury", "premium", "shopping", "fashion", "exclusive"],
-  authors: [{ name: "MIAKSAAA" }],
+    "Welcome to the official MIAKSAAA store. Discover premium luxury fashion, exclusive Hot Wheels diecast collectibles, custom 3D display frames, and handcrafted lifestyle essentials.",
+  applicationName: "MIAKSAAA",
+  keywords: [
+    "MIAKSAAA",
+    "MIAKSAAA store",
+    "MIAKSAAA online shopping",
+    "MIAKSAAA luxury",
+    "MIAKSAAA collections",
+    "MIAKSAAA official",
+    "MIAKSAAA clothing",
+    "Hot Wheels MIAKSAAA",
+    "diecast collectibles",
+    "custom frame displays",
+    "luxury fashion store",
+    "miaksaaa.com",
+  ],
+  authors: [{ name: "MIAKSAAA", url: baseUrl }],
   creator: "MIAKSAAA",
+  publisher: "MIAKSAAA",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "MIAKSAAA",
-    title: "MIAKSAAA — Premium Luxury Store",
-    description: "Discover premium products at MIAKSAAA.",
+    title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    description:
+      "Explore exclusive luxury collections, rare Hot Wheels diecast models, and custom wall display frames at MIAKSAAA.",
+    url: baseUrl,
+    images: [
+      {
+        url: "/logo2.png",
+        width: 800,
+        height: 800,
+        alt: "MIAKSAAA - Official Luxury Store Logo",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image", title: "MIAKSAAA", description: "Premium Luxury Store" },
+  twitter: {
+    card: "summary_large_image",
+    title: "MIAKSAAA — Official Luxury Store",
+    description:
+      "Explore exclusive luxury collections, rare Hot Wheels diecast models, and custom display frames at MIAKSAAA.",
+    images: ["/logo2.png"],
+    creator: "@miaksaaa",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "ecommerce",
   manifest: "/manifest.json",
-  icons: { icon: "/logo2.png", shortcut: "/logo2.png", apple: "/apple-icon.png" },
+  icons: {
+    icon: [
+      { url: "/logo2.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo2.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/logo2.png",
+    apple: "/logo2.png",
+  },
   verification: {
     google: "HtXnN71zGip4Cw4qKOPp0gjFd_y1jmEd5tqqcOOcPF4",
   },
@@ -39,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <JsonLd />
         {settings?.accentColor && (
           <style>{`
             :root {

@@ -17,6 +17,7 @@ import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import { AddedToCartModal } from "@/components/cart/AddedToCartModal";
+import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 
 const ImageZoom = dynamic(
   () => import("@/components/ui/ImageZoom").then((m) => m.ImageZoom),
@@ -255,6 +256,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="container-lg py-8 md:py-12">
+      <ProductJsonLd product={product} />
       {/* Back */}
       <button onClick={() => router.back()}
         className="flex items-center gap-1.5 btn-ghost text-sm mb-6 -ml-2">

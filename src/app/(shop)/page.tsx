@@ -11,8 +11,28 @@ const FlashSaleSection = nextDynamic(() => import("@/components/home/FlashSaleSe
 const TrustSection = nextDynamic(() => import("@/components/home/TrustSection").then((m) => m.TrustSection), { loading: () => <div className="py-14" /> });
 
 export const metadata: Metadata = {
-  title: "MIAKSAAA — Premium Luxury Store",
-  description: "Discover premium products at MIAKSAAA — your luxury shopping destination.",
+  title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+  description:
+    "Explore MIAKSAAA — the premier online luxury destination for curated fashion collections, rare Hot Wheels diecast models, and custom handcrafted frames.",
+  keywords: [
+    "MIAKSAAA",
+    "MIAKSAAA official website",
+    "MIAKSAAA luxury store",
+    "MIAKSAAA online shopping",
+    "MIAKSAAA collectibles",
+    "MIAKSAAA India",
+    "luxury shopping",
+    "Hot Wheels",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    description:
+      "Explore MIAKSAAA — the premier online luxury destination for curated fashion collections, rare Hot Wheels diecast models, and custom handcrafted frames.",
+    url: "/",
+  },
 };
 
 export const dynamic = "force-dynamic";

@@ -15,6 +15,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { useUIStore } from "@/lib/store/uiStore";
 import { formatPrice, getDiscountPercent } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 
 export default function HWProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -101,6 +102,7 @@ export default function HWProductDetailPage() {
 
   return (
     <div style={{ background: "#0D0200", minHeight: "100vh" }}>
+      <ProductJsonLd product={product} canonicalUrl={`https://miaksaaa.com/hotwheels/products/${product.id}`} />
       <div className="container-lg py-8">
         {/* Back */}
         <button onClick={() => router.back()}

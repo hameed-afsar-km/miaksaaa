@@ -24,6 +24,7 @@ import {
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useUIStore } from "@/lib/store/uiStore";
+import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import toast from "react-hot-toast";
 
 type Step = "car" | "position" | "background" | "size" | "review";
@@ -158,6 +159,7 @@ export default function FrameConfiguratorPage() {
 
   return (
     <div style={{ background: "#0D0200", minHeight: "100vh" }}>
+      <ProductJsonLd product={frameProduct} canonicalUrl={`https://miaksaaa.com/hotwheels/frames/${frameProduct.id}`} />
       <div className="container-lg py-8">
         {/* Back */}
         <button onClick={() => router.back()}
