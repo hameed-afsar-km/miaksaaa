@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "MIAKSAAA", description: "Premium Luxury Store" },
   manifest: "/manifest.json",
   icons: { icon: "/logo2.png", shortcut: "/logo2.png", apple: "/apple-icon.png" },
+  verification: {
+    google: "HtXnN71zGip4Cw4qKOPp0gjFd_y1jmEd5tqqcOOcPF4",
+  },
 };
 
 export const viewport: Viewport = {
