@@ -7,7 +7,7 @@ interface ProductJsonLdProps {
 }
 
 export function ProductJsonLd({ product, canonicalUrl }: ProductJsonLdProps) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.vercel.app").replace(/\/$/, "");
   
   const isFrame = "basePrice" in product;
   const price = isFrame ? (product.discountedPrice || product.basePrice) : (product.discountedPrice || product.price);

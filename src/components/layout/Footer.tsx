@@ -171,6 +171,20 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
           ))}
         </div>
 
+        {/* ── Internal SEO links ── */}
+        <div
+          className="flex flex-wrap items-center justify-center gap-4 py-4 border-t text-xs"
+          style={{ borderColor: "rgba(147,51,234,0.08)" }}
+        >
+          <Link href="/about" className="hover:underline underline-offset-4" style={{ color: "var(--text-muted)" }}>About MIAKSAAA</Link>
+          <span style={{ color: "rgba(147,51,234,0.2)" }}>•</span>
+          <Link href="/contact" className="hover:underline underline-offset-4" style={{ color: "var(--text-muted)" }}>Contact MIAKSAAA</Link>
+          <span style={{ color: "rgba(147,51,234,0.2)" }}>•</span>
+          <Link href="/products" className="hover:underline underline-offset-4" style={{ color: "var(--text-muted)" }}>Shop MIAKSAAA</Link>
+          <span style={{ color: "rgba(147,51,234,0.2)" }}>•</span>
+          <a href="https://miaksaaa.vercel.app/" className="hover:underline underline-offset-4" style={{ color: "var(--text-muted)" }}>MIAKSAAA Official</a>
+        </div>
+
         {/* ── Copyright Bar ── */}
         <div
           className="py-5 flex items-center justify-center border-t"

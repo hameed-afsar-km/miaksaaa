@@ -254,12 +254,14 @@ export function HeroSection({ banners }: HeroSectionProps) {
               className="space-y-2.5"
             >
               {/* Title */}
-              <h1
+              <p
                 className="text-2xl font-black text-white uppercase leading-tight tracking-tight"
                 style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}
+                role="heading"
+                aria-level={2}
               >
                 {banner.title}
-              </h1>
+              </p>
 
               {/* Subtitle */}
               <p className="text-[11px] text-white/65 leading-relaxed font-light line-clamp-2">
@@ -373,14 +375,14 @@ export function HeroSection({ banners }: HeroSectionProps) {
               </div>
 
               {/* Title Header */}
-              <h1 className="text-4xl xl:text-6xl font-black leading-[1.1] tracking-tight">
+              <p className="text-4xl xl:text-6xl font-black leading-[1.1] tracking-tight" role="heading" aria-level={2}>
                 <span
                   className="bg-gradient-to-r from-white via-purple-100 to-amber-200 bg-clip-text text-transparent filter drop-shadow-md uppercase block"
                   style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}
                 >
                   {banner.title}
                 </span>
-              </h1>
+              </p>
 
               {/* Description Subtitle */}
               <p

@@ -5,30 +5,23 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LenisProvider } from "@/components/layout/LenisProvider";
 import { JsonLd } from "@/components/seo/JsonLd";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.com";
+const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.vercel.app").replace(/\/$/, "");
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    default: "MIAKSAAA | Premium Online Store",
     template: "%s | MIAKSAAA",
   },
   description:
-    "Welcome to the official MIAKSAAA store. Discover premium luxury fashion, exclusive Hot Wheels diecast collectibles, custom 3D display frames, and handcrafted lifestyle essentials.",
+    "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
   applicationName: "MIAKSAAA",
   keywords: [
     "MIAKSAAA",
+    "miaksaaa",
+    "miaksaaa vercel",
     "MIAKSAAA store",
-    "MIAKSAAA online shopping",
-    "MIAKSAAA luxury",
-    "MIAKSAAA collections",
-    "MIAKSAAA official",
-    "MIAKSAAA clothing",
-    "Hot Wheels MIAKSAAA",
-    "diecast collectibles",
-    "custom frame displays",
-    "luxury fashion store",
-    "miaksaaa.com",
+    "MIAKSAAA online store",
   ],
   authors: [{ name: "MIAKSAAA", url: baseUrl }],
   creator: "MIAKSAAA",
@@ -38,33 +31,29 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "MIAKSAAA",
-    title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    title: "MIAKSAAA | Premium Online Store",
     description:
-      "Explore exclusive luxury collections, rare Hot Wheels diecast models, and custom wall display frames at MIAKSAAA.",
-    url: baseUrl,
+      "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
+    url: "https://miaksaaa.vercel.app/",
     images: [
       {
         url: "/logo2.png",
         width: 800,
         height: 800,
-        alt: "MIAKSAAA - Official Luxury Store Logo",
+        alt: "MIAKSAAA - Premium Online Store Logo",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MIAKSAAA — Official Luxury Store",
+    title: "MIAKSAAA | Premium Online Store",
     description:
-      "Explore exclusive luxury collections, rare Hot Wheels diecast models, and custom display frames at MIAKSAAA.",
+      "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
     images: ["/logo2.png"],
-    creator: "@miaksaaa",
   },
   robots: {
     index: true,

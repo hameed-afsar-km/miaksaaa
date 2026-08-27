@@ -11,27 +11,29 @@ const FlashSaleSection = nextDynamic(() => import("@/components/home/FlashSaleSe
 const TrustSection = nextDynamic(() => import("@/components/home/TrustSection").then((m) => m.TrustSection), { loading: () => <div className="py-14" /> });
 
 export const metadata: Metadata = {
-  title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+  title: "MIAKSAAA | Premium Online Store",
   description:
-    "Explore MIAKSAAA — the premier online luxury destination for curated fashion collections, rare Hot Wheels diecast models, and custom handcrafted frames.",
-  keywords: [
-    "MIAKSAAA",
-    "MIAKSAAA official website",
-    "MIAKSAAA luxury store",
-    "MIAKSAAA online shopping",
-    "MIAKSAAA collectibles",
-    "MIAKSAAA India",
-    "luxury shopping",
-    "Hot Wheels",
-  ],
+    "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
   alternates: {
-    canonical: "/",
+    canonical: "https://miaksaaa.vercel.app/",
   },
   openGraph: {
-    title: "MIAKSAAA — Official Luxury Store | Premium Fashion & Collectibles",
+    type: "website",
+    siteName: "MIAKSAAA",
+    title: "MIAKSAAA | Premium Online Store",
     description:
-      "Explore MIAKSAAA — the premier online luxury destination for curated fashion collections, rare Hot Wheels diecast models, and custom handcrafted frames.",
-    url: "/",
+      "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
+    url: "https://miaksaaa.vercel.app/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MIAKSAAA | Premium Online Store",
+    description:
+      "MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -60,6 +62,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <h1 className="sr-only">MIAKSAAA</h1>
+      <p className="sr-only">
+        MIAKSAAA is an online store for fashion, accessories, toys, stationery, keychains and more. Shop MIAKSAAA at https://miaksaaa.vercel.app/
+      </p>
       <HeroSection banners={banners} />
       <QuickSliderSection products={featured} />
       <HotWheelsPromoSection />

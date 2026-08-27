@@ -159,7 +159,7 @@ export default function FrameConfiguratorPage() {
 
   return (
     <div style={{ background: "#0D0200", minHeight: "100vh" }}>
-      <ProductJsonLd product={frameProduct} canonicalUrl={`https://miaksaaa.com/hotwheels/frames/${frameProduct.id}`} />
+      <ProductJsonLd product={frameProduct} canonicalUrl={`https://miaksaaa.vercel.app/hotwheels/frames/${frameProduct.id}`} />
       <div className="container-lg py-8">
         {/* Back */}
         <button onClick={() => router.back()}

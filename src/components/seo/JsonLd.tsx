@@ -1,59 +1,44 @@
 import React from "react";
 
 export function JsonLd() {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.com").replace(/\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.vercel.app").replace(/\/$/, "");
+  const canonical = "https://miaksaaa.vercel.app";
 
-  const organizationSchema = {
+  const graphSchema = {
     "@context": "https://schema.org",
-    "@type": ["Organization", "OnlineStore"],
-    "@id": `${baseUrl}/#organization`,
-    name: "MIAKSAAA",
-    alternateName: [
-      "MIAKSAAA Store",
-      "MIAKSAAA Collections",
-      "MIAKSAAA Luxury",
-      "miaksaaa",
-      "MIAKSAAA India",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${canonical}/#website`,
+        name: "MIAKSAAA",
+        alternateName: "miaksaaa",
+        url: `${canonical}/`,
+        publisher: {
+          "@id": `${canonical}/#organization`,
+        },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${canonical}/products?search={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${canonical}/#organization`,
+        name: "MIAKSAAA",
+        url: `${canonical}/`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${canonical}/logo2.png`,
+          caption: "MIAKSAAA Logo",
+        },
+        image: `${canonical}/logo2.png`,
+        sameAs: [
+          "https://www.instagram.com/miaksaaa_collections/",
+          "https://wa.me/917292070080",
+        ],
+      },
     ],
-    url: baseUrl,
-    logo: {
-      "@type": "ImageObject",
-      url: `${baseUrl}/logo2.png`,
-      caption: "MIAKSAAA Logo",
-    },
-    image: `${baseUrl}/logo2.png`,
-    description:
-      "MIAKSAAA is a premier luxury store offering curated fashion, exclusive Hot Wheels diecast collectibles, custom display frames, and premium lifestyle essentials.",
-    sameAs: [
-      "https://www.instagram.com/miaksaaa_collections/",
-      "https://wa.me/917292070080",
-    ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "Customer Support",
-      url: "https://wa.me/917292070080",
-      availableLanguage: ["English", "Hindi"],
-    },
-    priceRange: "₹₹₹",
-    currenciesAccepted: "INR",
-    paymentAccepted: "Credit Card, Debit Card, UPI, Net Banking",
-  };
-
-  const webSiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${baseUrl}/#website`,
-    name: "MIAKSAAA",
-    alternateName: ["MIAKSAAA Official Store", "MIAKSAAA Collections"],
-    url: baseUrl,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${baseUrl}/products?search={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
-    publisher: {
-      "@id": `${baseUrl}/#organization`,
-    },
   };
 
   const siteNavigationSchema = {
@@ -65,41 +50,40 @@ export function JsonLd() {
         position: 1,
         name: "Shop All Products",
         description: "Explore premium fashion and lifestyle collections at MIAKSAAA",
-        url: `${baseUrl}/products`,
+        url: `${canonical}/products`,
       },
       {
         "@type": "SiteNavigationElement",
         position: 2,
         name: "Hot Wheels & Diecast Collectibles",
         description: "Rare and exclusive Hot Wheels diecast models at MIAKSAAA",
-        url: `${baseUrl}/hotwheels`,
+        url: `${canonical}/hotwheels`,
       },
       {
         "@type": "SiteNavigationElement",
         position: 3,
         name: "Custom Display Frames",
         description: "Handcrafted 3D shadow box frames for Hot Wheels and collectibles",
-        url: `${baseUrl}/hotwheels/frames`,
+        url: `${canonical}/hotwheels/frames`,
       },
       {
         "@type": "SiteNavigationElement",
         position: 4,
         name: "Customer Reviews",
         description: "Verified customer reviews and feedback on MIAKSAAA",
-        url: `${baseUrl}/reviews`,
+        url: `${canonical}/reviews`,
       },
     ],
   };
+
+  // Suppress unused variable warning - baseUrl kept for potential env override future use
+  void baseUrl;
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(graphSchema) }}
       />
       <script
         type="application/ld+json"
