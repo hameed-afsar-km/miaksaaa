@@ -1,116 +1,222 @@
 import type { MetadataRoute } from "next";
-import { getAllProducts, getCollectibleProducts, getVisibleFrameProducts } from "@/lib/firebase/firestore";
+import {
+  getAllProducts,
+  getCollectibleProducts,
+  getVisibleFrameProducts,
+  getCategories,
+} from "@/lib/firebase/firestore";
 
-export const dynamic = "force-dynamic";
+// Revalidate sitemap every 1 hour (ISR) for fast responses and fresh SEO indexing
+export const revalidate = 3600;
+
+function getBaseUrl(): string {
+  let url =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "https://miaksaaa.vercel.app";
+
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url.replace(/\/+$/, "");
+}
+
+function parseDate(val: unknown): Date {
+  if (!val) return new Date();
+  if (val instanceof Date) return val;
+  if (typeof val === "object" && val !== null) {
+    if ("toDate" in val && typeof (val as { toDate?: () => Date }).toDate === "function") {
+      try {
+        return (val as { toDate: () => Date }).toDate();
+      } catch {
+        // ignore and fallback
+      }
+    }
+    if ("toMillis" in val && typeof (val as { toMillis?: () => number }).toMillis === "function") {
+      try {
+        return new Date((val as { toMillis: () => number }).toMillis());
+      } catch {
+        // ignore and fallback
+      }
+    }
+    if ("seconds" in val && typeof (val as { seconds?: number }).seconds === "number") {
+      return new Date((val as { seconds: number }).seconds * 1000);
+    }
+  }
+  if (typeof val === "string" || typeof val === "number") {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
+function formatImageUrls(images: unknown, baseUrl: string): string[] {
+  if (!Array.isArray(images)) return [];
+  const validUrls: string[] = [];
+
+  for (const item of images) {
+    if (typeof item === "string" && item.trim()) {
+      const trimmed = item.trim();
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        validUrls.push(trimmed);
+      } else if (trimmed.startsWith("/")) {
+        validUrls.push(`${baseUrl}${trimmed}`);
+      } else {
+        validUrls.push(`${baseUrl}/${trimmed}`);
+      }
+    }
+  }
+
+  return validUrls.slice(0, 8); // Google supports up to 1000 images per URL; 8 is fast & optimal
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://miaksaaa.vercel.app").replace(/\/$/, "");
+  const baseUrl = getBaseUrl();
+  const now = new Date();
 
-  // Static routes
+  // 1. Static high-level marketing & catalog routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}`,
-      lastModified: new Date(),
+      url: baseUrl,
+      lastModified: now,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/products`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/hotwheels`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/hotwheels/products`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/hotwheels/frames`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${baseUrl}/reviews`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
     },
   ];
 
-  // Fetch dynamic products safely with catch
+  // 2. Fetch dynamic routes safely in parallel
   try {
-    const [standardProducts, collectibleProducts, frameProducts] = await Promise.all([
-      getAllProducts().catch(() => []),
-      getCollectibleProducts().catch(() => []),
-      getVisibleFrameProducts().catch(() => []),
+    const [standardProducts, collectibleProducts, frameProducts, categories] = await Promise.all([
+      getAllProducts().catch((err) => {
+        console.error("Sitemap: Failed to load standard products:", err);
+        return [];
+      }),
+      getCollectibleProducts().catch((err) => {
+        console.error("Sitemap: Failed to load collectible products:", err);
+        return [];
+      }),
+      getVisibleFrameProducts().catch((err) => {
+        console.error("Sitemap: Failed to load frame products:", err);
+        return [];
+      }),
+      getCategories().catch((err) => {
+        console.error("Sitemap: Failed to load categories:", err);
+        return [];
+      }),
     ]);
 
-    const productRoutes: MetadataRoute.Sitemap = standardProducts.map((p) => {
-      let lastMod = new Date();
-      if (p.updatedAt) {
-        const millis = typeof p.updatedAt.toMillis === "function" ? p.updatedAt.toMillis() : (p.updatedAt as any)?.seconds ? (p.updatedAt as any).seconds * 1000 : null;
-        if (millis) lastMod = new Date(millis);
-      }
-      return {
-        url: `${baseUrl}/products/${p.id}`,
-        lastModified: lastMod,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      };
-    });
+    // Product routes (Standard shop products)
+    const productRoutes: MetadataRoute.Sitemap = standardProducts
+      .filter((p) => p && p.id && p.isVisible !== false)
+      .map((p) => {
+        const lastMod = parseDate(p.updatedAt || p.createdAt);
+        const images = formatImageUrls(p.images, baseUrl);
+        return {
+          url: `${baseUrl}/products/${p.id}`,
+          lastModified: lastMod,
+          changeFrequency: "weekly",
+          priority: 0.8,
+          ...(images.length > 0 ? { images } : {}),
+        };
+      });
 
-    const collectibleRoutes: MetadataRoute.Sitemap = collectibleProducts.map((p) => {
-      let lastMod = new Date();
-      if (p.updatedAt) {
-        const millis = typeof p.updatedAt.toMillis === "function" ? p.updatedAt.toMillis() : (p.updatedAt as any)?.seconds ? (p.updatedAt as any).seconds * 1000 : null;
-        if (millis) lastMod = new Date(millis);
-      }
-      return {
-        url: `${baseUrl}/hotwheels/products/${p.id}`,
-        lastModified: lastMod,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      };
-    });
+    // Collectible Hot Wheels routes
+    const collectibleRoutes: MetadataRoute.Sitemap = collectibleProducts
+      .filter((p) => p && p.id && p.isVisible !== false)
+      .map((p) => {
+        const lastMod = parseDate(p.updatedAt || p.createdAt);
+        const images = formatImageUrls(p.images, baseUrl);
+        return {
+          url: `${baseUrl}/hotwheels/products/${p.id}`,
+          lastModified: lastMod,
+          changeFrequency: "weekly",
+          priority: 0.8,
+          ...(images.length > 0 ? { images } : {}),
+        };
+      });
 
-    const frameRoutes: MetadataRoute.Sitemap = frameProducts.map((f) => {
-      let lastMod = new Date();
-      if (f.updatedAt) {
-        const millis = typeof f.updatedAt.toMillis === "function" ? f.updatedAt.toMillis() : (f.updatedAt as any)?.seconds ? (f.updatedAt as any).seconds * 1000 : null;
-        if (millis) lastMod = new Date(millis);
-      }
-      return {
-        url: `${baseUrl}/hotwheels/frames/${f.id}`,
-        lastModified: lastMod,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      };
-    });
+    // Custom Frame routes
+    const frameRoutes: MetadataRoute.Sitemap = frameProducts
+      .filter((f) => f && f.id && f.isVisible !== false)
+      .map((f) => {
+        const lastMod = parseDate(f.updatedAt || f.createdAt);
+        const images = formatImageUrls(f.images, baseUrl);
+        return {
+          url: `${baseUrl}/hotwheels/frames/${f.id}`,
+          lastModified: lastMod,
+          changeFrequency: "weekly",
+          priority: 0.8,
+          ...(images.length > 0 ? { images } : {}),
+        };
+      });
 
-    return [...staticRoutes, ...productRoutes, ...collectibleRoutes, ...frameRoutes];
+    // Active Category routes
+    const categoryRoutes: MetadataRoute.Sitemap = categories
+      .filter((c) => c && c.isActive && (c.slug || c.name))
+      .map((c) => {
+        const categoryKey = c.slug || c.name;
+        return {
+          url: `${baseUrl}/products?category=${encodeURIComponent(categoryKey)}`,
+          lastModified: now,
+          changeFrequency: "weekly",
+          priority: 0.75,
+        };
+      });
+
+    return [
+      ...staticRoutes,
+      ...categoryRoutes,
+      ...productRoutes,
+      ...collectibleRoutes,
+      ...frameRoutes,
+    ];
   } catch (error) {
-    console.error("Error generating dynamic sitemap routes:", error);
+    console.error("Sitemap generation error:", error);
     return staticRoutes;
   }
 }

@@ -70,6 +70,27 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
+    // ─── FRAMES ──────────────────────────────────────────────────────────────
+    match /frameProducts/{frameId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /framePositions/{posId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /frameBackgrounds/{bgId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /frameSizes/{sizeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ─── SETTINGS ────────────────────────────────────────────────────────────
     match /settings/{settingsId} {
       allow read: if true;
