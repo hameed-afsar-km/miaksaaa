@@ -49,6 +49,7 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showOffersModal, setShowOffersModal] = useState(false);
   const [showFreeDeliveryModal, setShowFreeDeliveryModal] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<{ id: string; total: number; method: string } | null>(null);
 
   const { applyCoupon, removeCoupon } = useCartStore();
 
@@ -207,19 +208,106 @@ export default function CheckoutPage() {
     }
 
     if (paymentMethod === "Online") {
-      sessionStorage.setItem("online-payment-data", JSON.stringify({
-        userId: user.uid,
-        userEmail: user.email || "",
-        items,
-        subtotal: getSubtotal(),
-        discount: getDiscount(),
-        couponCode: couponCode || "",
-        total: orderTotal,
-        deliveryAddress: address,
-        coords,
-        notes,
-      }));
-      router.push("/online-payment");
+      setSubmitting(true);
+      try {
+        // Load Razorpay Script
+        const res = await new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+        if (!res) {
+          toast.error("Razorpay SDK failed to load. Are you online?");
+          setSubmitting(false);
+          return;
+        }
+
+        // Create Order
+        const orderRes = await fetch("/api/razorpay/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: orderTotal }),
+        });
+
+        const orderData = await orderRes.json();
+
+        if (!orderRes.ok || !orderData.order_id) {
+          throw new Error(orderData.error || "Failed to create order");
+        }
+
+        // Initialize Razorpay
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: "MIAKSAAA Store",
+          description: "Premium Purchase",
+          order_id: orderData.order_id,
+          handler: async function (response: any) {
+            try {
+              // Verify Payment Signature
+              const verifyRes = await fetch("/api/razorpay/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+
+              if (!verifyRes.ok) {
+                throw new Error(verifyData.error || "Payment verification failed");
+              }
+
+              // Place Order in Firestore
+              const orderId = await placeOrder(
+                user.uid,
+                user.email || "",
+                items,
+                getSubtotal(),
+                getDiscount(),
+                couponCode || "",
+                orderTotal,
+                address,
+                coords,
+                notes,
+                "Online"
+              );
+
+              setCompletedOrder({ id: orderId, total: orderTotal, method: "Online" });
+              clearCart();
+            } catch (err: any) {
+              console.error(err);
+              toast.error(err.message || "Failed to place order after payment.");
+            }
+          },
+          prefill: {
+            name: address.fullName,
+            email: user.email || "",
+            contact: address.phone,
+          },
+          theme: {
+            color: "#9333ea",
+          },
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.on('payment.failed', function (response: any) {
+          toast.error(response.error.description || "Payment failed!");
+        });
+        paymentObject.open();
+      } catch (error: any) {
+        console.error(error);
+        toast.error(error.message || "Something went wrong.");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -238,9 +326,8 @@ export default function CheckoutPage() {
         notes
       );
 
-      toast.success("Order placed successfully! 🍾");
+      setCompletedOrder({ id: orderId, total: orderTotal, method: "COD" });
       clearCart();
-      router.push(`/orders`);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message ?? "Failed to place order.");
@@ -761,6 +848,58 @@ export default function CheckoutPage() {
                 Continue & Pay ₹{formatPrice(orderTotal)}
               </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── Payment Success Modal ── */}
+      {completedOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="relative w-full max-w-md rounded-3xl overflow-hidden p-8 text-center flex flex-col items-center"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 25px 50px -12px rgba(147,51,234,0.25)" }}
+          >
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+                <Check size={40} className="text-green-400" />
+              </motion.div>
+            </div>
+            
+            <h2 className="text-3xl font-black gradient-text mb-2" style={{ fontFamily: "Playfair Display,serif" }}>
+              Payment Successful
+            </h2>
+            <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
+              Thank you for your premium order. Your transaction has been securely processed.
+            </p>
+
+            <div className="w-full p-4 rounded-2xl mb-8 space-y-3" style={{ background: "rgba(147,51,234,0.05)", border: "1px solid rgba(147,51,234,0.1)" }}>
+              <div className="flex justify-between items-center text-sm">
+                <span style={{ color: "var(--text-muted)" }}>Order ID</span>
+                <span className="font-mono font-bold text-white">#{completedOrder.id.slice(-8).toUpperCase()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span style={{ color: "var(--text-muted)" }}>Amount Paid</span>
+                <span className="font-bold text-white">{formatPrice(completedOrder.total)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span style={{ color: "var(--text-muted)" }}>Method</span>
+                <span className="font-bold text-purple-300">{completedOrder.method}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => router.push("/orders")}
+              className="btn-primary w-full py-3.5"
+            >
+              View My Orders
+            </button>
           </motion.div>
         </div>
       )}

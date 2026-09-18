@@ -518,18 +518,22 @@ export async function placeOrder(
   notes: string,
   paymentMethod: "COD" | "Online" = "COD"
 ): Promise<string> {
+  // Remove undefined fields which Firebase rejects
+  const sanitizedItems = JSON.parse(JSON.stringify(items));
+  const sanitizedAddress = JSON.parse(JSON.stringify(deliveryAddress));
+
   // 1. Create order document with 'waiting' status
   const ref = await addDoc(collection(db, "orders"), {
     userId,
     userEmail,
-    items,
+    items: sanitizedItems,
     subtotal,
     discount,
     couponCode,
     total,
     paymentMethod,
     status: "waiting",
-    deliveryAddress,
+    deliveryAddress: sanitizedAddress,
     location,
     notes,
     createdAt: serverTimestamp(),

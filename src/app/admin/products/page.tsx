@@ -46,6 +46,7 @@ export default function AdminProductsPage() {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [customCategoryActive, setCustomCategoryActive] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -133,6 +134,19 @@ export default function AdminProductsPage() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete product");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you absolutely sure you want to delete ${selectedProductIds.length} luxury items?`)) return;
+    try {
+      await Promise.all(selectedProductIds.map(id => deleteProduct(id)));
+      toast.success("Products vaporized successfully");
+      setSelectedProductIds([]);
+      loadProducts();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete some products");
     }
   };
 
@@ -272,14 +286,45 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Control bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-300/40" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter catalog by name or category..."
-          className="input pl-11 text-sm"
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-300/40" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter catalog by name or category..."
+            className="input pl-11 text-sm w-full"
+          />
+        </div>
+        
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <select
+            className="input text-xs py-2 appearance-none pr-8 cursor-pointer"
+            style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+            onChange={(e) => {
+              const cat = e.target.value;
+              if (!cat) return;
+              const ids = filtered.filter(p => p.category === cat).map(p => p.id);
+              setSelectedProductIds(Array.from(new Set([...selectedProductIds, ...ids])));
+              e.target.value = ""; // reset
+            }}
+            value=""
+          >
+            <option value="" disabled style={{ backgroundColor: "#120a24" }}>Select by Category...</option>
+            {storeCategories.map(cat => (
+              <option key={cat.id} value={cat.name} style={{ backgroundColor: "#120a24" }}>{cat.name}</option>
+            ))}
+          </select>
+
+          {selectedProductIds.length > 0 && (
+            <button 
+              onClick={handleBulkDelete}
+              className="btn-outline text-xs border-red-500/50 text-red-400 hover:bg-red-500/10 px-4 py-2 flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Trash2 size={14} /> Delete Selected ({selectedProductIds.length})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Products table */}
@@ -288,6 +333,20 @@ export default function AdminProductsPage() {
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b" style={{ borderColor: "var(--border)" }}>
+                <th className="p-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 cursor-pointer accent-purple-500"
+                    checked={filtered.length > 0 && selectedProductIds.length === filtered.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedProductIds(filtered.map(p => p.id));
+                      } else {
+                        setSelectedProductIds([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase">Product info</th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase">Store</th>
                 <th className="p-4 text-purple-300/60 font-bold uppercase">Category</th>
@@ -300,6 +359,20 @@ export default function AdminProductsPage() {
             <tbody className="divide-y divide-purple-500/5">
               {filtered.map((product) => (
                 <tr key={product.id} className="hover:bg-purple-950/5">
+                  <td className="p-4 text-center">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 cursor-pointer accent-purple-500"
+                      checked={selectedProductIds.includes(product.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProductIds([...selectedProductIds, product.id]);
+                        } else {
+                          setSelectedProductIds(selectedProductIds.filter(id => id !== product.id));
+                        }
+                      }}
+                    />
+                  </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-purple-950/20 border border-purple-500/10 overflow-hidden relative flex-shrink-0">
@@ -365,7 +438,7 @@ export default function AdminProductsPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-purple-300/40">No matching products found in catalog</td>
+                  <td colSpan={8} className="p-10 text-center text-purple-300/40">No matching products found in catalog</td>
                 </tr>
               )}
             </tbody>
