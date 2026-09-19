@@ -18,6 +18,7 @@ import {
   Users,
   Frame,
   ChevronDown,
+  Truck,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -29,6 +30,7 @@ const SIDEBAR_ITEMS = [
   { label: "Categories", path: "/admin/categories",icon: Tag },
   { label: "Coupons",    path: "/admin/coupons",   icon: Tag },
   { label: "Team",       path: "/admin/team",      icon: Users },
+  { label: "Delivery",   path: "/admin/delivery",  icon: Truck },
   { label: "Settings",   path: "/admin/settings",  icon: Settings },
 ];
 

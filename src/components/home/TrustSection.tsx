@@ -1,17 +1,34 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Shield, Truck, RefreshCw, Headphones, CreditCard, Star } from "lucide-react";
+import { getStoreSettings } from "@/lib/firebase/firestore";
 
-const TRUST_ITEMS = [
-  { icon: Truck, title: "Free Delivery", desc: "On orders above ₹499", accent: "#a855f7" },
-  { icon: Shield, title: "Secure Payments", desc: "100% safe & protected", accent: "#22c55e" },
-  { icon: RefreshCw, title: "Easy Returns", desc: "7-day hassle-free return", accent: "#ec4899" },
-  { icon: Headphones, title: "24/7 Support", desc: "Always here to help you", accent: "#eab308" },
-  { icon: CreditCard, title: "Cash On Delivery", desc: "Pay when you receive it", accent: "#3b82f6", comingSoon: true },
-  { icon: Star, title: "Premium Quality", desc: "Curated luxury products", accent: "#f97316" },
+const BASE_TRUST_ITEMS = [
+  { id: "delivery", icon: Truck, title: "Free Delivery", desc: "On orders above ₹499", accent: "#a855f7" },
+  { id: "secure", icon: Shield, title: "Secure Payments", desc: "100% safe & protected", accent: "#22c55e" },
+  { id: "returns", icon: RefreshCw, title: "Easy Returns", desc: "7-day hassle-free return", accent: "#ec4899" },
+  { id: "support", icon: Headphones, title: "24/7 Support", desc: "Always here to help you", accent: "#eab308" },
+  { id: "cod", icon: CreditCard, title: "Cash On Delivery", desc: "Pay when you receive it", accent: "#3b82f6", comingSoon: true },
+  { id: "quality", icon: Star, title: "Premium Quality", desc: "Curated luxury products", accent: "#f97316" },
 ];
 
 export function TrustSection() {
+  const [trustItems, setTrustItems] = useState(BASE_TRUST_ITEMS);
+
+  useEffect(() => {
+    getStoreSettings().then((settings) => {
+      if (settings?.freeDeliveryThreshold !== undefined) {
+        setTrustItems((prev) =>
+          prev.map((item) =>
+            item.id === "delivery"
+              ? { ...item, desc: `On orders above ₹${settings.freeDeliveryThreshold}` }
+              : item
+          )
+        );
+      }
+    }).catch(console.error);
+  }, []);
   return (
     <section className="py-14 md:py-16 relative overflow-hidden bg-[#0a0614]" data-snap>
       {/* Dynamic ambient lights */}
@@ -47,7 +64,7 @@ export function TrustSection() {
 
         {/* Compact Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {TRUST_ITEMS.map(({ icon: Icon, title, desc, accent, comingSoon }, i) => (
+          {trustItems.map(({ icon: Icon, title, desc, accent, comingSoon }, i) => (
             <motion.div
               key={title}
               initial={{ opacity: 0, y: 15 }}

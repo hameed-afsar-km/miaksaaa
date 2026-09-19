@@ -725,6 +725,8 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       flashSaleEndsAt: null,
       currency: "INR",
       currencySymbol: "₹",
+      deliveryCharge: 49,
+      freeDeliveryThreshold: 499,
     };
   }
   return snap.data() as StoreSettings;

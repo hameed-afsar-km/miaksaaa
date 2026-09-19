@@ -312,4 +312,6 @@ export interface StoreSettings {
   storeMessage?: string;
   currency: string;
   currencySymbol: string;
+  deliveryCharge?: number;
+  freeDeliveryThreshold?: number;
 }

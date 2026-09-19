@@ -238,7 +238,7 @@ export function ProductDetailPreviewModal({ isOpen, onClose, product }: ProductD
                     {/* Delivery info */}
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { icon: Truck, label: "Free Delivery", sub: "Orders above ₹499" },
+                        { icon: Truck, label: "Free Delivery", sub: "Qualifying orders" },
                         { icon: Shield, label: "Secure", sub: "100% protected" },
                         { icon: RefreshCw, label: "7-Day Return", sub: "Easy returns" },
                       ].map(({ icon: Icon, label, sub }) => (

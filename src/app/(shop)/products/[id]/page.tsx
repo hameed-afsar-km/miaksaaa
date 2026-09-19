@@ -7,8 +7,8 @@ import {
   ShoppingBag, Heart, Star, ChevronLeft, ChevronRight,
   Minus, Plus, Truck, Shield, RefreshCw, Share2, Flame, Sparkles, Zap, Expand
 } from "lucide-react";
-import { Product, Review } from "@/lib/types";
-import { getProductById, getProductReviews, addReview, deleteReview, updateReview } from "@/lib/firebase/firestore";
+import { Product, Review, StoreSettings } from "@/lib/types";
+import { getProductById, getProductReviews, addReview, deleteReview, updateReview, getStoreSettings } from "@/lib/firebase/firestore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -34,6 +34,7 @@ export default function ProductDetailPage() {
   const [tab, setTab] = useState<"desc" | "details">("desc");
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
 
   const authUser = useAuthStore((s) => s.user);
   const addToCart = useCartStore((s) => s.addItem);
@@ -65,6 +66,7 @@ export default function ProductDetailPage() {
   } | null>(null);
 
   useEffect(() => {
+    getStoreSettings().then(setSettings).catch(console.error);
     Promise.all([
       getProductById(id),
       getProductReviews(id),
@@ -659,7 +661,7 @@ export default function ProductDetailPage() {
           {/* Delivery info */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: Truck, label: "Free Delivery", sub: "Orders above ₹499" },
+              { icon: Truck, label: "Free Delivery", sub: settings?.freeDeliveryThreshold ? `Orders above ₹${settings.freeDeliveryThreshold}` : "Qualifying orders" },
               { icon: Shield, label: "Secure", sub: "100% protected" },
               { icon: RefreshCw, label: "7-Day Return", sub: "Easy returns" },
             ].map(({ icon: Icon, label, sub }) => (

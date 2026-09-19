@@ -7,8 +7,8 @@ import Link from "next/link";
 import { MapPin, Phone, User, CreditCard, ChevronLeft, Calendar, ArrowRight, ShieldCheck, Tag, Check, X } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useAuthStore } from "@/lib/store/authStore";
-import { getAvailableCoupons, validateCoupon, placeOrder } from "@/lib/firebase/firestore";
-import { Coupon } from "@/lib/types";
+import { getAvailableCoupons, validateCoupon, placeOrder, getStoreSettings } from "@/lib/firebase/firestore";
+import { Coupon, StoreSettings } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -50,18 +50,24 @@ export default function CheckoutPage() {
   const [showOffersModal, setShowOffersModal] = useState(false);
   const [showFreeDeliveryModal, setShowFreeDeliveryModal] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<{ id: string; total: number; method: string } | null>(null);
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
 
   const { applyCoupon, removeCoupon } = useCartStore();
-
-  // Delivery charge: free above ₹499, else ₹80
-  const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
-  const deliveryCharge = subtotalAfterDiscount >= 499 ? 0 : 49;
-  const orderTotal = subtotalAfterDiscount + deliveryCharge;
 
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [couponsLoading, setCouponsLoading] = useState(true);
 
+  // Delivery charge: dynamic based on settings
+  const subtotalAfterDiscount = Math.max(0, getSubtotal() - getDiscount());
+  
+  const freeThreshold = settings?.freeDeliveryThreshold ?? 499;
+  const standardCharge = settings?.deliveryCharge ?? 49;
+  
+  const deliveryCharge = subtotalAfterDiscount >= freeThreshold ? 0 : standardCharge;
+  const orderTotal = subtotalAfterDiscount + deliveryCharge;
+
   useEffect(() => {
+    getStoreSettings().then(setSettings).catch(console.error);
     getAvailableCoupons()
       .then(setAvailableCoupons)
       .catch(console.error)
@@ -202,7 +208,7 @@ export default function CheckoutPage() {
     }
 
     // Free delivery alert — within ₹100 of threshold
-    if (!bypassFreeDelivery && deliveryCharge > 0 && subtotalAfterDiscount >= 399) {
+    if (!bypassFreeDelivery && deliveryCharge > 0 && subtotalAfterDiscount >= freeThreshold - 100) {
       setShowFreeDeliveryModal(true);
       return;
     }
@@ -683,7 +689,7 @@ export default function CheckoutPage() {
                 }
               </div>
               {deliveryCharge > 0 && (
-                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Add ₹{499 - subtotalAfterDiscount} more for free delivery</p>
+                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Add ₹{Math.max(0, freeThreshold - subtotalAfterDiscount)} more for free delivery</p>
               )}
               <div className="flex justify-between font-black text-base border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <span>Total Amount</span><span className="gradient-text text-lg">{formatPrice(orderTotal)}</span>
@@ -811,11 +817,11 @@ export default function CheckoutPage() {
             <h3 className="text-lg font-black mb-2">You're Almost There!</h3>
             <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
               Add just <span className="font-black text-amber-400">
-                ₹{499 - subtotalAfterDiscount}
+                ₹{Math.max(0, freeThreshold - subtotalAfterDiscount)}
               </span> more to your cart
             </p>
             <p className="text-xs mb-6" style={{ color: "var(--text-muted)" }}>
-              to unlock <span className="font-bold" style={{ color: "#86efac" }}>FREE delivery</span> and save ₹49!
+              to unlock <span className="font-bold" style={{ color: "#86efac" }}>FREE delivery</span> and save ₹{standardCharge}!
             </p>
 
             {/* Progress bar */}
@@ -823,7 +829,7 @@ export default function CheckoutPage() {
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${Math.min(100, (subtotalAfterDiscount / 499) * 100)}%`,
+                  width: `${Math.min(100, (subtotalAfterDiscount / freeThreshold) * 100)}%`,
                   background: "linear-gradient(90deg, #9333ea, #fbbf24)",
                 }}
               />
